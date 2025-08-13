@@ -22,7 +22,7 @@
                         <h1>123아오아오123</h1>
                         
                         <h1>장지영 테스트</h1>
-                        ㅇㅇㅇ
+                        ㅇㅇㅇddeegege
                         
                         
                     </div> <!-- container-fluid -->
