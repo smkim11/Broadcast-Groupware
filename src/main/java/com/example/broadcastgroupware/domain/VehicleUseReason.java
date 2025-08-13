@@ -9,4 +9,5 @@ public class VehicleUseReason {
 	private String vehicleUseReasonContent;
 	private String vehicleUseReasonStartDate;
 	private String vehicleUseReasonEndDate;
+	private	String createDate;
 }
