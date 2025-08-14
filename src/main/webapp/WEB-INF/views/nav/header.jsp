@@ -21,7 +21,7 @@
 
     </head>
 
-    <nav>
+   <!-- <nav> -->
     <body>
 
     <!-- <body data-layout="horizontal" data-topbar="colored"> -->
@@ -387,5 +387,5 @@
        
 
     </body>
-    </nav>
+   <!-- </nav> -->
 </html>
