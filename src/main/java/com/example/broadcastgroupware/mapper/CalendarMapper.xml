@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper
-	namespace="com.example.broadcastgroupware.mapper.CalendarMapper">
+<mapper namespace="com.example.broadcastgroupware.mapper.CalendarMapper">
+	<!--ID에 맞는 일정-->
+	<select id="selectUserCalendar" resultType="map">
+		SELECT c.calendar_title calendarTitle, c.calendar_location calendarLocation, c.calendar_type calendarType,
+		c.calendar_memo calendarMemo, c.calendar_start_time calendarStartTime, c.calendar_end_time calendarEndTime 
+		FROM calendar c INNER JOIN user u ON c.user_id= u.user_id
+		INNER JOIN deployment_history dh ON dh.user_id = u.user_id
+		INNER JOIN team t ON t.team_id = dh.team_id
+		WHERE c.user_id=53 OR c.calendar_type='전체' OR 
+		(c.calendar_type='팀' AND dh.team_id=(SELECT team_id FROM deployment_history WHERE user_id=53))
+	</select>
 </mapper>

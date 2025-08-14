@@ -1,5 +1,22 @@
 package com.example.broadcastgroupware.controller;
 
-public class CalendarController {
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 
+import com.example.broadcastgroupware.service.CalendarService;
+
+@Controller
+public class CalendarController {
+	private CalendarService calendarService;
+	public CalendarController(CalendarService calendarService) {
+		this.calendarService = calendarService;
+	}
+	
+	@GetMapping("/calendar")
+	public String calendar(Model model) {
+		model.addAttribute("events",calendarService.selectUserCalendar()); // int userId
+		return "calendar";
+	}
+	
 }
