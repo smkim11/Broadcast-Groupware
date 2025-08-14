@@ -278,14 +278,14 @@
 								        <a href="javascript: void(0);" class="has-arrow">시설</a>
 								        <ul class="sub-menu" aria-expanded="false">
 								            <li>
-								                <a href="layouts-dark-sidebar.html">회의실</a>
+								                <a href="/user/meetingroom">회의실</a>
 								            </li>
 								            <li>
-								                <a href="layouts-dark-sidebar.html">편집실</a>
+								                <a href="/user/cuttingroom">편집실</a>
 								            </li>
 								         </ul>
 								            <li>
-								                <a href="#">차량</a>
+								                <a href="/user/car">차량</a>
 								            </li>
 								        
 								    </li>
