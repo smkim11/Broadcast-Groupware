@@ -2,4 +2,31 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper
 	namespace="com.example.broadcastgroupware.mapper.ReservationMapper">
+	
+	<select id="getTotalCount" resultType="int">
+		SELECT COUNT(*)
+		FROM vehicle
+	</select>
+	
+	<select id="getCarReservationList">
+		SELECT 
+			v.vehicle_id AS vehicle,
+			v.vehicle_status AS status,
+			v.vehicle_no AS vehicleNo,
+			v.vehicle_type AS vehicleType,
+			v.vehicle_name AS vehicleName,
+			CASE 
+				WHEN r.vehicle_reservation_start_time IS NULL THEN ''
+				ELSE DATE_FORMAT(r.vehicle_reservation_start_time, '%Y-%m-%d %H:%i') 
+			END AS reservationStart,
+			CASE 
+				WHEN r.vehicle_reservation_end_time IS NULL THEN ''
+				ELSE DATE_FORMAT(r.vehicle_reservation_end_time, '%Y-%m-%d %H:%i') 
+			END AS reservationEnd
+		FROM vehicle v
+		LEFT JOIN vehicle_reservation r
+			ON v.vehicle_id = r.vehicle_id
+		ORDER BY v.vehicle_id
+		LIMIT #{beginRow}, #{rowPerPage}
+	</select>
 </mapper>

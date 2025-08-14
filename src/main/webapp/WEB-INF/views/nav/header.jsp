@@ -288,7 +288,7 @@
 								                <a href="/user/car">차량</a>
 								            </li>
 								        
-								    </li>
+							    </li>
 								</ul>
                              </li>     
                              <li>

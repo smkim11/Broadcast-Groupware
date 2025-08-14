@@ -9,6 +9,9 @@ public class PageDto {
 	private int beginRow;
 	private int totalPage;
 	private String searchWord;
+	private String type;
+	private String startDateTime;
+	private String endDateTime;
 	
 	// 검색 없는 페이징
 	public PageDto(int currentPage, int rowPerPage, int totalPage){
@@ -34,5 +37,17 @@ public class PageDto {
 			lastPage++;
 		}
 		return lastPage;
+	}
+	
+	// 예약 페이징
+	public PageDto(int currentPage, int rowPerPage, int totalPage, 
+					String type, String startDateTime, String endDateTime) {
+		this.rowPerPage = rowPerPage;
+ 		this.currentPage = currentPage;
+		this.totalPage = totalPage;
+		this.beginRow = (currentPage-1)*rowPerPage;
+		this.type = type;
+		this.startDateTime = startDateTime;
+		this.endDateTime = endDateTime;
 	}
 }
