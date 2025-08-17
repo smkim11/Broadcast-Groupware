@@ -96,7 +96,7 @@
 	<table border="1">
 		<tr>
 			<th>차량정보</th>
-			<th>대여시간</th>
+			<th>예약 현황</th>
 			<th>예약하기</th>
 		</tr>
 		
@@ -107,28 +107,20 @@
 					<div class="vehicleName">${c.vehicleName}</div> 
 					<div class="vehicleType">${c.vehicleType}</div>
 				</td>
-				 <td>
-    <!-- 예약 막대 차트 (Canvas 들어감) -->
-    <div class="legend">
-	    <span class="red-box"></span> 예약상태
-	    <span class="gray-box"></span> 예약 불가
-	    <span class="blue-box"></span> 예약 가능
-	</div>
-
-    <div class="chart-container"
-         data-start="${c.reservationStart}"
-         data-end="${c.reservationEnd}">
-    </div>
-	    <!-- 시간 눈금 -->
-	    <div class="time-scale">
-	        <span>0시</span>
-	        <span>6시</span>
-	        <span>12시</span>
-	        <span>18시</span>
-	        <span>24시</span>
-	    </div>
-	</td>
-
+		 <td>
+		    <!-- 예약 막대 차트 (Canvas 들어감) -->
+		    <div class="legend">
+			    <span class="red-box"></span> 예약상태
+			    <span class="gray-box"></span> 예약 불가
+			    <span class="blue-box"></span> 예약 가능
+			</div>
+		
+		    <div class="chart-container"
+		         data-start="${c.reservationStart}"
+		         data-end="${c.reservationEnd}">
+		    </div>
+		
+		</td>
 
 				<td><button>예약하기</button></td>
 			</tr>
@@ -144,71 +136,102 @@
 	
 	//차트 그리기 함수
 	function drawCharts() {
-		const charts = document.querySelectorAll(".chart-container");
-	
-		charts.forEach(chart => {
-			chart.innerHTML = ""; // 이전 canvas 제거
-	
-			const reservationStart = new Date(chart.dataset.start);
-			const reservationEnd = new Date(chart.dataset.end);
-	
-			// 선택된 대여일이 없으면 예약 기간만 사용
-			const start = selectedStartDate || reservationStart;
-			const end = selectedEndDate || reservationEnd;
-	
-			const canvas = document.createElement("canvas");
-			canvas.width = chart.clientWidth;
-			canvas.height = chart.clientHeight;
-			chart.appendChild(canvas);
-	
-			const ctx = canvas.getContext("2d");
-	
-			// 전체 기간 (시간 단위)
-			const totalHours = (end - start) / (1000 * 60 * 60);
-			const unitWidth = canvas.width / totalHours;
-	
-			// 전체 바 (연한 회색)
-			ctx.fillStyle = "blue";
-			ctx.fillRect(0, 15, canvas.width, 20);
-	
-			// 예약 구간 (빨강) - 선택 기간과 겹치는 부분만 표시
-			const displayStart = new Date(Math.max(reservationStart, start));
-			const displayEnd = new Date(Math.min(reservationEnd, end));
-	
-			if (displayEnd > displayStart) {
-				const redStartX = ((displayStart - start) / (1000*60*60)) * unitWidth;
-				const redWidth = ((displayEnd - displayStart) / (1000*60*60)) * unitWidth;
-				ctx.fillStyle = "red";
-				ctx.fillRect(redStartX, 15, redWidth, 20);
+	const charts = document.querySelectorAll(".chart-container");
+
+	charts.forEach(chart => {
+		chart.innerHTML = ""; // 이전 canvas 제거
+
+		const reservationStart = new Date(chart.dataset.start);
+		const reservationEnd = new Date(chart.dataset.end);
+
+		// 선택된 대여일이 없으면 예약 기간만 사용
+		const start = selectedStartDate || reservationStart;
+		const end = selectedEndDate || reservationEnd;
+
+		const canvas = document.createElement("canvas");
+		canvas.width = chart.clientWidth;
+		canvas.height = chart.clientHeight;
+		chart.appendChild(canvas);
+
+		const ctx = canvas.getContext("2d");
+
+		// 전체 기간 (시간 단위)
+		const totalHours = (end - start) / (1000 * 60 * 60);
+		const unitWidth = canvas.width / totalHours;
+
+		// 전체 바 (파랑: 예약 가능시간)
+		ctx.fillStyle = "blue";
+		ctx.fillRect(0, 15, canvas.width, 20);
+
+		// 예약 구간 (빨강) - 선택 기간과 겹치는 부분만 표시
+		const displayStart = new Date(Math.max(reservationStart, start));
+		const displayEnd = new Date(Math.min(reservationEnd, end));
+
+		if (displayEnd > displayStart) {
+			const redStartX = ((displayStart - start) / (1000*60*60)) * unitWidth;
+			const redWidth = ((displayEnd - displayStart) / (1000*60*60)) * unitWidth;
+
+			ctx.fillStyle = "red";
+			ctx.fillRect(redStartX, 15, redWidth, 20);
+
+			//  예약 구간 시작/끝 시간 표시
+			ctx.fillStyle = "black";
+			const textY = 15 + 20 + 5;
+			ctx.font = "12px Arial";
+			const startLabel = displayStart.getHours().toString().padStart(2, '0') + ":00";
+			const endLabel = displayEnd.getHours().toString().padStart(2, '0') + ":00";
+			
+
+			// 날짜 + 시간 표시 (00:00은 제외)
+			if (startLabel !== "00:00") {
+				// 날짜 (막대 위)
+				ctx.font = "bold 10px Arial";
+				ctx.fillText(displayStart.toLocaleDateString("ko-KR"), redStartX, 10);
+
+				// 시간 (날짜 밑)
+				ctx.font = "10px Arial";
+				ctx.fillText(startLabel, redStartX, 25);
 			}
-	
-			// 오늘까지 지난 구간 (짙은 회색)
+
+			if (endLabel !== "00:00") {
+				// 날짜 (막대 위)
+				ctx.font = "bold 10px Arial";
+				const endDateText = displayEnd.toLocaleDateString("ko-KR");
+				const endDateWidth = ctx.measureText(endDateText).width;
+				ctx.fillText(endDateText, redStartX + redWidth - endDateWidth, 10);
+
+				// 시간 (날짜 밑)
+				ctx.font = "10px Arial";
+				const endTimeWidth = ctx.measureText(endLabel).width;
+				ctx.fillText(endLabel, redStartX + redWidth - endTimeWidth, 25);
+			}
+
+		}
+
+			// 오늘 기준 이전 구간 처리 (회색)
 			const today = new Date();
 			if (today > start) {
-				const pastHours = Math.min((today - start) / (1000*60*60), totalHours);
-				const pastX = pastHours * unitWidth;
-				ctx.fillStyle = "gray";
-				ctx.fillRect(0, 15, pastX, 20);
-			}
+			    const pastHours = Math.min((today - start) / (1000*60*60), totalHours);
+			    const pastX = pastHours * unitWidth;
 	
-			// 날짜 눈금 (하루 단위)
-			let tickDate = new Date(start);
-			while (tickDate <= end) {
-				const diffHours = (tickDate - start) / (1000*60*60);
-				const x = diffHours * unitWidth;
+			    // 🔹 예약구간을 제외한 부분만 회색
+			    let grayStartX = 0;
+			    let grayEndX = pastX;
 	
-				ctx.fillStyle = "black";
-				ctx.font = "10px Arial";
-				ctx.fillText(
-					(tickDate.getMonth()+1) + "/" + tickDate.getDate(),
-					x,
-					12
-				);
+			    // 예약이 오늘 이전부터 시작된 경우 → 예약 시작 전까지만 회색
+			    if (reservationStart < today && reservationEnd > start) {
+			        const reservedStartX = ((reservationStart - start) / (1000*60*60)) * unitWidth;
+			        grayEndX = Math.max(0, reservedStartX);
+			    }
 	
-				tickDate.setDate(tickDate.getDate() + 1);
+			    if (grayEndX > grayStartX) {
+			        ctx.fillStyle = "gray";
+			        ctx.fillRect(grayStartX, 15, grayEndX, 20);
+			    }
 			}
 		});
 	}
+
 	
 	//시간 선택 드롭다운 생성
 	function populateTimeOptions(selectId, firstOptionLabel) {
@@ -265,7 +288,7 @@
 		return yyyy + "-" + mm + "-" + dd + " " + hh + ":" + mi + ":" + ss;
 	}
 	
-	//DOMContentLoaded 초기화
+	//대여시간 및 반납시간 초기화
 	document.addEventListener("DOMContentLoaded", function () {
 		populateTimeOptions("startTime", "-- 대여시간 선택 --");
 		populateTimeOptions("endTime", "-- 반납시간 선택 --");
