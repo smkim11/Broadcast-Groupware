@@ -4449,6 +4449,8 @@ div.table-responsive > div.dataTables_wrapper > div.row > div[class^=col-]:last-
   }
 }
 
+/* ===================================================================================================
+ 	채팅 =============================================================================================*/
 .chat-noti-dropdown.active:before {
   content: "";
   position: absolute;
@@ -4693,6 +4695,8 @@ div.table-responsive > div.dataTables_wrapper > div.row > div[class^=col-]:last-
     height: calc(100vh - 300px);
   }
 }
+
+/* ===============================================================================================*/
 
 .counter-number {
   font-size: 32px;

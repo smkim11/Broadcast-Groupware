@@ -18,8 +18,8 @@ public class ChatController {
 	}
 	
     // 클라이언트에서 "/app/chat" 으로 메시지를 보내면
-    @MessageMapping("/chat")
-    @SendTo("/topic/messages") // 구독자들에게 브로드캐스트됨
+    @MessageMapping("/chat.send")
+    @SendTo("/topic/public") // 구독자들에게 브로드캐스트됨
     public ChatmessageDto sendMessage(ChatmessageDto message) {
         return message; // 그대로 반환 → 구독자에게 전달
     }

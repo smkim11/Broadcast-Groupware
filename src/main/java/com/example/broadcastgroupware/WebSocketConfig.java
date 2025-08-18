@@ -18,7 +18,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // SockJS를 지원하는 STOMP 엔드포인트 등록
         registry.addEndpoint("/ws-stomp")
-                .setAllowedOrigins("*") // CORS 허용
+        		.setAllowedOriginPatterns("*")
                 .withSockJS(); // SockJS 사용
     }
 
