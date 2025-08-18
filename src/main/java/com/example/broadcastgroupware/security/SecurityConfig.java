@@ -25,8 +25,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll() // JSP forward 허용
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/user/**").hasRole("USER")
+                .requestMatchers("/admin/**").hasRole("admin")
+                .requestMatchers("/user/**").hasRole("user")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

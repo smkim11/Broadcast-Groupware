@@ -29,4 +29,9 @@
 		ORDER BY v.vehicle_id
 		LIMIT #{beginRow}, #{rowPerPage}
 	</select>
+	
+	<insert id="addCar" parameterType="com.example.broadcastgroupware.domain.Vehicle">
+		INSERT INTO vehicle(vehicle_status, vehicle_no, vehicle_type, vehicle_name)
+		VALUES('Y', #{vehicleNo}, #{vehicleType}, #{vehicleName})
+	</insert>
 </mapper>
