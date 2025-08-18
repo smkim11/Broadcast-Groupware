@@ -13,10 +13,10 @@ public class CalendarController {
 		this.calendarService = calendarService;
 	}
 	
+	// 캘린더 조회
 	@GetMapping("/calendar")
 	public String calendar(Model model) {
 		model.addAttribute("events",calendarService.selectUserCalendar()); // int userId
 		return "calendar";
 	}
-	
 }

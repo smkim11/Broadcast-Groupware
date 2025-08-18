@@ -4,11 +4,26 @@
 	<!--ID에 맞는 일정-->
 	<select id="selectUserCalendar" resultType="map">
 		SELECT c.calendar_title calendarTitle, c.calendar_location calendarLocation, c.calendar_type calendarType,
-		c.calendar_memo calendarMemo, c.calendar_start_time calendarStartTime, c.calendar_end_time calendarEndTime 
+			c.calendar_memo calendarMemo, c.calendar_start_time calendarStartTime, c.calendar_end_time calendarEndTime 
 		FROM calendar c INNER JOIN user u ON c.user_id= u.user_id
 		INNER JOIN deployment_history dh ON dh.user_id = u.user_id
 		INNER JOIN team t ON t.team_id = dh.team_id
 		WHERE c.user_id=53 OR c.calendar_type='전체' OR 
-		(c.calendar_type='팀' AND dh.team_id=(SELECT team_id FROM deployment_history WHERE user_id=53))
+			(c.calendar_type='팀' AND dh.team_id=(SELECT team_id FROM deployment_history WHERE user_id=53))
 	</select>
+	
+	<!--일정생성-->
+	<insert id="insertCalendar" parameterType="com.example.broadcastgroupware.domain.Calendar">
+		INSERT INTO calendar(user_id,calendar_title,calendar_location,calendar_type,
+			calendar_memo,calendar_start_time,calendar_end_time) 
+		VALUES(53,#{calendarTitle},#{calendarLocation},#{calendarType},#{calendarMemo}
+			,#{calendarStartTime},#{calendarEndTime})
+	</insert>
+	
+	<!--일정수정-->
+	<update id="updateCalendar" parameterType="com.example.broadcastgroupware.domain.Calendar">
+		UPDATE calendar SET calendar_title=#{calendarTitle},calendar_location=#{calendarLocation},calendar_memo=#{calendarMemo},
+			calendar_start_time=#{calendarStartTime},calendar_end_time=#{calendarEndTime}
+		WHERE calendar_id=#{calendarId}
+	</update>
 </mapper>
