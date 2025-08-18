@@ -23,6 +23,7 @@ public class ReservationController {
 	public String carList(Model model, 
 						@RequestParam(value = "page", defaultValue = "1") int page,
 				        @RequestParam(value = "size", defaultValue = "10") int size) {
+
 		
 		// 전체 차량 조회
 		int totalCount = reservationService.getTotalCount();

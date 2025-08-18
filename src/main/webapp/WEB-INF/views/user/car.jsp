@@ -22,6 +22,12 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
+.mainPage {
+    width: 1000px;          
+    margin: 50px auto 60px;
+    padding: 20px;
+}
+
 .chart-container {
     position: relative;
     width: 500px;
@@ -128,67 +134,72 @@
 	cursor: pointer;
 }
 
-
 </style>
 
 </head>
 <body>
 
-	<form id="reservationForm" action="/api/car" method="post">
-	    <label>차량선택</label>
-	    <select>
-	        <option value="">--타입--</option>
-	        <option value="소형">소형</option>
-	        <option value="중형">중형</option>
-	        <option value="대형">대형</option>
-	    </select>
-	
-	    <input type="text" id="rentalPeriod" placeholder="대여일 ~ 반납일" readonly>
-	
-	    <select id="startTime"></select>
-	    <select id="endTime"></select>
-	
-	    <button type="submit" id="search">조회하기</button>
-	</form>
-	
-	<p>예약 가능한 차량은 총 0대 입니다.</p>
-	
-		<div class="legend-container">
-			<div class="legend">
-				<span class="red-box"></span> 예약상태
-				<span class="gray-box"></span> 예약 불가
-				<span class="blue-box"></span> 예약 가능
-				<span class="green-box"></span> 선택시간
-				<span class="purple-box"></span> 겹침
+<div>
+    <jsp:include page ="../nav/header.jsp"></jsp:include>
+</div>
+
+	<div class="mainPage">
+		<form id="reservationForm" action="/api/car" method="post">
+		    <label>차량선택</label>
+		    <select>
+		        <option value="">--타입--</option>
+		        <option value="전체">전체</option>
+		        <option value="소형">소형</option>
+		        <option value="중형">중형</option>
+		        <option value="대형">대형</option>
+		    </select>
+		
+		    <input type="text" id="rentalPeriod" placeholder="대여일 ~ 반납일" readonly>
+		
+		    <select id="startTime"></select>
+		    <select id="endTime"></select>
+		
+		    <button type="submit" id="search">조회하기</button>
+		</form>
+		
+			<div class="legend-container">
+				<div class="legend">
+					<span class="red-box"></span> 예약상태
+					<span class="gray-box"></span> 예약 불가
+					<span class="blue-box"></span> 예약 가능
+					<span class="green-box"></span> 선택시간
+					<span class="purple-box"></span> 중복불가
+				</div>
+				<button id="addCar" class="addCar">차량등록</button> <!-- 로그인 기능 구현 후 관리자만 보이게 출력 -->
 			</div>
-			<button id="addCar" class="addCar">차량등록</button> <!-- 로그인 기능 구현 후 관리자만 보이게 출력 -->
-		</div>
-	
-	<table border="1">
-	<tr>
-	    <th>차량정보</th>
-	    <th>예약 현황</th>
-	    <th>예약하기</th>
-	</tr>
-	
-	<c:forEach var="c" items="${carReservationList}">
-		<input type="hidden" value="${c.vehicleId}">
-	<tr>
-	    <td>
-	        <div class="vehicleNo">${c.vehicleNo}</div> 
-	        <div class="vehicleName">${c.vehicleName}</div> 
-	        <div class="vehicleType">${c.vehicleType}</div>
-	    </td>
-	    <td>
-	        <div class="chart-container"
-	             data-start="${c.reservationStart}"
-	             data-end="${c.reservationEnd}">
-	        </div>
-	    </td>
-	    <td><button>예약하기</button></td>
-	</tr>
-	</c:forEach>
-	</table>
+		
+		<table border="1">
+		<tr>
+		    <th>차량정보</th>
+		    <th>예약 현황</th>
+		    <th>예약하기</th>
+		</tr>
+		
+		<c:forEach var="c" items="${carReservationList}">
+			<input type="hidden" value="${c.vehicleId}">
+		<tr>
+		    <td>
+		        <div class="vehicleNo">${c.vehicleNo}</div> 
+		        <div class="vehicleName">${c.vehicleName}</div> 
+		        <div class="vehicleType">${c.vehicleType}</div>
+		    </td>
+		    <td>
+		        <div class="chart-container"
+		             data-start="${c.reservationStart}"
+		             data-end="${c.reservationEnd}">
+		        </div>
+		    </td>
+		    <td><button>예약하기</button></td>
+		</tr>
+		</c:forEach>
+		</table>
+		
+	</div>
 	
 	<!-- 차량등록 모달 -->
 	<div id="carModal" class="modal">
@@ -322,16 +333,16 @@
 	            if(overlapWidth > 0){
 	                ctx.fillStyle = "purple";
 	                ctx.fillRect(overlapStartX, 15, overlapWidth, 20);
-	                drawTimeLabelLocal(overlapStartX, new Date(Math.max(selectedStart, displayStart))); // ❗ 보라 시작 시간
-	                drawTimeLabelLocal(overlapEndX, new Date(Math.min(selectedEnd, displayEnd))); // ❗ 보라 종료 시간
+	                drawTimeLabelLocal(overlapStartX, new Date(Math.max(selectedStart, displayStart))); // 보라 시작 시간
+	                drawTimeLabelLocal(overlapEndX, new Date(Math.min(selectedEnd, displayEnd))); // 보라 종료 시간
 	            }
 
 	            // 겹치지 않는 초록 영역
 	            if(greenWidth > 0){
 	                ctx.fillStyle = "green";
 	                ctx.fillRect(greenStartX, 15, greenWidth, 20);
-	                drawTimeLabelLocal(greenStartX, greenStartTime); // ❗ 초록 시작 시간
-	                drawTimeLabelLocal(greenStartX + greenWidth, greenEndTime); // ❗ 초록 종료 시간
+	                drawTimeLabelLocal(greenStartX, greenStartTime); // 초록 시작 시간
+	                drawTimeLabelLocal(greenStartX + greenWidth, greenEndTime); // 초록 종료 시간
 	            }
 	        }
 
@@ -478,6 +489,16 @@
 	    } else if(startTime == '') {
 			alert('대여시간을 선택하세요.')
 	    }
+	    
+	    const rows = document.querySelectorAll("table tr");
+	    for(let i=1; i<rows.length; i++){ 
+	        const typeCell = rows[i].querySelector(".vehicleType");
+	        if(vehicleType === "전체" || vehicleType === "" || typeCell.textContent === vehicleType){
+	            rows[i].style.display = ""; // 보여주기
+	        } else {
+	            rows[i].style.display = "none"; // 숨기기
+	        }
+	    }
 
 	    console.log("차량 타입:", vehicleType);
 	    console.log("대여일시:", startDateTime);
@@ -530,6 +551,13 @@
 
 
 </script>
+
+<div>
+    <jsp:include page ="../nav/footer.jsp"></jsp:include>
+</div>
+<div>
+    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
+</div>
 
 </body>
 </html>
