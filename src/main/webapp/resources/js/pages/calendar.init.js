@@ -2,7 +2,7 @@
 function eventClicked(){
     document.getElementById("form-event").classList.add("view-event"), // 폼을 'view-event' 모드로
     document.getElementById("event-title").classList.replace("d-block","d-none"), // 제목 입력 필드 숨김
-    document.getElementById("event-category").classList.replace("d-block","d-none"), // 카테고리 입력 필드 숨김
+    document.getElementById("event-type").classList.replace("d-block","d-none"), // 카테고리 입력 필드 숨김
     document.getElementById("btn-save-event").setAttribute("hidden",!0) // 저장 버튼 숨김
 }
 
@@ -32,7 +32,7 @@ function editEvent(e){
 function eventTyped(){
     document.getElementById("form-event").classList.remove("view-event"), // 읽기 모드 해제
     document.getElementById("event-title").classList.replace("d-none","d-block"), // 제목 입력 필드 표시
-    document.getElementById("event-category").classList.replace("d-none","d-block"), // 카테고리 입력 필드 표시
+    document.getElementById("event-type").classList.replace("d-block","d-none"), // 카테고리 입력 필드 표시
     document.getElementById("btn-save-event").removeAttribute("hidden") // 저장 버튼 표시
 }
 
@@ -128,21 +128,26 @@ document.addEventListener("DOMContentLoaded", function(){
         },
         eventResize: function(t){
             var e = s.findIndex(function(e){ return e.id == t.event.id });
-            s[e] && (s[e].title = t.event.title, s[e].className = t.event.classNames[0]);
+            s[e] && (s[e].title = t.event.title, s[e].location=t.event.location, s[e].start=t.event.start, 
+				s[e].end=t.event.end, s[e].type = t.event.type, s[e].memo=t.event.memo);
         },
         eventClick: function(e){
             document.getElementById("edit-event-btn").removeAttribute("hidden"),
             document.getElementById("btn-save-event").setAttribute("hidden", !0),
             document.getElementById("edit-event-btn").setAttribute("data-id", "edit-event"),
-            document.getElementById("edit-event-btn").innerHTML = "Edit",
+            document.getElementById("edit-event-btn").innerHTML = "수정",
             eventClicked(),
             i.show(),
             n.reset(),
             o = e.event,
-            document.getElementById("modal-title").innerHTML = "",
+            document.getElementById("modal-title").innerHTML = "일정상세",
             console.log("selectedEvent", o),
             document.getElementById("event-title").value = o.title,
-            document.getElementById("event-category").value = o.className,
+			document.getElementById("event-location").value = o.extendedProps.location,
+            document.getElementById("event-type").value = o.extendedProps.type,
+			document.getElementById("event-start-time").value = moment(o.start).format("YYYY-MM-DDTHH:mm"),
+			document.getElementById("event-end-time").value = moment(o.end).format("YYYY-MM-DDTHH:mm"),
+			document.getElementById("event-memo").value = o.extendedProps.memo || "",
             document.getElementById("btn-delete-event").removeAttribute("hidden");
         },
         dateClick: function(e){
@@ -155,13 +160,18 @@ document.addEventListener("DOMContentLoaded", function(){
             var t = {
                 id: parseInt(e.event.id),
                 title: e.event.title,
-                className: e.event.classNames[0]
+				location:e.event.location,
+				start: e.event.start,
+				end: e.event.end,
+                type: e.event.type,
+				memo: e.event.location
             };
             s.push(t);
         },
         eventDrop: function(t){
             var e = s.findIndex(function(e){ return e.id == t.event.id });
-            s[e] && (s[e].title = t.event.title, s[e].className = t.event.classNames[0]);
+            s[e] && (s[e].title = t.event.title, s[e].location=t.event.location, s[e].start=t.event.start, 
+				s[e].end=t.event.end, s[e].type = t.event.type, s[e].memo=t.event.memo);
         }
     });
 
@@ -172,28 +182,54 @@ document.addEventListener("DOMContentLoaded", function(){
         e.preventDefault();
         var t, n, d,
             a = document.getElementById("event-title").value,
-            l = document.getElementById("event-category").value;
-
+            tp = document.getElementById("event-type").value;
+			sd = document.getElementById("event-start-time").value;
+			ed = document.getElementById("event-end-time").value;
+			lc = document.getElementById("event-location").value;
+			m = document.getElementById("event-memo").value;
         if(o){
             // 기존 이벤트 수정
-            t = document.getElementById("eventid").value,
-            o.setProp("id", t),
-            o.setProp("title", a),
-            o.setProp("classNames", [l]),
-            n = s.findIndex(function(e){ return e.id == o.id }),
-            s[n] && (s[n].title = a, s[n].className = l),
-            g.render();
+			t = parseInt(document.getElementById("eventid").value);
+            
+			fetch("/updateCalendar", {
+		        method: "PATCH",
+		        headers: {"Content-Type":"application/json"},
+		        body: JSON.stringify({calendarId:t,calendarTitle:a,calendarLocation:lc,
+					calendarMemo:m,calendarStartTime:sd,calendarEndTime:ed
+				})
+		    }).then((res) => {
+				if(res.ok){
+		            g.render();
+				}else{
+					alert('수정실패');
+				}
+			});
+            
         } else {
             // 새 이벤트 추가
             d = {
-                id: (1e4 * Math.random()).toFixed(0),
                 title: a,
-                start: new Date(document.querySelector("#calendar").value),
-                allDay: !0,
-                className: l
+                location: lc,
+				start: sd,
+				end: ed,
+                type: tp,
+				memo: m
             },
-            g.addEvent(d),
-            s.push(d);
+			fetch("/insertCalendar", {
+			        method: "POST",
+			        headers: {"Content-Type":"application/json"},
+			        body: JSON.stringify({userId:53,calendarTitle:a,calendarLocation:lc,calendarType:tp,
+						calendarMemo:m,calendarStartTime:sd,calendarEndTime:ed
+					})
+		    }).then((res) => {
+				if(res.ok){
+					g.addEvent(d),
+		            s.push(d);
+				}else{
+					alert('등록실패');
+				}
+			});
+            
         }
         i.hide();
     });
