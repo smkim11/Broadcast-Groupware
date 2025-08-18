@@ -69,31 +69,59 @@
                                                         <div class="col-12">
                                                             <div class="mb-3">
                                                                 <label class="form-label">제목</label>
-                                                                <input class="form-control" placeholder="일정을 입력하세요."
+                                                                <input class="form-control" placeholder="제목을 입력하세요."
                                                                     type="text" name="calendarTitle" id="event-title" required value="" />
-                                                                <div class="invalid-feedback">Please provide a valid event name</div>
+                                                                <div class="invalid-feedback">제목을 입력하세요.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">장소</label>
+                                                                <input class="form-control" placeholder="장소를 입력하세요."
+                                                                    type="text" name="calendarLocation" id="event-location"/>
+                                                                <div class="invalid-feedback">장소를 입력하세요.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">시작일</label>
+                                                                <input class="form-control" type="datetime-local" name="calendarStartTime" id="event-start-time"/>
+                                                                <div class="invalid-feedback">시작일을 입력하세요.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">종료일</label>
+                                                                <input class="form-control" type="datetime-local" name="calendarEndTime" id="event-end-time"/>
+                                                                <div class="invalid-feedback">종료일을 입력하세요.</div>
                                                             </div>
                                                         </div>
                                                         <div class="col-12">
                                                             <div class="mb-3">
                                                                 <label class="form-label">공개범위</label>
-                                                                <select class="form-control form-select" name="category" id="event-category">
-                                                                    <option value="bg-primary">개인</option>
-                                                                    <option value="bg-success">팀</option>
-                                                                    <option value="bg-warning">전체</option>
+                                                                <select class="form-control form-select" name="calendarType" id="event-type">
+                                                                    <option>개인</option>
+                                                                    <option>팀</option>
+                                                                    <option>전체</option>
                                                                 </select>
-                                                                <div class="invalid-feedback">Please select a valid event category</div>
+                                                                <div class="invalid-feedback">공개범위를 선택하세요.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="mb-3">
+                                                            	<label class="form-label">메모</label>
+                                                            	<textarea class="form-control" rows="5" cols="50" name="calendarMemo" id="event-memo"></textarea>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="row mt-2">
                                                         <div class="col-6">
-                                                            <button type="button" class="btn btn-danger" id="btn-delete-event">삭제</button>
+                                                            <button type="button" class="btn btn-outline-danger waves-effect waves-light" id="btn-delete-event">삭제</button>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            <button type="button" class="btn btn-light me-1" data-bs-dismiss="modal">닫기</button>
-                                                            <button type="submit" class="btn btn-success" id="edit-event-btn">수정</button>
-                                                            <button type="submit" class="btn btn-success" id="btn-save-event">저장</button>
+                                                            <button type="button" class="btn btn-outline-secondary waves-effect" data-bs-dismiss="modal">닫기</button>
+                                                            <button type="submit" class="btn btn-outline-success waves-effect waves-light" id="edit-event-btn">수정</button>
+                                                            <button type="submit" class="btn btn-outline-success waves-effect waves-light" id="btn-save-event">저장</button>
                                                         </div>
                                                     </div>
                                                 </form>
@@ -121,11 +149,27 @@
 window.calendarEvents = [
     <c:forEach var="event" items="${events}" varStatus="loop">
         {
-            id: "${event.id}",
+            id: "${event.calendarId}",
             title: "${fn:escapeXml(event.calendarTitle)}",
+            location: "${event.calendarLocation}",
             start: "${event.calendarStartTime}",
             end: "${event.calendarEndTime}",
-            className: "${event.className}"
+            type: "${event.calendarType}",
+            <c:choose>
+	            <c:when test="${event.calendarType eq '개인'}">
+	            	className: "bg-info"
+	            </c:when>
+	            <c:when test="${event.calendarType eq '팀'}">
+	            	className: "bg-success"
+	            </c:when>
+	            <c:when test="${event.calendarType eq '전체'}">
+	            	className: "bg-warning"
+	            </c:when>
+	            <c:otherwise>
+	            	className: "bg-danger"
+	            </c:otherwise>
+            </c:choose>,
+            memo: "${event.calendarMemo}"
         }<c:if test="${!loop.last}">,</c:if>
     </c:forEach>
 ];
