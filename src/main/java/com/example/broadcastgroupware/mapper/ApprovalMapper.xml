@@ -2,4 +2,112 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper
 	namespace="com.example.broadcastgroupware.mapper.ApprovalMapper">
+	
+    <!-- 공통(일반) 문서 INSERT -->
+    <!-- 
+		useGeneratedKeys="true": DB에서 AUTO_INCREMENT로 생성된 PK 값을 가져오도록 설정
+		keyProperty="approvalDocumentId": 생성된 PK를 ApprovalDocument 객체의 approvalDocumentId 필드에 자동 세팅
+		=> insert 실행 후 doc.getApprovalDocumentId() 호출 시 DB에서 생성된 PK 값 확인 가능
+	-->
+    <insert id="insertApprovalDocument"
+            parameterType="com.example.broadcastgroupware.domain.ApprovalDocument"
+            useGeneratedKeys="true" keyProperty="approvalDocumentId">
+        INSERT INTO approval_document (
+            user_id,approval_document_title, approval_document_content,
+            approval_document_save, create_date, update_date
+        ) VALUES (
+            #{userId}, #{approvalDocumentTitle}, #{approvalDocumentContent},            
+            #{approvalDocumentSave}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 휴가 문서 폼 INSERT -->
+    <insert id="insertVacationForm"
+            parameterType="com.example.broadcastgroupware.domain.VacationForm"
+            useGeneratedKeys="true" keyProperty="vacationFormId">
+        INSERT INTO vacation_form (
+            approval_document_id, vacation_form_type, vacation_form_half_type,
+            vacation_form_start_date, vacation_form_end_date, create_date, update_date    
+        ) VALUES (
+            #{approvalDocumentId}, #{vacationFormType}, #{vacationFormHalfType},
+            #{vacationFormStartDate}, #{vacationFormEndDate}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 방송 문서 폼 INSERT -->
+    <insert id="insertBroadcastForm"
+            parameterType="com.example.broadcastgroupware.domain.BroadcastForm"
+            useGeneratedKeys="true" keyProperty="broadcastFormId">
+        INSERT INTO broadcast_form (
+            approval_document_id, broadcast_form_name, broadcast_form_capacity,
+            broadcast_form_start_date, broadcast_form_end_date,
+            broadcast_form_start_time, broadcast_form_end_time,
+            create_date, update_date
+        ) VALUES (
+            #{approvalDocumentId}, #{broadcastFormName}, #{broadcastFormCapacity},
+            #{broadcastFormStartDate}, #{broadcastFormEndDate},
+            #{broadcastFormStartTime}, #{broadcastFormEndTime},
+            NOW(), NOW()
+        )
+    </insert>
+
+
+	<!-- 결재선 INSERT -->
+	<insert id="insertApprovalLines" parameterType="java.util.List">
+	    INSERT INTO approval_line (
+	        approval_document_id, user_id, approval_line_sequence,
+	        approval_line_status, approval_line_comment, create_date
+	    )
+	    VALUES
+	    <foreach collection="lines" item="l" separator=",">
+	        (#{l.approvalDocumentId}, #{l.userId}, #{l.approvalLineSequence},
+	         #{l.approvalLineStatus}, #{l.approvalLineComment}, NOW())
+	    </foreach>
+	</insert>
+
+	<!-- 결재선 조회 -->
+	<select id="selectApprovalLines"
+	        parameterType="int"
+	        resultType="com.example.broadcastgroupware.domain.ApprovalLine">
+	    SELECT
+	        approval_line_id, approval_document_id, user_id,
+	        approval_line_sequence, approval_line_status,
+	        approval_line_comment, create_date
+	    FROM approval_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    ORDER BY approval_line_sequence ASC
+	</select>
+	
+	<!-- 참조선 INSERT -->
+	<insert id="insertReferenceLines" parameterType="java.util.List">
+	    INSERT INTO reference_line (
+	        approval_document_id, user_id, create_date
+	    )
+	    VALUES
+	    <foreach collection="refs" item="r" separator=",">
+	        (#{r.approvalDocumentId}, #{r.userId}, NOW())
+	    </foreach>
+	</insert>
+	
+	<!-- 참조선 조회 -->
+	<select id="selectReferenceLines"
+	        parameterType="int"
+	        resultType="com.example.broadcastgroupware.domain.ReferenceLine">
+	    SELECT
+	        reference_line_id,
+	        approval_document_id,
+	        user_id, create_date
+	    FROM reference_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    ORDER BY reference_line_id ASC
+	</select>
+	
+	<!-- 문서 제출 (임시저장 N -> 제출 Y) -->
+	<update id="updateDocumentAsSubmitted" parameterType="int">
+	    UPDATE approval_document
+	    SET
+	        approval_document_save = 'Y',
+	        update_date = NOW()
+	    WHERE approval_document_id = #{approvalDocumentId}
+	</update>
 </mapper>
