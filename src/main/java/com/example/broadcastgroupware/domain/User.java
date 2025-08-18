@@ -15,4 +15,5 @@ public class User {
 	private String userRank;
 	private String userJoinDate;
 	private String userResignDate;
+	private String password;
 }

@@ -1,5 +1,9 @@
 package com.example.broadcastgroupware.mapper;
 
-public interface UserMapper {
+import com.example.broadcastgroupware.domain.User;
+import org.apache.ibatis.annotations.Mapper;
 
+@Mapper
+public interface UserMapper {
+    User findByUsername(String username);
 }

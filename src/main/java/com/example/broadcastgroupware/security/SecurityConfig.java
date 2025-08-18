@@ -1,39 +1,60 @@
 package com.example.broadcastgroupware.security;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import jakarta.servlet.DispatcherType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
+import org.springframework.security.authentication.*;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.*;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 @Configuration
 public class SecurityConfig {
 
+    @Autowired
+    private UserDetailsService userDetailsService;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+        	.csrf(csrf -> csrf.disable())
+        
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().authenticated()  // 모든 요청 인증 필요
+                .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll() // JSP forward 허용
+                .requestMatchers("/login", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/user/**").hasRole("USER")
+                .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login")          // 커스텀 로그인 페이지 URL
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .successHandler(new CustomLoginSuccessHandler())
                 .permitAll()
             )
-            .logout(logout -> logout.permitAll());
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .permitAll()
+            );
 
         return http.build();
     }
 
-    // 인증 관리자 빈 등록 (필요시)
+    // ✅ CustomUserDetailsService와 PasswordEncoder를 연결해주는 AuthenticationManager
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                   .userDetailsService(userDetailsService)
+                   .passwordEncoder(passwordEncoder())
+                   .and()
+                   .build();
     }
 
-    // 테스트용 비밀번호 인코더 (암호화 안 함) — 실제 서비스에서는 BCryptPasswordEncoder 등 사용 권장
+    // ✅ 테스트용 패스워드 인코더 — 실제 운영 시에는 반드시 BCryptPasswordEncoder 등으로 변경
     @Bean
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
