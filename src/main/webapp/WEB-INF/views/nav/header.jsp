@@ -249,7 +249,7 @@
                             <li class="menu-title">메뉴</li>
 
                             <li>
-                                <a href="index.html">
+                                <a href="/home">
                                     <i class="uil-home-alt"></i>
                                     <span>HOME</span>
                                 </a>
@@ -263,7 +263,7 @@
                             </li>
 
                             <li>
-                                <a href="chat.html" class=" waves-effect">
+                                <a href="/user/chat" class=" waves-effect">
                                     <i class="uil-comments-alt"></i>
                                     <span>채팅</span>
                                 </a>
