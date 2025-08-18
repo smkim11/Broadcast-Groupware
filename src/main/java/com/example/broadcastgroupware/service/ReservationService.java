@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
@@ -21,9 +22,15 @@ public class ReservationService {
 		return reservationMapper.getTotalCount();
 	}
 	
+	// 예약 리스트 조회
 	public List<CarReservationDto> getCarReservationList(PageDto pageDto) {
 		
 		return reservationMapper.getCarReservationList(pageDto);
+	}
+
+	// 차량등록
+	public void addCar(Vehicle vehicle) {
+		reservationMapper.addCar(vehicle);	
 	}
 
 

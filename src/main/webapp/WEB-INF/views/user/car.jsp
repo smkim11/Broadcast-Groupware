@@ -18,6 +18,9 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- jquery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <style>
 .chart-container {
     position: relative;
@@ -78,40 +81,53 @@
 .green-box { background-color: green; }
 .purple-box { background-color: purple; }
 
-/* 모달 기본: 숨김 상태 */
 .modal {
-    display: none; /* 페이지 로드 시 숨김 */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5); /* 반투명 배경 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+	display: none; 
+	position: fixed;
+	z-index: 1000;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	justify-content: center;
+	align-items: center;
 }
 
-/* 모달 내부 컨텐츠: 폼만 보이도록 */
 .modal-content {
-    background-color: #fff;
-    width: 320px; /* 폼 폭 */
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    text-align: left;
+	background: white;
+	padding: 20px;
+	border-radius: 10px;
+	width: 400px;
+	text-align: center;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+
+/* fieldset (틀) */
+.modal-content fieldset {
+	border: 2px solid #007BFF; /* 파란색 테두리 */
+	border-radius: 8px;
+	padding: 15px;
+}
+
+/* legend (제목) */
+.modal-content legend {
+	padding: 0 10px;
+	font-weight: bold;
+	color: #007BFF;
 }
 
 /* 닫기 버튼 */
 .modal .close {
-    position: absolute;
-    right: 10px;
-    top: 5px;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
+	position: absolute;
+	right: 10px;
+	top: 5px;
+	font-size: 24px;
+	font-weight: bold;
+	cursor: pointer;
 }
+
 
 </style>
 
@@ -176,20 +192,21 @@
 	
 	<!-- 차량등록 모달 -->
 	<div id="carModal" class="modal">
-		<div class="center">
+		<div class="modal-content">
 			<span class="close">&times;</span>
 			<h3>차량 등록</h3>
 			<form id="carForm">
 				<label>차량번호:</label>
-				<input type="text" name="vehicleNo" required></br>
-				<label>차량명:</label>
-				<input type="text" name="vehicleName" required></br>
+				<input type="text" name="vehicleNo" placeholder="000가0000"></br>
+				<label>차종:</label>
+				<input type="text" name="vehicleName" placeholder="ex) 아반떼, 카니발"></br>
 				<label>차량타입:</label>
 				<select name="vehicleType" required>
 					<option value="소형">소형</option>
 					<option value="중형">중형</option>
 					<option value="대형">대형</option>
 				</select> </br>
+				
 				<button type="submit">등록</button>
 			</form>
 		</div>
@@ -217,33 +234,53 @@
 	    drawnTimes.add(key);
 	}
 	
+	//초기 날짜 세팅: 오늘 전체
+	let now = new Date();
+	selectedStartDate = new Date(today);
+	selectedStartDate.setHours(0,0,0,0);
+	selectedEndDate = new Date(today);
+	selectedEndDate.setHours(23,59,59,999);
+
+	// 차트 그릭 함수
 	function drawCharts() {
-	    drawnTimes = new Set(); // 차트 새로 그릴 때 초기화
 	    const charts = document.querySelectorAll(".chart-container");
-	
+
 	    charts.forEach(chart => {
 	        chart.innerHTML = "";
-	
+	        const localDrawnTimes = new Set(); // 각 차트별 시간 Set
+
 	        const reservationStart = new Date(chart.dataset.start);
 	        const reservationEnd = new Date(chart.dataset.end);
-	
+
 	        const start = selectedStartDate || reservationStart;
 	        const end = selectedEndDate || reservationEnd;
-	
+
 	        const canvas = document.createElement("canvas");
 	        canvas.width = chart.clientWidth;
 	        canvas.height = chart.clientHeight;
 	        chart.appendChild(canvas);
-	
+
 	        const ctx = canvas.getContext("2d");
-	
 	        const totalHours = (end - start) / (1000*60*60);
 	        const unitWidth = canvas.width / totalHours;
-	
+
+	        // drawTimeLabelLocal 함수 상태에따라 색호출
+	        function drawTimeLabelLocal(x, date) {
+	            const hourStr = date.getHours().toString().padStart(2,'0') + ":00";
+	            if(hourStr === "00:00") return;
+	            const key = x + "-" + hourStr;
+	            if(localDrawnTimes.has(key)) return;
+	            ctx.fillStyle = "black";
+	            ctx.font = "10px Arial";
+	            ctx.fillText(hourStr, x, 45);
+	            localDrawnTimes.add(key);
+	        }
+
 	        // 전체 바 (파랑)
 	        ctx.fillStyle = "blue";
 	        ctx.fillRect(0, 15, canvas.width, 20);
-	
+	        drawTimeLabelLocal(0, start); // 전체 시작 시간 표시
+
 	        // 예약 구간 빨강
 	        const displayStart = new Date(Math.max(reservationStart, start));
 	        const displayEnd = new Date(Math.min(reservationEnd, end));
@@ -253,53 +290,51 @@
 	            redWidth = ((displayEnd - displayStart)/(1000*60*60))*unitWidth;
 	            ctx.fillStyle = "red";
 	            ctx.fillRect(redStartX,15,redWidth,20);
-	
-	            // 빨강 구간 시간 표시
-	            drawTimeLabel(ctx, redStartX, displayStart);
-	            drawTimeLabel(ctx, redStartX + redWidth, displayEnd);
+	            drawTimeLabelLocal(redStartX, displayStart); // 기존예약 시간(빨강)
+	            drawTimeLabelLocal(redStartX + redWidth, displayEnd); // 기존예약 종료
 	        }
-	
-	     	// 선택한 시간 초록/보라 처리 
+
+	        // 선택한 시간 초록/보라 처리
 	        const startTimeValue = document.getElementById("startTime").value;
 	        const endTimeValue = document.getElementById("endTime").value;
 	        if(startTimeValue && endTimeValue){
 	            const [startH,startM] = startTimeValue.split(":").map(Number);
 	            const [endH,endM] = endTimeValue.split(":").map(Number);
-	
+
 	            const selectedStart = new Date(selectedStartDate);
 	            selectedStart.setHours(startH,startM,0);
 	            const selectedEnd = new Date(selectedEndDate);
 	            selectedEnd.setHours(endH,endM,0);
-	
+
 	            // 빨강 예약 종료 이후부터 초록 시작
 	            const greenStartTime = new Date(Math.max(selectedStart, reservationEnd));
 	            const greenEndTime = selectedEnd;
-	
+
 	            const greenStartX = ((greenStartTime - start)/(1000*60*60))*unitWidth;
 	            const greenWidth = ((greenEndTime - greenStartTime)/(1000*60*60))*unitWidth;
-	
+
 	            // 겹치는 영역 계산 (선택 시작~예약 종료 구간)
 	            const overlapStartX = ((selectedStart - start)/(1000*60*60))*unitWidth;
 	            const overlapEndX = ((Math.min(selectedEnd, reservationEnd) - start)/(1000*60*60))*unitWidth;
 	            const overlapWidth = Math.max(0, overlapEndX - overlapStartX);
-	
-	            // 보라색 영역 {예약중(빨강)과 선택시간(초록)겹치는 여역}
+
+	            // 보라색 영역
 	            if(overlapWidth > 0){
 	                ctx.fillStyle = "purple";
 	                ctx.fillRect(overlapStartX, 15, overlapWidth, 20);
-	                drawTimeLabel(ctx, overlapStartX, new Date(Math.max(selectedStart, displayStart)));
-	                drawTimeLabel(ctx, overlapEndX, new Date(Math.min(selectedEnd, displayEnd)));
+	                drawTimeLabelLocal(overlapStartX, new Date(Math.max(selectedStart, displayStart))); // ❗ 보라 시작 시간
+	                drawTimeLabelLocal(overlapEndX, new Date(Math.min(selectedEnd, displayEnd))); // ❗ 보라 종료 시간
 	            }
-	
+
 	            // 겹치지 않는 초록 영역
 	            if(greenWidth > 0){
 	                ctx.fillStyle = "green";
 	                ctx.fillRect(greenStartX, 15, greenWidth, 20);
-	                drawTimeLabel(ctx, greenStartX, greenStartTime);
-	                drawTimeLabel(ctx, greenStartX + greenWidth, greenEndTime);
+	                drawTimeLabelLocal(greenStartX, greenStartTime); // ❗ 초록 시작 시간
+	                drawTimeLabelLocal(greenStartX + greenWidth, greenEndTime); // ❗ 초록 종료 시간
 	            }
 	        }
-	
+
 	        // 날짜 표시 (MM-DD)
 	        const oneDay = 1000*60*60*24;
 	        ctx.fillStyle = "black";
@@ -310,10 +345,10 @@
 	            const day = d.getDate().toString().padStart(2,'0');
 	            ctx.fillText(month + "-" + day, offsetX, 10);
 	        }
-	
+
 	        // 회색 처리 (오늘 이전)
-	        const today = new Date();
-	        if(today>start){
+	        const now = new Date();
+	        if(now>start){
 	            const pastHours = Math.min((today-start)/(1000*60*60),totalHours);
 	            const pastX = pastHours * unitWidth;
 	            let grayStartX = 0;
@@ -327,9 +362,9 @@
 	                ctx.fillRect(grayStartX,15,grayEndX-grayStartX,20);
 	            }
 	        }
-	
 	    });
 	}
+
 	
 	// 시간 드롭다운
 	function populateTimeOptions(selectId, firstOptionLabel){
@@ -435,41 +470,64 @@
 
 	    var startDateTime = formatDateTime(startDate, startTime);
 	    var endDateTime = formatDateTime(endDate, endTime);
+	    
+	    if(vehicleType == '') {
+			alert('차량타입을 선택하세요.')
+	    } else if(endDate == '') {
+			alert('대여 기간을 선택하세여.')
+	    } else if(startTime == '') {
+			alert('대여시간을 선택하세요.')
+	    }
 
 	    console.log("차량 타입:", vehicleType);
 	    console.log("대여일시:", startDateTime);
 	    console.log("반납일시:", endDateTime);
 	});
 	
-	// 차량등록 모달
-	const modal = document.getElementById("carModal");
-	const btn = document.getElementById("addCar");
-	const closeBtn = modal.querySelector(".close");
-	
-	// 모달창 열기
-	btn.onclick = function() {
-		modal.style.display = "flex";
-	}
-	
-	closeBtn.onclick = function() {
-		modal.style.display = "none";
-	}
-	
-	// 밖 클릭시 닫기
-	window.onclick = function(event) {
-		if(event.target == modal) {
-			modal.style.display = "none";
-		}
-	
-	// 폼 처리
-	document.getElementById("carForm").addEventListener("submit", function(e) {
-		e.preventDefault();
-		// ajax 처리
-		alert("차량 등록 완료");
-		modal.style.display = "none";
+	document.addEventListener("DOMContentLoaded", function() {
+
+	    const modal = document.getElementById("carModal");
+	    const btn = document.getElementById("addCar");
+	    const closeBtn = modal.querySelector(".close");
+	    const carForm = document.getElementById("carForm");
+
+	    // 모달 열기
+	    btn.onclick = function() {
+	        modal.style.display = "flex";
+	    }
+
+	    // 모달 닫기
+	    closeBtn.onclick = function() {
+	        modal.style.display = "none";
+	    }
+
+	    // 모달 외부 클릭 닫기
+	    window.onclick = function(event) {
+	        if(event.target == modal) {
+	            modal.style.display = "none";
+	        }
+	    }
+
+	    // submit 이벤트 한 번만 등록
+	    carForm.addEventListener("submit", function(e) {
+	        e.preventDefault();
+
+	        $.ajax({
+	            url: "/api/car/addCar",
+	            type: "post",
+	            data: $(this).serialize(),
+	            success: function(response) {
+	                alert("차량 등록 완료");
+	                modal.style.display = "none";
+	                location.reload();
+	            },
+	            error: function(xhr, status, error) {
+	                alert("등록 실패: " + error);
+	            }
+	        });
+	    });
 	});
-		
-	}
+
 
 </script>
 
