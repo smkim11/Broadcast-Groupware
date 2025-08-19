@@ -18,8 +18,8 @@ public class CalendarService {
 	}
 	
 	// ID에 맞는 일정
-	public List<HashMap<String,Object>> selectUserCalendar(){
-		return calendarMapper.selectUserCalendar(); // int userId
+	public List<HashMap<String,Object>> selectUserCalendar(int userId){
+		return calendarMapper.selectUserCalendar(userId); // int userId
 	}
 	
 	// 일정 생성
@@ -27,8 +27,13 @@ public class CalendarService {
 		calendarMapper.insertCalendar(calendar);
 	}
 	
-	// 일정 수정
+	// 일정 수정(본인이 작성한 일정만 수정)
 	public void updateCalendar(Calendar calendar) {
 		calendarMapper.updateCalendar(calendar);
+	}
+	
+	// 일정 삭제(본인이 작성한 일정만 삭제)
+	public void deleteCalendar(Calendar calendar) {
+		calendarMapper.deleteCalendar(calendar);
 	}
 }

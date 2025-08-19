@@ -1,5 +1,6 @@
 package com.example.broadcastgroupware.rest;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Calendar;
 import com.example.broadcastgroupware.service.CalendarService;
+
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 public class CalendarRest {
@@ -24,8 +27,15 @@ public class CalendarRest {
 
 	// 일정 수정
 	@PatchMapping("/updateCalendar")
-	@ResponseBody
-	public void updateCalendar(@RequestBody Calendar calendar) {
+	public void updateCalendar(@RequestBody Calendar calendar, HttpSession session) {
+		System.out.println("Calendar: " + calendar);
+		
 		calendarService.updateCalendar(calendar);
+	}
+	
+	// 일정 삭제
+	@DeleteMapping("/deleteCalendar")
+	public void deleteCalendar(@RequestBody Calendar calendar) {
+		calendarService.deleteCalendar(calendar);
 	}
 }
