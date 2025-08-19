@@ -409,7 +409,11 @@ table tr:nth-child(even) {
 				</select>
 				<input type="hidden" name="vehicleId" value="">
 				<label>기간</label>
-				<div class="issueDate" id="issueDate"></div> <!-- 달력 나와서 날짜 선택  yyyy-mm-dd ~ yyyy-mm-dd -->
+				<input type="text" id="issueDate" placeholder="날짜 선택">
+				<!-- ajax 전송용 -->
+				<input type="hidden" name="startDate" id="startDate">
+   				<input type="hidden" name="endDate" id="endDate">
+   				
 				<div class="toggle-container">
 				    <span>비활성화</span>
 				    <label class="switch">
@@ -420,9 +424,10 @@ table tr:nth-child(even) {
 				</div>
 
 				<div class="toggleReason">사유</div>
-				<input type="text" id="toggleReason" placeholder="ex: 사고, 수리(완료),">
+				<input type="text" id="toggleReason" name="reasonContent" placeholder="ex: 사고, 수리(완료),">
 				<button class="close1" type="button">닫기</button>
 				<button type="submit">변경</button>
+				
 			</form>
 		</div>
 	</div>
@@ -818,6 +823,26 @@ table tr:nth-child(even) {
 				});
 		    });
 		    
+		    // 비활성 or 활성화
+		    carToggle.addEventListener("submit", function(e) {
+				e.preventDefault();
+				console.log($(this).serialize());
+				
+				$.ajax({
+					url: "/api/car/carToggle",
+					type: "post",
+					data: $(this). serialize(),
+					success: function(response) {
+						alert('변경완료');
+						modal.style.display = "none";
+						location.reload();
+					},
+					error: function(xhr, status, error) {
+						alert("수정 실패: " + error);
+					}
+				});
+		    });
+		    
 		    
 		 // 수정, 비활성에 사용할 차량 리스트
 		    $(document).ready(function() {
@@ -851,6 +876,7 @@ table tr:nth-child(even) {
 		    $('#toggleVehicleSelect').change(function() {
 		        var selectedId = $(this).val();
 		        console.log('선택한 차량 ID (비활성화 폼):', selectedId);
+		        $('#carToggle input[name="vehicleId"]').val(selectedId); 
 		    });
 
 		    // 수정 폼에서 선택한 차량 가져오기
@@ -875,14 +901,45 @@ table tr:nth-child(even) {
 		            modifyForm.style.display = "block";
 		        } else if (type === "비활성화") {
 		            toggleForm.style.display = "block";
-		        }
-		    }
+		        }		    }
 
 		    // select 값 바뀔 때 폼 전환
 		    adminTypeSelect.addEventListener("change", function() {
 		        showForm(this.value);
 		    });
 		});
+		
+		// Flatpickr 초기화
+		flatpickr("#issueDate", {
+		    mode: "range",      // 날짜 범위 선택 가능
+		    dateFormat: "Y-m-d",
+		    locale:"ko",
+		    defaultDate: new Date(), // 오늘 기본값
+		    onClose: function(selectedDates) {
+		        // 시작일과 종료일을 hidden input에 넣기
+		        if (selectedDates.length === 1) {
+		            // 당일 선택
+		            document.getElementById("startDate").value = formatDate(selectedDates[0]);
+		            document.getElementById("endDate").value = formatDate(selectedDates[0]);
+		        } else if (selectedDates.length === 2) {
+		            // 범위 선택
+		            document.getElementById("startDate").value = formatDate(selectedDates[0]);
+		            document.getElementById("endDate").value = formatDate(selectedDates[1]);
+		        }
+		        
+		        // console.log('비활성 시작시간 : ', startDate);
+		        //  console.log('비활성 종료시간 :', endDate);
+		    }
+		});
+
+		// 날짜 포맷 YYYY-MM-DD
+		function formatDate(date) {
+		    let y = date.getFullYear();
+		    let m = ("0" + (date.getMonth() + 1)).slice(-2);
+		    let d = ("0" + date.getDate()).slice(-2);
+		    return y + "-" + m + "-" + d;
+		}
+
 </script>
 
 <footer>
