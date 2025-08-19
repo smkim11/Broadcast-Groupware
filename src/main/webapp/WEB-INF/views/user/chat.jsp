@@ -26,7 +26,7 @@
                         <h4 class="mb-0">Chat</h4>
                         <div class="page-title-right">
                             <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item"><a href="javascript: void(0);">Apps</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0);">KOJ</a></li>
                                 <li class="breadcrumb-item active">Chat</li>
                             </ol>
                         </div>
@@ -34,6 +34,13 @@
                 </div>
             </div>
             <!-- end page title -->
+
+            <!-- 로그인/방 메타 (서버에서 내려주세요: loginUserId, loginUserName) -->
+            <div id="chat-meta"
+                 data-room-id="${empty roomId ? 1 : roomId}"
+                 data-user-id="${empty loginUserId ? 0 : loginUserId}"
+                 data-user-name="${empty loginUserName ? '' : loginUserName}">
+            </div>
 
             <div class="d-lg-flex mb-4">
                 <!-- Sidebar -->
@@ -119,9 +126,10 @@
                                     <h5 class="font-size-16 mb-1 text-truncate">
                                         <a href="#" class="text-reset">Chat Room</a>
                                     </h5>
+                                    <!-- 연결 상태 표시 -->
+                                    <small id="ws-status" class="text-muted">연결 시도중...</small>
                                 </div>
                                 <div class="col-md-6 col-6 text-end">
-                                    <!-- 옵션 메뉴 -->
                                     <button class="btn nav-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                         <i class="uil uil-ellipsis-h"></i>
                                     </button>
@@ -130,15 +138,11 @@
                         </div>
 
                         <!-- 채팅 메시지 영역 -->
-                        <div>
-                            <div class="chat-conversation py-3">
-                                <ul class="list-unstyled mb-0 chat-conversation-message px-3" data-simplebar id="chat-messages">
-                                    <!-- 실제 메시지가 append 되는 영역 -->
-                                </ul>
-                            </div>
-                        </div>
+                       <div class="chat-conversation py-3" data-simplebar style="height: 60vh;">
+						  <ul class="list-unstyled chat-conversation-list mb-0 px-3" id="chat-messages"></ul>
+						</div>
 
-                        <!-- 메시지 입력창 -->
+                        <!-- 입력창 -->
                         <div class="p-3 chat-input-section">
                             <div class="row">
                                 <div class="col">
@@ -147,7 +151,7 @@
                                     </div>
                                 </div>
                                 <div class="col-auto">
-                                    <button type="button" id="send-btn" class="btn btn-primary chat-send w-md">
+                                    <button type="button" id="send-btn" class="btn btn-primary chat-send w-md" disabled>
                                         <span class="d-none d-sm-inline-block me-2">Send</span> 
                                         <i class="mdi mdi-send float-end"></i>
                                     </button>
@@ -163,82 +167,269 @@
 </div>
 
 <script>
-    let stompClient = null;
-    let currentUserId = "Marcus"; // 로그인 유저 (추후 세션값 사용 가능)
+  // =========================
+  // 기본 셋업
+  // =========================
+  let stompClient = null;
+  let lastMessageId = 0;
+  let retry = 0;
 
-    function connect() {
-        const socket = new SockJS("/ws-stomp");
-        stompClient = Stomp.over(socket);
+  const $status  = document.getElementById('ws-status');
+  const $sendBtn = document.getElementById('send-btn');
+  const $input   = document.getElementById('chat-input');
+  const $list    = document.getElementById('chat-messages');
 
-        stompClient.connect({}, function () {
-            console.log("Connected");
+  // 메타 읽기 (서버에서 주입)
+  const meta     = document.getElementById('chat-meta').dataset;
+  const roomId   = Number(meta.roomId || 1);
+  const myUserId = Number(meta.userId || 0);
+  const myName   = meta.userName || 'Me';
 
-            // 구독
-            stompClient.subscribe("/topic/public", function (msg) {
-                const chat = JSON.parse(msg.body);
+  // 경로 빌더
+  function topicRoom(id){ return '/topic/rooms/' + id; }
+  function topicRead(id){ return '/topic/rooms/' + id + '/read'; }
+  const APP_SEND = '/app/chat/send';
+  const APP_READ = '/app/chat/read';
 
-                if (String(chat.chatroomUserId).trim() === String(currentUserId).trim()) {
-                    return; // 내가 보낸 건 무시
-                }
-                showMessage({ sender: chat.chatroomUserId, content: chat.chatMessageContent }, false);
-            });
-        });
+  // CSRF 헤더(옵션)
+  function getCsrfHeaders() {
+    const tokenMeta = document.querySelector('meta[name="_csrf"]');
+    const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+    if (tokenMeta && headerMeta) {
+      return { [headerMeta.getAttribute('content')]: tokenMeta.getAttribute('content') };
     }
+    return {};
+  }
 
-    function sendMessage() {
-        const content = document.getElementById("chat-input").value.trim();
-        if (!content) return;
+  // 서버 → 프런트 키 정규화
+  function normalizeMessage(raw){
+    return {
+      messageId:    raw.messageId ?? raw.chatMessageId ?? raw.id ?? 0,
+      content:      raw.content ?? raw.chatMessageContent ?? raw.message ?? '',
+      createdAt:    raw.createdAt ?? raw.createDate ?? raw.created_at ?? '',
+      senderUserId: raw.senderUserId ?? raw.userId ?? raw.senderId ?? raw.chatroomUserId ?? (raw.sender && raw.sender.userId) ?? 0,
+      fullName:     raw.fullName ?? (raw.sender && raw.sender.fullName) ?? '',
+      senderRank:   raw.senderRank ?? raw.userRank ?? (raw.sender && raw.sender.rank) ?? ''
+    };
+  }
 
-        const chatObj = {
-            chatroomUserId: currentUserId,
-            chatMessageContent: content,
-            chatMessageStatus: "SENT"
-        };
-
-        stompClient.send("/app/chat.send", {}, JSON.stringify(chatObj));
-        showMessage({ sender: currentUserId, content: content }, true);
-
-        document.getElementById("chat-input").value = "";
+  // 시간 포맷: 'yyyy-MM-dd HH:mm:ss' → 'HH:mm'
+  function formatTime(s) {
+    if (!s) return '';
+    const hhmm = (s.match(/\d{2}:\d{2}/) || [])[0];
+    if (hhmm) return hhmm;
+    const n = Number(s);
+    if (!isNaN(n)) {
+      const d = new Date(n);
+      return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
     }
+    return s;
+  }
 
-    function showMessage(message, isMine = false) {
-        const box = document.getElementById("chat-messages"); // 수정됨
-
-        const li = document.createElement("li");
-        li.classList.add(isMine ? "right" : "left");
-
-        li.innerHTML = `
-            <div class="conversation-list">
-                <div class="ctext-wrap">
-                    <div class="ctext-wrap-content">
-                        <h5 class="font-size-14 conversation-name">
-                            <a href="#" class="text-reset">${message.sender}</a>
-                            <span class="d-inline-block font-size-12 text-muted ms-2">
-                                \${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}
-                            </span>
-                        </h5>
-                        <p class="mb-0">${message.content}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        box.appendChild(li);
-        box.scrollTop = box.scrollHeight;
+  // 날짜 구분선
+  let lastDateLabel = '';
+  function dateLabel(ts){
+    if (!ts) return '';
+    const d = ts.slice(0,10);
+    const today = new Date().toISOString().slice(0,10);
+    return (d === today) ? 'Today' : d;
+  }
+  function maybeAddDateSeparator(ts){
+    const label = dateLabel(ts);
+    if (label && label !== lastDateLabel) {
+      lastDateLabel = label;
+      const li = document.createElement('li');
+      li.className = 'chat-day-title';
+      const span = document.createElement('span');
+      span.className = 'title';
+      span.appendChild(document.createTextNode(label));
+      li.appendChild(span);
+      $list.appendChild(li);
     }
+  }
 
-    // 버튼 이벤트 연결
-    document.addEventListener("DOMContentLoaded", () => {
-        connect();
-        document.getElementById("send-btn").addEventListener("click", sendMessage);
+  // =========================
+  // 템플릿 스타일 말풍선 렌더
+  // =========================
+function appendMessage(raw) {
+  const msg = normalizeMessage(raw);
 
-        // 엔터키로 전송
-        document.getElementById("chat-input").addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                sendMessage();
-            }
-        });
+  if (typeof msg.messageId === 'number') {
+    lastMessageId = Math.max(lastMessageId, msg.messageId);
+  }
+
+  maybeAddDateSeparator(msg.createdAt);
+
+  // 내가 보낸 메시지 판정 (필드 보강)
+  const senderId = Number(
+    msg.senderUserId ?? msg.userId ?? msg.chatroomUserId ?? (msg.sender && msg.sender.userId) ?? 0
+  );
+  const isMine = senderId === myUserId;
+
+  // li에 right/left를 붙인다 (CSS가 이렇게 기대함)
+  const li = document.createElement('li');
+  li.className = isMine ? 'right' : 'left';
+
+  // .conversation-list에는 클래스 하나만
+  const conv = document.createElement('div');
+  conv.className = 'conversation-list';
+
+  // 드롭다운(생략 가능)
+  const dd = document.createElement('div');
+  dd.className = 'dropdown';
+  dd.innerHTML =
+    '<a class="dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">' +
+      '<i class="mdi mdi-dots-vertical"></i>' +
+    '</a>' +
+    '<div class="dropdown-menu dropdown-menu-end">' +
+      '<a class="dropdown-item" href="#" data-action="copy">Copy</a>' +
+      '<a class="dropdown-item" href="#" data-action="delete">Delete</a>' +
+    '</div>';
+
+  // 말풍선 래퍼
+  const wrap = document.createElement('div');
+  wrap.className = 'ctext-wrap d-flex align-items-end';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'ctext-wrap-content';
+
+  // 테마 색상
+  if (isMine) {
+    bubble.classList.add('bg-soft-primary', 'bg-primary-subtle');
+  } else {
+    bubble.classList.add('bg-light');
+  }
+
+  const h5 = document.createElement('h5');
+  h5.className = 'conversation-name';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'name fw-semibold';
+  // conv.appendChild(dd);  3점
+ //상대방 메시지라면 이름/직급을 말풍선 위에 표시
+  if (!isMine) {
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'sender-name fw-semibold mb-1';
+    nameDiv.textContent = msg.fullName + (msg.senderRank ? ' ' + msg.senderRank : '');
+    conv.appendChild(nameDiv);   // wrap 위에 붙이기
+  }
+
+  const p = document.createElement('p');
+  p.className = 'mb-0';
+  p.innerHTML = (msg.content || '').replace(/\n/g, "<br>");
+
+  h5.appendChild(nameSpan);
+  bubble.appendChild(h5);
+  bubble.appendChild(p);
+
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'message-time small text-muted ms-2 me-2';
+  timeSpan.textContent = formatTime(msg.createdAt);
+
+  // 순서 배치
+  if (isMine) {
+    // 오른쪽: [시간][말풍선]
+    wrap.appendChild(timeSpan);
+    wrap.appendChild(bubble);
+  } else {
+    // 왼쪽: [말풍선][시간]
+    wrap.appendChild(bubble);
+    wrap.appendChild(timeSpan);
+  }
+
+  
+  conv.appendChild(wrap);
+  li.appendChild(conv);
+  $list.appendChild(li);
+
+  $list.parentElement.scrollTop = $list.parentElement.scrollHeight;
+  }
+
+  // =========================
+  // 메시지 전송/읽음
+  // =========================
+  function sendMessage() {
+    if (!stompClient || !stompClient.connected) return;
+    const content = $input.value.trim();
+    if (!content) return;
+
+    stompClient.send(APP_SEND, {}, JSON.stringify({
+   		chatroomId: roomId,
+    	chatMessageContent: content
+    }));
+    
+    $input.value = '';
+    $input.focus();
+  }
+
+  function markReadIfNeeded() {
+    if (!stompClient || !stompClient.connected || lastMessageId === 0) return;
+    stompClient.send(APP_READ, {}, JSON.stringify({
+    	chatroomId: roomId,
+    	chatMessageId: lastMessageId
+    }));
+  }
+
+  function setConnected(connected) {
+    if (connected) {
+      $status.textContent = '연결됨';
+      $sendBtn.disabled = false;
+    } else {
+      $status.textContent = '연결 끊김 - 재시도 중...';
+      $sendBtn.disabled = true;
+    }
+  }
+
+  // =========================
+  // STOMP 연결
+  // =========================
+  function connect() {
+    setConnected(false);
+
+    const sock = new SockJS('/ws-stomp');
+    stompClient = Stomp.over(sock);
+    // stompClient.debug = null; // 로그 줄이고 싶으면 주석 해제
+
+    const headers = getCsrfHeaders();
+
+    stompClient.connect(headers, function onConnect(frame) {
+      retry = 0;
+      setConnected(true);
+      console.log('Connected: ' + frame);
+
+      // 구독
+      stompClient.subscribe(topicRoom(roomId), function (message) {
+        try {
+          appendMessage(JSON.parse(message.body));
+        } catch (e) {
+          console.error('메시지 파싱 실패', e, message.body);
+        }
+      });
+
+      stompClient.subscribe(topicRead(roomId), function (message) {
+        // 필요 시 읽음 UI 반영
+      });
+
+      if (document.hasFocus()) markReadIfNeeded();
+    }, function onError(err) {
+      console.error('STOMP error', err);
+      setConnected(false);
+      retry = Math.min(retry + 1, 5);
+      const delay = Math.min(1000 * Math.pow(2, retry), 10000);
+      setTimeout(connect, delay);
     });
+
+    sock.onclose = function() { setConnected(false); };
+  }
+
+  // 이벤트 바인딩
+  document.getElementById('send-btn').addEventListener('click', sendMessage);
+  document.getElementById('chat-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  window.addEventListener('focus', markReadIfNeeded);
+
+  connect();
 </script>
 
 <div><jsp:include page ="../nav/footer.jsp"></jsp:include></div>
