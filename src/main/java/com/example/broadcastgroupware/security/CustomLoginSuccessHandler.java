@@ -48,7 +48,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         sessionUser.setUserResignDate(user.getUserResignDate());
         
         // 세션에 저장
-        session.setAttribute("loginUser", user);
+        session.setAttribute("loginUser", sessionUser);
 
         // 권한에 따라 리디렉션
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
