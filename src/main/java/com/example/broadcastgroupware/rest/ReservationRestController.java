@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Vehicle;
-import com.example.broadcastgroupware.domain.VehicleUseReason;
+import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.service.ReservationService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,16 +50,20 @@ public class ReservationRestController {
 		return "success";
 	}
 	
-	// 차량 비활성 <-> 활성
+	// 차량 비활성 <-> 활성화
 	@PostMapping("/car/carToggle")
-	public String carToggle(VehicleUseReason vehicleUseReason) {
+	public String carToggle(CarToggle carToggle) {
 		
+		/*
 		log.info("=== Ajax로 전달된 차량 정보 ===", "");
-		log.info("vehicleId: {}", vehicleUseReason.getVehicleId());
-		log.info("reasonContent: {}", vehicleUseReason.getVehicleUseReasonContent());
-		log.info("reasonStartDate: {}", vehicleUseReason.getVehicleUseReasonStartDate());
-		log.info("reasonEndDate: {}", vehicleUseReason.getVehicleUseReasonEndDate());
+		log.info("vehicleId: {}", carToggle.getVehicleId());
+		log.info("reasonContent: {}", carToggle.getVehicleUseReasonContent());
+		log.info("reasonStartDate: {}", carToggle.getVehicleUseReasonStartDate());
+		log.info("reasonEndDate: {}", carToggle.getVehicleUseReasonEndDate());
+		log.info("vehicleStatus: {}", carToggle.getVehicleStatus());
+		*/
 		
+		reservationService.carToggle(carToggle);
 		
 		return "success";
 	}

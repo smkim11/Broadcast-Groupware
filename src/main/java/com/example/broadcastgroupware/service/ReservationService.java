@@ -3,9 +3,11 @@ package com.example.broadcastgroupware.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.dto.CarReservationDto;
+import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
 
@@ -42,6 +44,13 @@ public class ReservationService {
 	// 차량 수정
 	public void modifyCar(Vehicle vehicle) {
 		reservationMapper.modifyCar(vehicle);	
+	}
+
+	// 차량 비활성 <-> 활성화
+	@Transactional
+	public void carToggle(CarToggle carToggle) {
+		reservationMapper.modifyVehicleStatus(carToggle);
+		reservationMapper.insertVehicleReason(carToggle);
 	}
 
 

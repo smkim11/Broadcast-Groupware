@@ -411,8 +411,8 @@ table tr:nth-child(even) {
 				<label>기간</label>
 				<input type="text" id="issueDate" placeholder="날짜 선택">
 				<!-- ajax 전송용 -->
-				<input type="hidden" name="startDate" id="startDate">
-   				<input type="hidden" name="endDate" id="endDate">
+				<input type="hidden" name="vehicleUseReasonStartDate" id="startDate">
+   				<input type="hidden" name="vehicleUseReasonEndDate" id="endDate">
    				
 				<div class="toggle-container">
 				    <span>비활성화</span>
@@ -424,7 +424,7 @@ table tr:nth-child(even) {
 				</div>
 
 				<div class="toggleReason">사유</div>
-				<input type="text" id="toggleReason" name="reasonContent" placeholder="ex: 사고, 수리(완료),">
+				<input type="text" id="toggleReason" name="vehicelUseReasonContent" placeholder="ex: 사고, 수리(완료),">
 				<button class="close1" type="button">닫기</button>
 				<button type="submit">변경</button>
 				
@@ -788,6 +788,17 @@ table tr:nth-child(even) {
 		    // 등록
 		    addForm.addEventListener("submit", function(e) {
 		        e.preventDefault();
+		        
+		        const vehicleNo = this.vehicleNo.value.trim();
+		        const vehicleName = this.vehicleName.value.trim();
+		        
+		        if(!vehicleNo) {
+					alert("차량번호를 입력하세요")
+					return;
+		        } else if(!vehicleName) {
+		        	alert("차종을 입력하세요")
+					return;
+		        } 
 	
 		        $.ajax({
 		            url: "/api/car/addCar",
@@ -829,17 +840,20 @@ table tr:nth-child(even) {
 				console.log($(this).serialize());
 				
 				$.ajax({
-					url: "/api/car/carToggle",
-					type: "post",
-					data: $(this). serialize(),
-					success: function(response) {
-						alert('변경완료');
-						modal.style.display = "none";
+				    url: "/api/car/carToggle",
+				    type: "post",
+				    data: {
+				        vehicleId: $('#toggleVehicleSelect').val(),
+				        vehicleUseReasonContent: $('#toggleReason').val(),
+				        vehicleUseReasonStartDate: $('#startDate').val(),
+				        vehicleUseReasonEndDate: $('#endDate').val(),
+				        vehicleStatus: $('#toggleSwitch').is(':checked') ? "Y" : "N"
+				    },
+				    success: function(res){
+				        console.log("변경 완료");
+				        modal.style.display = "none";
 						location.reload();
-					},
-					error: function(xhr, status, error) {
-						alert("수정 실패: " + error);
-					}
+				    }
 				});
 		    });
 		    

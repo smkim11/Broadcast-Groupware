@@ -47,5 +47,15 @@
 		WHERE vehicle_id = #{vehicleId}
 	</update>
 	
+	<update id="modifyVehicleStatus">
+		UPDATE vehicle SET vehicle_status = #{vehicleStatus}
+		WHERE vehicle_id = #{vehicleId}
+	</update>
+	
+	<insert id="insertVehicleReason">
+		INSERT INTO vehicle_use_reason(vehicle_id, vehicel_use_reason_content
+								, vehicle_use_reason_start_date, vehicle_use_reason_end_date)
+		VALUES(#{vehicleId}, #{vehicleUseReasonContent}, #{vehicleUseReasonStartDate}, #{vehicleUseReasonEndDate})
+	</insert>
 	
 </mapper>
