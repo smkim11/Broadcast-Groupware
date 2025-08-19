@@ -102,12 +102,21 @@
 	    ORDER BY reference_line_id ASC
 	</select>
 	
-	<!-- 문서 제출 (임시저장 N -> 제출 Y) -->
-	<update id="updateDocumentAsSubmitted" parameterType="int">
+	
+	<!-- 제출: save = 'N' -->
+	<update id="updateDocumentSubmitted" parameterType="int">
 	    UPDATE approval_document
-	    SET
-	        approval_document_save = 'Y',
+	    SET approval_document_save = 'N',
 	        update_date = NOW()
 	    WHERE approval_document_id = #{approvalDocumentId}
 	</update>
+	
+	<!-- 임시저장: save = 'Y' -->
+	<update id="updateDocumentDraft" parameterType="int">
+	    UPDATE approval_document
+	    SET approval_document_save = 'Y',
+	        update_date = NOW()
+	    WHERE approval_document_id = #{approvalDocumentId}
+	</update>
+
 </mapper>

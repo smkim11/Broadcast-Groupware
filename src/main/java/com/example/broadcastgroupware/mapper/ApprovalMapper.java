@@ -23,10 +23,11 @@ public interface ApprovalMapper {
     int insertApprovalLines(@Param("lines") List<ApprovalLine> lines);
     List<ApprovalLine> selectApprovalLines(@Param("approvalDocumentId") int approvalDocumentId);
 
-    // 참조선 (배치 전용)
+    // 참조선
     int insertReferenceLines(@Param("refs") List<ReferenceLine> refs);
     List<ReferenceLine> selectReferenceLines(@Param("approvalDocumentId") int approvalDocumentId);
 
-    // 문서 제출 상태 전환 (임시저장 -> 제출)
-    int updateDocumentAsSubmitted(@Param("approvalDocumentId") int approvalDocumentId);
+    // 문서 상태 변경
+    int updateDocumentSubmitted(@Param("approvalDocumentId") int approvalDocumentId);  // 제출 = 'N'
+    int updateDocumentDraft(@Param("approvalDocumentId") int approvalDocumentId);      // 임시저장 = 'Y'
 }
