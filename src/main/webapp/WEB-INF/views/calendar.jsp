@@ -36,23 +36,39 @@
                                     <div class="col-lg-12">
                                         <div class="card">
                                             <div class="card-body">
-                                            <div class="form-check">
-					                             <input class="form-check-input" type="checkbox" id="formCheck1">
-					                             <label class="form-check-label" for="formCheck1">
-					                                 개인
-					                             </label>
-                         					</div>
+                                            	<div class="d-flex justify-content-between align-items-start mb-2">
+												    <!-- 타입 체크박스 -->
+												    <div class="d-flex gap-3">
+												        <div class="form-check">
+												            <input class="form-check-input" type="checkbox" id="personal">
+												            <label class="form-check-label text-info" for="personal">개인</label>
+												        </div>
+												        <div class="form-check">
+												            <input class="form-check-input" type="checkbox" id="team">
+												            <label class="form-check-label text-success" for="team">팀</label>
+												        </div>
+												        <div class="form-check">
+												            <input class="form-check-input" type="checkbox" id="total">
+												            <label class="form-check-label text-warning" for="total">전체</label>
+												        </div>
+												    </div>
+												
+												    <button class="btn btn-outline-primary" id="btn-new-event">
+												        <i class="mdi mdi-plus-circle-outline"></i> 일정생성
+												    </button>
+												</div>
+
                                                 <div id="calendar"></div>
                                             </div>
                                         </div>
-                                    </div> <!-- end col -->
+                                    </div> 
 
                                 </div> 
 
                                 <div style='clear:both'></div>
 
 
-                                <!-- Add New Event MODAL -->
+                                <!-- 모달창 -->
                                 <div class="modal fade" id="event-modal" tabindex="-1">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
@@ -64,7 +80,8 @@
                                             </div>
                                             <div class="modal-body p-4">
                                                 <form class="needs-validation" name="event-form" id="form-event" novalidate>
-                                                    <input type="hidden" id="eventid">
+                                                    <input type="hidden" name="calendarId" id="eventid">
+                                                    <input type="hidden" name="userId" id="event-user-id">
                                                     <div class="row">
                                                         <div class="col-12">
                                                             <div class="mb-3">
@@ -140,16 +157,17 @@
 <div>
     <jsp:include page ="../views/nav/footer.jsp"></jsp:include>
 </div>
-</body>
+
 <div>
     <jsp:include page ="../views/nav/javascript.jsp"></jsp:include>
 </div>
-
+</body>
 <script>
 window.calendarEvents = [
     <c:forEach var="event" items="${events}" varStatus="loop">
         {
             id: "${event.calendarId}",
+            userId: "${event.userId}",
             title: "${fn:escapeXml(event.calendarTitle)}",
             location: "${event.calendarLocation}",
             start: "${event.calendarStartTime}",
@@ -180,6 +198,10 @@ window.calendarEvents = [
 <script src="${pageContext.request.contextPath}/resources/libs/jquery-ui-dist/jquery-ui.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/fullcalendar/index.global.min.js"></script>
 
+
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 <!-- Calendar init -->
 <script src="${pageContext.request.contextPath}/resources/js/pages/calendar.init.js"></script>
+
 </html>
