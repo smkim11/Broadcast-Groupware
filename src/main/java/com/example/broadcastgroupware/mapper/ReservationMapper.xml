@@ -41,4 +41,11 @@
 		vehicle_type AS vehicleType, vehicle_name AS vehicleName
 		FROM vehicle
 	</select>
+	
+	<update id="modifyCar">
+		UPDATE vehicle SET vehicle_no = #{vehicleNo}, vehicle_type = #{vehicleType}, vehicle_name = #{vehicleName}
+		WHERE vehicle_id = #{vehicleId}
+	</update>
+	
+	
 </mapper>

@@ -7,9 +7,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.example.broadcastgroupware.domain.User;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
+import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ReservationService;
 
 import jakarta.servlet.http.HttpSession;
@@ -29,7 +29,7 @@ public class ReservationController {
 						@RequestParam(value = "page", defaultValue = "1") int page,
 				        @RequestParam(value = "size", defaultValue = "10") int size) {
 	    
-	    User loginUser = (User) session.getAttribute("loginUser");
+		UserSessionDto  loginUser = (UserSessionDto) session.getAttribute("loginUser");
 	    
 	    
 	    if(loginUser != null) {

@@ -39,5 +39,10 @@ public class ReservationService {
 		return reservationMapper.adminCarList();
 	}
 
+	// 차량 수정
+	public void modifyCar(Vehicle vehicle) {
+		reservationMapper.modifyCar(vehicle);	
+	}
+
 
 }
