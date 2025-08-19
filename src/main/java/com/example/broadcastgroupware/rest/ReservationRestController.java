@@ -1,5 +1,8 @@
 package com.example.broadcastgroupware.rest;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,5 +27,11 @@ public class ReservationRestController {
 		reservationService.addCar(vehicle);
 		
 		return "success";
+	}
+	
+	// 관리자용 차량리스트
+	@GetMapping("/car/adminCarList")
+	public List<Vehicle> adminCarList() {
+		return reservationService.adminCarList();
 	}
 }

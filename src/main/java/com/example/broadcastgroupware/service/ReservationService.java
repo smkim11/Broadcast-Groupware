@@ -33,5 +33,11 @@ public class ReservationService {
 		reservationMapper.addCar(vehicle);	
 	}
 
+	// 관리자용 차량 리스트
+	public List<Vehicle> adminCarList() {
+
+		return reservationMapper.adminCarList();
+	}
+
 
 }

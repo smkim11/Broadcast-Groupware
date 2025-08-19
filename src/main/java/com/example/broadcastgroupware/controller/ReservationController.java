@@ -7,11 +7,16 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.broadcastgroupware.domain.User;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.service.ReservationService;
 
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
+
 @Controller
+@Slf4j
 public class ReservationController {
 	
 	private final ReservationService reservationService;
@@ -20,10 +25,21 @@ public class ReservationController {
 	}
 
 	@GetMapping("/user/car")
-	public String carList(Model model, 
+	public String carList(Model model, HttpSession session,
 						@RequestParam(value = "page", defaultValue = "1") int page,
 				        @RequestParam(value = "size", defaultValue = "10") int size) {
-
+	    
+	    User loginUser = (User) session.getAttribute("loginUser");
+	    
+	    
+	    if(loginUser != null) {
+	    	model.addAttribute("username", loginUser.getUsername());
+	    	model.addAttribute("role", loginUser.getRole());
+	    	
+	    	log.info("username: {}", loginUser.getUsername());
+	    	log.info("role: {}", loginUser.getRole());
+	    	
+	    }
 		
 		// 전체 차량 조회
 		int totalCount = reservationService.getTotalCount();

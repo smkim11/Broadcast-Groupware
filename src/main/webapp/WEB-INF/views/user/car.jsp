@@ -52,9 +52,8 @@
 }
 
 #reservationForm button {
-    padding: 6px 12px;
-    border: 1px solid #007BFF;
-    background-color: #007BFF;
+    border: 1px solid blue;
+    background-color: blue;
     color: white;
     border-radius: 4px;
     cursor: pointer;
@@ -62,7 +61,7 @@
 }
 
 #reservationForm button:hover {
-    background-color: #0056b3;
+    background-color: blue;
     border-color: #0056b3;
 }
 
@@ -96,7 +95,7 @@
 }
 
 .addCar:hover {
-    background-color: #1e7e34;
+    background-color: blue;
     border-color: #1e7e34;
 }
 
@@ -123,7 +122,7 @@ table tr:nth-child(even) {
 .chart-container {
     position: relative;
     width: 100%;
-    height: 50px;
+    height: 60px;
     border-radius: 4px;
     overflow: hidden;
     background-color: #f0f0f0;
@@ -146,7 +145,8 @@ table tr:nth-child(even) {
     background: white;
     padding: 25px;
     border-radius: 12px;
-    width: 400px;
+    width: 90%;
+    max-width: 400px;
     text-align: center;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
     position: relative;
@@ -158,7 +158,7 @@ table tr:nth-child(even) {
 }
 
 .modal-content fieldset {
-    border: 2px solid #007BFF;
+    border: 2px solid blue;
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
@@ -167,7 +167,7 @@ table tr:nth-child(even) {
 .modal-content legend {
     padding: 0 10px;
     font-weight: bold;
-    color: #007BFF;
+    color: blue;
 }
 
 .modal-content input[type="text"],
@@ -179,25 +179,26 @@ table tr:nth-child(even) {
     border: 1px solid #ccc;
 }
 
-.modal-content button {
+.modal-content button, .close1 {
     padding: 6px 12px;
     border-radius: 4px;
     border: none;
     cursor: pointer;
     margin: 5px;
     transition: 0.3s;
+    
 }
 
 .modal-content button[type="submit"] {
-    background-color: #007BFF;
+    background-color: green;
     color: white;
 }
 
 .modal-content button[type="submit"]:hover {
-    background-color: #0056b3;
+    background-color: green;
 }
 
-.modal-content .close, .modal-content .close1 {
+.modal-content .close, .modal-content{
     position: absolute;
     top: 10px;
     right: 15px;
@@ -211,11 +212,77 @@ table tr:nth-child(even) {
     top: auto;
     bottom: 10px;
     right: 10px;
+    background-color: green;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #333;
+  	color: white;
 }
 
 .chart-container canvas {
     display: block;
 }
+
+/* 토글 스위치 전체 */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+/* 스위치 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+/* 숨긴 checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* 슬라이더 */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 24px;
+}
+
+/* 원 버튼 */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+/* 체크 시 색 변경 및 원 이동 */
+.switch input:checked + .slider {
+    background-color: green;
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
 
 </style>
 
@@ -251,7 +318,9 @@ table tr:nth-child(even) {
 					<span class="gray-box"></span> 예약 가능시간
 					<span class="blue-box"></span> 선택시간
 				</div>
-				<button id="addCar" class="addCar">차량등록</button> <!-- 로그인 기능 구현 후 관리자만 보이게 출력 -->
+				
+					<button id="addCar" class="addCar">차량관리</button> <!-- 로그인 기능 구현 후 관리자만 보이게 출력 -->
+				
 			</div>
 		
 		<table border="1">
@@ -286,18 +355,72 @@ table tr:nth-child(even) {
 	<div id="carModal" class="modal">
 		<div class="modal-content">
 			<span class="close">&times;</span>
-			<h3>차량 등록</h3>
-			<form id="carForm">
-				<label>차량번호:</label>
-				<input type="text" name="vehicleNo" placeholder="000가0000"></br>
-				<label>차종:</label>
-				<input type="text" name="vehicleName" placeholder="ex) 아반떼, 카니발"></br>
-				<label>차량타입:</label>
+			<h3>차량 관리</h3>
+			
+			<!-- 모드 선택 -->
+			<select name="adminType" id="adminType">
+				<option value="등록">등록</option>
+				<option value="수정">수정</option>
+				<option value="비활성화">비활성화</option>
+			</select>
+			
+			<!-- 등록 폼 -->
+			<form id="addForm" class="form-section">
+				<label>차량번호</label>
+				<input type="text" name="vehicleNo" placeholder="000가0000"><br>
+				<label>차종</label>
+				<input type="text" name="vehicleName" placeholder="ex) 아반떼, 카니발"><br>
+				<label>차량타입</label>
 				<select name="vehicleType" required>
 					<option value="소형">소형</option>
 					<option value="중형">중형</option>
 					<option value="대형">대형</option>
-				</select> </br>
+				</select><br>
+				<button class="close1" type="button">닫기</button>
+				<button type="submit">등록</button>
+			</form>
+			
+			<!-- 수정 폼 -->
+			<form id="modifyCar" class="form-section" style="display:none;">
+				<label for="vehicleSelect">차량 선택</label>
+				<select id="modifyVehicleSelect">
+				    <option value="">-- 차량 선택 --</option>
+				</select>
+
+				<label>차량번호</label>
+				<input type="text" name="vehicleNo" placeholder="000가0000"><br>
+				<label>차종</label>
+				<input type="text" name="vehicleName" placeholder="ex) 아반떼, 카니발"><br>
+				<label>차량타입</label>
+				<select name="vehicleType" required>
+					<option value="소형">소형</option>
+					<option value="중형">중형</option>
+					<option value="대형">대형</option>
+				</select><br>
+				<button class="close1" type="button">닫기</button>
+				<button type="submit">수정</button>
+			</form>
+			
+			<!-- 비활성화 폼 -->
+			<form id="carToggle" class="form-section" style="display:none;">
+				<label for="vehicleSelect">차량 선택</label>
+				<select id="toggleVehicleSelect">
+				    <option value="">-- 차량 선택 --</option>
+				</select>
+
+				<label>기간</label>
+				<div class="issueDate" id="issueDate"></div> <!-- 달력 나와서 날짜 선택  yyyy-mm-dd ~ yyyy-mm-dd -->
+				<div class="toggle-container">
+				    <span>비활성화</span>
+				    <label class="switch">
+				        <input type="checkbox" id="toggleSwitch" name="toggle">
+				        <span class="slider round"></span>
+				    </label>
+				    <span>활성화</span>
+				</div>
+
+				<div class="toggleReason">사유</div>
+				<input type="text" id="toggleReason" placeholder="ex: 사고, 수리(완료),">
 				<button class="close1" type="button">닫기</button>
 				<button type="submit">등록</button>
 			</form>
@@ -312,6 +435,7 @@ table tr:nth-child(even) {
 	selectedEndDate = new Date(today);
 	selectedEndDate.setHours(23,59,59,999);
 	let drawnTimes = new Set(); // 중복 시간 출력 방지용
+	drawCharts();
 	
 	// 시간 라벨 표시 함수
 	function drawTimeLabel(ctx, x, date) {
@@ -619,23 +743,35 @@ table tr:nth-child(even) {
 		    const modal = document.getElementById("carModal");
 		    const btn = document.getElementById("addCar");
 		    const closeBtn = modal.querySelector(".close");
-		    const closeBtn1 = modal.querySelector(".close1");
-		    const carForm = document.getElementById("carForm");
+		    const closeBtns = modal.querySelectorAll(".close1");
+		    
+		    // 폼 가져오기
+		    const addForm = document.getElementById("addForm");
+		    const modifyForm = document.getElementById("modifyCar");
+		    const toggleForm = document.getElementById("carToggle");
+		    const adminTypeSelect = document.getElementById("adminType");
 	
 		    // 모달 열기
 		    btn.onclick = function() {
 		        modal.style.display = "flex";
+		        showForm("등록");
+		    	adminTypeSelect.value = "등록";
+		    	
+		    	selectAdminCarList();
+		    	
 		    }
 	
-		    // 모달 닫기버튼
+		    // 모달 닫기버튼 (x)
 		    closeBtn.onclick = function() {
 		        modal.style.display = "none";
 		    }
 		    
 		 	// 모달 닫기버튼
-		    closeBtn1.onclick = function() {
-		        modal.style.display = "none";
-		    }
+		    closeBtns.forEach(function(b) {
+				b.onclick = function() {
+					modal.style.display = "none";
+				}
+			});
 	
 		    // 모달 외부 클릭 닫기
 		    window.onclick = function(event) {
@@ -645,7 +781,7 @@ table tr:nth-child(even) {
 		    }
 	
 		    // 등록
-		    carForm.addEventListener("submit", function(e) {
+		    addForm.addEventListener("submit", function(e) {
 		        e.preventDefault();
 	
 		        $.ajax({
@@ -662,9 +798,71 @@ table tr:nth-child(even) {
 		            }
 		        });
 		    });
-		});
-	
+		    
+		 // 수정, 비활성에 사용할 차량 리스트
+		    $(document).ready(function() {
+		        $.ajax({
+		            url: '/api/car/adminCarList',
+		            method: 'GET',
+		            success: function(vehicleList) {
+		              
+		            	 var selects = [$('#modifyVehicleSelect'), $('#toggleVehicleSelect')];
 
+		                 selects.forEach(function(select) {
+		                     select.empty();
+		                     select.append('<option value="">-- 차량 선택 --</option>');
+		                     vehicleList.forEach(function(vehicle) {
+		                         select.append('<option value="' + vehicle.vehicleId + '">' + vehicle.vehicleNo + '</option>');
+		                     });
+		                 });
+		             },
+		            error: function(err) {
+		                console.error('차량 목록을 불러오는데 실패했습니다.', err);
+		            }
+		        });
+		    });
+
+		    // 모달 열 때 호출
+		    $('#toggleModalOpenBtn').on('click', function() {
+		        $('#carToggle').show();
+		    });
+
+		    // 비활성화 폼에서 선택한 차량 가져오기
+		    $('#toggleVehicleSelect').change(function() {
+		        var selectedId = $(this).val();
+		        console.log('선택한 차량 ID (비활성화 폼):', selectedId);
+		    });
+
+		    // 수정 폼에서 선택한 차량 가져오기
+		    $('#modifyVehicleSelect').change(function() {
+		        var selectedId = $(this).val();
+		        console.log('선택한 차량 ID (수정 폼):', selectedId);
+		    });
+
+
+		    
+		    // 폼 전환
+		    function showForm(type) {
+		        // 모든 폼 숨기기
+		        addForm.style.display = "none";
+		        modifyForm.style.display = "none";
+		        toggleForm.style.display = "none";
+
+		        // 선택한 폼만 보이기
+		        if (type === "등록") {
+		            addForm.style.display = "block";
+		        } else if (type === "수정") {
+		            modifyForm.style.display = "block";
+		        } else if (type === "비활성화") {
+		            toggleForm.style.display = "block";
+		        }
+		    }
+
+		    // select 값 바뀔 때 폼 전환
+		    adminTypeSelect.addEventListener("change", function() {
+		        showForm(this.value);
+		    });
+		});
 </script>
 
 <footer>

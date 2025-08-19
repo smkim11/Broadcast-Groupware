@@ -35,4 +35,10 @@
 		INSERT INTO vehicle(vehicle_status, vehicle_no, vehicle_type, vehicle_name)
 		VALUES('Y', #{vehicleNo}, #{vehicleType}, #{vehicleName})
 	</insert>
+	
+	<select id="adminCarList" resultType="com.example.broadcastgroupware.domain.Vehicle">
+		SELECT vehicle_id AS vehicleId, vehicle_status AS vehicleStatus, vehicle_no AS vehicleNo,
+		vehicle_type AS vehicleType, vehicle_name AS vehicleName
+		FROM vehicle
+	</select>
 </mapper>

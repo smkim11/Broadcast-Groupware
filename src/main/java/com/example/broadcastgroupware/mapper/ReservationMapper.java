@@ -17,4 +17,7 @@ public interface ReservationMapper {
 
 	void addCar(Vehicle vehicle);
 
+	// 관리자용 차량 리스트
+	List<Vehicle> adminCarList();
+
 }
