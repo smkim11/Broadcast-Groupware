@@ -318,9 +318,9 @@ table tr:nth-child(even) {
 					<span class="gray-box"></span> 예약 가능시간
 					<span class="blue-box"></span> 선택시간
 				</div>
-				
-					<button id="addCar" class="addCar">차량관리</button> <!-- 로그인 기능 구현 후 관리자만 보이게 출력 -->
-				
+				<c:if test="${role == 'admin'}">
+					<button id="addCar" class="addCar">차량관리</button>
+				</c:if>
 			</div>
 		
 		<table border="1">
@@ -386,7 +386,7 @@ table tr:nth-child(even) {
 				<select id="modifyVehicleSelect">
 				    <option value="">-- 차량 선택 --</option>
 				</select>
-
+				<input type="hidden" name="vehicleId" value="">
 				<label>차량번호</label>
 				<input type="text" name="vehicleNo" placeholder="000가0000"><br>
 				<label>차종</label>
@@ -407,7 +407,7 @@ table tr:nth-child(even) {
 				<select id="toggleVehicleSelect">
 				    <option value="">-- 차량 선택 --</option>
 				</select>
-
+				<input type="hidden" name="vehicleId" value="">
 				<label>기간</label>
 				<div class="issueDate" id="issueDate"></div> <!-- 달력 나와서 날짜 선택  yyyy-mm-dd ~ yyyy-mm-dd -->
 				<div class="toggle-container">
@@ -422,7 +422,7 @@ table tr:nth-child(even) {
 				<div class="toggleReason">사유</div>
 				<input type="text" id="toggleReason" placeholder="ex: 사고, 수리(완료),">
 				<button class="close1" type="button">닫기</button>
-				<button type="submit">등록</button>
+				<button type="submit">변경</button>
 			</form>
 		</div>
 	</div>
@@ -799,6 +799,26 @@ table tr:nth-child(even) {
 		        });
 		    });
 		    
+		    // 수정
+		    modifyCar.addEventListener("submit", function(e) {
+				e.preventDefault();
+				
+				$.ajax({
+					url: "/api/car/modifyCar",
+					type: "post",
+					data: $(this).serialize(),
+					success: function(response) {
+						alert("수정 완료");
+						modal.style.display = "none";
+						location.reload();
+					},
+					error: function(xhr, status, error) {
+						alert("수정 실패: " + error);
+					}
+				});
+		    });
+		    
+		    
 		 // 수정, 비활성에 사용할 차량 리스트
 		    $(document).ready(function() {
 		        $.ajax({
@@ -836,7 +856,7 @@ table tr:nth-child(even) {
 		    // 수정 폼에서 선택한 차량 가져오기
 		    $('#modifyVehicleSelect').change(function() {
 		        var selectedId = $(this).val();
-		        console.log('선택한 차량 ID (수정 폼):', selectedId);
+		        $('input[name="vehicleId"]').val(selectedId);
 		    });
 
 

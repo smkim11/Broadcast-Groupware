@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.service.ReservationService;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class ReservationRestController {
 	
 	private final ReservationService reservationService;
@@ -29,9 +32,26 @@ public class ReservationRestController {
 		return "success";
 	}
 	
+	// 차량 수정
+	@PostMapping("/car/modifyCar")
+	public String modifyCar(Vehicle vehicle) {
+		
+		log.info("=== Ajax로 전달된 차량 정보 ===", "");
+		log.info("vehicleId: {}", vehicle.getVehicleId());
+		log.info("vehicleNo: {}", vehicle.getVehicleNo());
+		log.info("vehicleName: {}", vehicle.getVehicleName());
+		log.info("vehicleType: {}", vehicle.getVehicleType());
+		
+		reservationService.modifyCar(vehicle);
+		
+		return "success";
+	}
+	
 	// 관리자용 차량리스트
 	@GetMapping("/car/adminCarList")
 	public List<Vehicle> adminCarList() {
 		return reservationService.adminCarList();
 	}
+	
+	
 }

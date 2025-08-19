@@ -15,9 +15,13 @@ public interface ReservationMapper {
 
 	int getTotalCount();
 
+	// 차량등록
 	void addCar(Vehicle vehicle);
 
 	// 관리자용 차량 리스트
 	List<Vehicle> adminCarList();
+
+	// 차량 수정
+	void modifyCar(Vehicle vehicle);
 
 }
