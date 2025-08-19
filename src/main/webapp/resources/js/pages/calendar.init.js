@@ -142,11 +142,18 @@ document.addEventListener("DOMContentLoaded", function(){
             o = e.event,
             document.getElementById("modal-title").innerHTML = "일정상세",
             console.log("selectedEvent", o),
+			document.getElementById("eventid").value = o.id; 
+			console.log("id:",o.id);
+			document.getElementById("event-user-id").value = o.extendedProps.userId,
+			console.log("userId:",o.extendedProps.userId);
             document.getElementById("event-title").value = o.title,
 			document.getElementById("event-location").value = o.extendedProps.location,
             document.getElementById("event-type").value = o.extendedProps.type,
 			document.getElementById("event-start-time").value = moment(o.start).format("YYYY-MM-DDTHH:mm"),
-			document.getElementById("event-end-time").value = moment(o.end).format("YYYY-MM-DDTHH:mm"),
+			// fullCalendar에서는 시작시간과 종료시간이 같으면 종료시간이 null이되기때문에 시간이 같으면 종료시간에도 시작시간 입력
+			document.getElementById("event-end-time").value = o.end 
+			    ? moment(o.end).format("YYYY-MM-DDTHH:mm") 
+			    : moment(o.start).format("YYYY-MM-DDTHH:mm"),
 			document.getElementById("event-memo").value = o.extendedProps.memo || "",
             document.getElementById("btn-delete-event").removeAttribute("hidden");
         },
@@ -170,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function(){
         },
         eventDrop: function(t){
             var e = s.findIndex(function(e){ return e.id == t.event.id });
-            s[e] && (s[e].title = t.event.title, s[e].location=t.event.location, s[e].start=t.event.start, 
+            s[e] && (s[e].id=t.event.id,s[e].title = t.event.title, s[e].location=t.event.location, s[e].start=t.event.start, 
 				s[e].end=t.event.end, s[e].type = t.event.type, s[e].memo=t.event.memo);
         }
     });
@@ -189,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function(){
 			m = document.getElementById("event-memo").value;
         if(o){
             // 기존 이벤트 수정
-			t = parseInt(document.getElementById("eventid").value);
+			t = document.getElementById("eventid").value;
             
 			fetch("/updateCalendar", {
 		        method: "PATCH",
@@ -236,11 +243,23 @@ document.addEventListener("DOMContentLoaded", function(){
 
     // 이벤트 삭제
     document.getElementById("btn-delete-event").addEventListener("click", function(e){
+		var t = Number(document.getElementById("eventid").value);
+		console.log("deleteCalendarId:",t);
         if(o){
-            for(var t = 0; t < s.length; t++)
-                s[t].id == o.id && (s.splice(t, 1), t--);
-            o.remove(),
-            o = null,
+			fetch("/deleteCalendar", {method:"DELETE",
+              headers:{"Content-Type":"application/json"},
+              body: JSON.stringify({calendarId:t})})
+            .then((res)=>{
+                if(res.ok){
+					for(var t = 0; t < s.length; t++)
+		                s[t].id == o.id && (s.splice(t, 1), t--);
+		            o.remove(),
+		            o = null;
+                }else{
+                    alert('삭제실패');
+                }
+            })
+            
             i.hide();
         }
     });
