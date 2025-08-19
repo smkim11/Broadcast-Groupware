@@ -26,6 +26,7 @@
 		FROM vehicle v
 		LEFT JOIN vehicle_reservation r
 			ON v.vehicle_id = r.vehicle_id
+		WHERE v.vehicle_status = 'Y'
 		ORDER BY v.vehicle_id
 		LIMIT #{beginRow}, #{rowPerPage}
 	</select>
