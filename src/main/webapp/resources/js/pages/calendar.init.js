@@ -3,7 +3,7 @@ function eventClicked(){
     document.getElementById("form-event").classList.add("view-event"), // 폼을 'view-event' 모드로
     document.getElementById("event-title").classList.replace("d-block","d-none"), // 제목 입력 필드 숨김
     document.getElementById("event-type").classList.replace("d-block","d-none"), // 카테고리 입력 필드 숨김
-    document.getElementById("btn-save-event").setAttribute("hidden",!0) // 저장 버튼 숨김
+    document.getElementById("btn-save-event").setAttribute("hidden",true) // 저장 버튼 숨김
 }
 
 // 이벤트 편집 상태로 전환
@@ -85,6 +85,9 @@ document.addEventListener("DOMContentLoaded", function(){
     // 새 이벤트 생성 모달 열기
     function v(e){
         document.getElementById("form-event").reset(),
+		// 일정을 생성할때는 input을 hidden으로 바꾸고 select를 다시 보이도록 변경
+		document.getElementById("event-type").style.display ='block';
+		document.getElementById("event-type-read").type='hidden';
         i.show(), // 모달 표시
         n.classList.remove("was-validated"),
         n.reset(),
@@ -103,10 +106,10 @@ document.addEventListener("DOMContentLoaded", function(){
     // FullCalendar 초기화
     var g = new FullCalendar.Calendar(m, {
         timeZone: "local",
-        editable: !0,
-        droppable: !0,
-        selectable: !0,
-        navLinks: !0,
+        editable: true,
+        droppable: true,
+        selectable: true,
+        navLinks: true,
         initialView: u(),
 		aspectRatio: 1.6, // 캘린더 세로길이 조절 높아질수록 줄어듬
         themeSystem: "bootstrap",
@@ -133,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function(){
         },
         eventClick: function(e){
             document.getElementById("edit-event-btn").removeAttribute("hidden"),
-            document.getElementById("btn-save-event").setAttribute("hidden", !0),
+            document.getElementById("btn-save-event").setAttribute("hidden", true),
             document.getElementById("edit-event-btn").setAttribute("data-id", "edit-event"),
             document.getElementById("edit-event-btn").innerHTML = "수정",
             eventClicked(),
@@ -149,6 +152,11 @@ document.addEventListener("DOMContentLoaded", function(){
             document.getElementById("event-title").value = o.title,
 			document.getElementById("event-location").value = o.extendedProps.location,
             document.getElementById("event-type").value = o.extendedProps.type,
+			// 상세보기일때는 select가 안보이게하고, input에 값이 보이며 수정불가하도록 설정
+			document.getElementById("event-type").style.display ='none';
+			document.getElementById("event-type-read").type='text';
+			document.getElementById("event-type-read").value = o.extendedProps.type,
+			document.getElementById("event-type-read").readOnly = true;
 			document.getElementById("event-start-time").value = moment(o.start).format("YYYY-MM-DDTHH:mm"),
 			// fullCalendar에서는 시작시간과 종료시간이 같으면 종료시간이 null이되기때문에 시간이 같으면 종료시간에도 시작시간 입력
 			document.getElementById("event-end-time").value = o.end 
@@ -158,9 +166,14 @@ document.addEventListener("DOMContentLoaded", function(){
             document.getElementById("btn-delete-event").removeAttribute("hidden");
         },
         dateClick: function(e){
-            document.getElementById("edit-event-btn").setAttribute("hidden", !0),
+			// 수정,삭제버튼 숨기고 저장버튼을 보이게
+            document.getElementById("edit-event-btn").setAttribute("hidden", true),
             document.getElementById("btn-save-event").removeAttribute("hidden"),
+			document.getElementById("btn-delete-event").setAttribute("hidden", true),
             v(e);
+			// 캘린더에서 날짜를 클릭하면 시작일과 종료일이 해당날짜의 00시00분으로 설정
+			document.getElementById("event-start-time").value =moment(e.dateStr).format("YYYY-MM-DDTHH:mm");
+			document.getElementById("event-end-time").value =moment(e.dateStr).format("YYYY-MM-DDTHH:mm");
         },
         events: s,
         eventReceive: function(e){
@@ -243,6 +256,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
     // 이벤트 삭제
     document.getElementById("btn-delete-event").addEventListener("click", function(e){
+		// Object로 받아온 calendarId값 숫자로 변환
 		var t = Number(document.getElementById("eventid").value);
 		console.log("deleteCalendarId:",t);
         if(o){
@@ -264,9 +278,12 @@ document.addEventListener("DOMContentLoaded", function(){
         }
     });
 
-    // 새 이벤트 버튼 클릭 시
+    // 일정 생성버튼 클릭시
     document.getElementById("btn-new-event").addEventListener("click", function(e){
-        v(),
-        document.getElementById("edit-event-btn").click();
+		// 수정,삭제버튼 숨기고 저장버튼을 보이게
+		document.getElementById("edit-event-btn").setAttribute("hidden", true),
+        document.getElementById("btn-save-event").removeAttribute("hidden"),
+		document.getElementById("btn-delete-event").setAttribute("hidden", true),
+        v(e);
     });
 });

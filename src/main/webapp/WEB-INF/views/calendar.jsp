@@ -31,7 +31,6 @@
                                 <div class="row">
                                     <div class="col-lg-3" style="display:none;">
 									    <div id="external-events"></div>
-									    <button id="btn-new-event"></button>
 									</div>
                                     <div class="col-lg-12">
                                         <div class="card">
@@ -116,6 +115,8 @@
                                                         <div class="col-12">
                                                             <div class="mb-3">
                                                                 <label class="form-label">공개범위</label>
+                                                                <!-- 상세보기시 select가 아닌 input으로 보이며 수정불가 -->
+                                                                <input class="form-control" type="hidden" id="event-type-read"/>
                                                                 <select class="form-control form-select" name="calendarType" id="event-type">
                                                                     <option>개인</option>
                                                                     <option>팀</option>
