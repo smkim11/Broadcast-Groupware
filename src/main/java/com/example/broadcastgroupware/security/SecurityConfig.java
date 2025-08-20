@@ -25,7 +25,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll() // JSP forward 허용
-                .requestMatchers("/login", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/login", "/css/**", "/js/**", "/ws-stomp/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("admin")
                 .requestMatchers("/user/**").hasAnyRole("admin", "user")
                 .anyRequest().authenticated()

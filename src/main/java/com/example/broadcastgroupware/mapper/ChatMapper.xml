@@ -1,4 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.broadcastgroupware.mapper.ChatMapper">
+	<!-- chatroom_user_id 조회 -->
+	<select id="selectChatroomUserId" resultType="java.lang.Integer">
+		SELECT chatroom_user_id
+		FROM chatroom_user
+		WHERE chatroom_id = #{chatroomId}
+			AND user_id = #{userId}
+		LIMIT 1
+	</select>
+	
+	<!-- 메시지 저장: 도메인(ChatMessage)로 INSERT -->
+	<insert id="insertChatMessage" 
+			parameterType="com.example.broadcastgroupware.domain.ChatMessage"
+			useGeneratedKeys="true" 
+			keyProperty="chatMessageId"
+			keyColumn="chat_message_id">
+		INSERT INTO chat_message
+			(chatroom_user_id, chat_message_content, chat_message_status, create_date)
+		VALUES
+			(#{chatroomUserId}, #{chatMessageContent}, #{chatMessageStatus}, NOW())		
+	</insert>
+	
+	<!-- 단건 뷰(방금 저장한 메시지) 조회 -> Dto로 반환 -->
+	<select id="selectMessageViewById"
+			resultType="com.example.broadcastgroupware.dto.ChatMessageDto">
+		SELECT
+			m.chat_message_id 		AS chatMessageId,
+			cu.chatroom_id 			AS chatroomId,
+			cu.user_id 				AS userId,
+			u.full_name 			AS fullName,
+			u.user_rank				AS userRank,
+			m.chat_message_content	AS chatMessageContent,
+			m.chat_message_status	AS chatMessageStatus,
+			m.create_date			AS createDate
+		FROM chat_message m
+		INNER JOIN chatroom_user cu
+			ON cu.chatroom_user_id = m.chatroom_user_id
+		INNER JOIN `user` u
+			ON u.user_id = cu.user_id
+		WHERE m.chat_message_id = #{messageId}		
+	</select>
+	
+	<!-- 히스토리 조회 -->
+	<select id="selectMessages"
+			resultType="com.example.broadcastgroupware.dto.ChatMessageDto">
+		SELECT
+			m.chat_message_id        AS chatMessageId,
+	        cu.chatroom_id           AS chatroomId,
+	        cu.user_id               AS userId,
+	        u.full_name              AS fullName,
+	        u.user_rank              AS userRank,
+	        m.chat_message_content   AS chatMessageContent,
+	        m.chat_message_status    AS chatMessageStatus,
+	        m.create_date            AS createDate
+		FROM chat_message m
+		INNER JOIN chatroom_user cu
+			ON cu.chatroom_user_id = m.chatroom_user_id
+		INNER JOIN `user` u
+			ON u.user_id = cu.user_id
+		WHERE cu.chatroom_id = #{chatroomId}
+			<if test="afterId != null">
+				AND m.chat_message_id &gt; #{afterId}
+			</if>
+		ORDER BY m.chat_message_id ASC
+		LIMIT #{limit}
+	</select>
+	
+	<!-- 읽음시간 갱신 -->
+	<update id="updateLastReadAt">
+		UPDATE chatroom_user
+		SET last_read_at = NOW()
+		WHERE chatroom_id = #{chatroomId} AND user_id = #{userId}
+	</update>
+	
+	
+	<!--
+	<select id="selectChatUserList" resultType="com.example.broadcastgroupware.dto.ChatUserListDto">
+		SELECT full_name AS fullName
+			 , user_rank AS userRank
+			 , 
+		FROM user u
+		LEFT JOIN user_images ui
+			ON ui.user_id = u.user_id
+			AND ui.user_images_type = '프로필'
+			프로필이미지 중 최신것 1개만
+			AND ui.update_date = (
+								   SELECT MAX(x.update_date)
+								   FROM user_images x
+								   WHERE x.user_id = u.user_id
+								   	AND x.user_images_type = '프로필'
+								  )
+		<where>
+			(u.user_resign_date IS NULL OR u.user_resign_date > NOW())	재직자만
+			<if test="meId != null">
+				AND u.user_id
+			</if>
+		</where>
+	</select>
+		-->
 </mapper>

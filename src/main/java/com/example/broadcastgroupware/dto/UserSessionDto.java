@@ -15,7 +15,7 @@ public class UserSessionDto {
     private String userRank;
     private String userJoinDate;
     private String userResignDate;
-    private String userimagesName;
+    private String userimagesName;  // 추가 추후 수정
 
     // password 필드는 제외
 }

@@ -37,7 +37,7 @@
 
             <!-- 로그인/방 메타 (서버에서 내려주세요: loginUserId, loginUserName) -->
             <div id="chat-meta"
-                 data-room-id="${empty roomId ? 1 : roomId}"
+                 data-room-id="${empty chatroomId ? 1 : chatroomId}"
                  data-user-id="${empty loginUserId ? 0 : loginUserId}"
                  data-user-name="${empty loginUserName ? '' : loginUserName}">
             </div>
@@ -101,7 +101,7 @@
                                 </ul>
                             </div>
 
-                            <!-- 연락처 리스트 -->
+                            <!-- 1대1 리스트 -->
                             <div class="p-4 border-top">
                                 <div class="float-end">
                                     <a href="javascript:void(0);" class="text-primary"><i class="mdi mdi-plus"></i> New Contact</a>
@@ -117,7 +117,7 @@
                 <!-- end chat-leftsidebar -->
 
                 <!-- Chat 영역 -->
-                <div class="w-100 user-chat mt-4 mt-sm-0 ms-lg-1">
+                <div class="w-100 user-chat mt-4 mt-sm-0 ms-lg-1"id="chat-panel">
                     <div class="card">
                         <!-- 채팅방 헤더 -->
                         <div class="p-3 px-lg-4 border-bottom">
@@ -138,7 +138,7 @@
                         </div>
 
                         <!-- 채팅 메시지 영역 -->
-                       <div class="chat-conversation py-3" data-simplebar style="height: 60vh;">
+                       <div class="chat-conversation py-3" data-simplebar style="height: 65vh;">
 						  <ul class="list-unstyled chat-conversation-list mb-0 px-3" id="chat-messages"></ul>
 						</div>
 
@@ -165,7 +165,6 @@
         </div>
     </div>
 </div>
-
 <script>
   // =========================
   // 기본 셋업
@@ -180,16 +179,16 @@
   const $list    = document.getElementById('chat-messages');
 
   // 메타 읽기 (서버에서 주입)
-  const meta     = document.getElementById('chat-meta').dataset;
-  const roomId   = Number(meta.roomId || 1);
-  const myUserId = Number(meta.userId || 0);
-  const myName   = meta.userName || 'Me';
+  const meta        = document.getElementById('chat-meta').dataset;
+  const chatroomId  = Number(meta.roomId || 1);
+  const myUserId    = Number(meta.userId || 0);
+  const myName      = meta.userName || 'Me';
 
   // 경로 빌더
   function topicRoom(id){ return '/topic/rooms/' + id; }
   function topicRead(id){ return '/topic/rooms/' + id + '/read'; }
-  const APP_SEND = '/app/chat/send';
-  const APP_READ = '/app/chat/read';
+  function appSend(id){ return `/app/rooms/${id}/send`; }
+  function appRead(id){ return `/app/rooms/${id}/read`; }
 
   // CSRF 헤더(옵션)
   function getCsrfHeaders() {
@@ -200,6 +199,16 @@
     }
     return {};
   }
+  
+	//=========================
+	//메시지 로드 (새로고침 시 DB에서 불러옴)
+	//=========================
+	function loadMessages(chatroomId) {
+	 $.getJSON(`/api/rooms/${chatroomId}/messages?limit=50`, function(messages) {
+	   $("#chat-messages").empty();   
+	   messages.forEach(m => appendMessage(m));
+	 });
+	}
 
   // 서버 → 프런트 키 정규화
   function normalizeMessage(raw){
@@ -251,98 +260,87 @@
   // =========================
   // 템플릿 스타일 말풍선 렌더
   // =========================
-function appendMessage(raw) {
-  const msg = normalizeMessage(raw);
+  function appendMessage(raw) {
+    const msg = normalizeMessage(raw);
 
-  if (typeof msg.messageId === 'number') {
-    lastMessageId = Math.max(lastMessageId, msg.messageId);
-  }
+    if (typeof msg.messageId === 'number') {
+      lastMessageId = Math.max(lastMessageId, msg.messageId);
+    }
 
-  maybeAddDateSeparator(msg.createdAt);
+    maybeAddDateSeparator(msg.createdAt);
 
-  // 내가 보낸 메시지 판정 (필드 보강)
-  const senderId = Number(
-    msg.senderUserId ?? msg.userId ?? msg.chatroomUserId ?? (msg.sender && msg.sender.userId) ?? 0
-  );
-  const isMine = senderId === myUserId;
+    const senderId = Number(
+      msg.senderUserId ?? msg.userId ?? msg.chatroomUserId ?? (msg.sender && msg.sender.userId) ?? 0
+    );
+    const isMine = senderId === myUserId;
 
-  // li에 right/left를 붙인다 (CSS가 이렇게 기대함)
-  const li = document.createElement('li');
-  li.className = isMine ? 'right' : 'left';
+    const li = document.createElement('li');
+    li.className = isMine ? 'right' : 'left';
 
-  // .conversation-list에는 클래스 하나만
-  const conv = document.createElement('div');
-  conv.className = 'conversation-list';
+    const conv = document.createElement('div');
+    conv.className = 'conversation-list';
 
-  // 드롭다운(생략 가능)
-  const dd = document.createElement('div');
-  dd.className = 'dropdown';
-  dd.innerHTML =
-    '<a class="dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">' +
-      '<i class="mdi mdi-dots-vertical"></i>' +
-    '</a>' +
-    '<div class="dropdown-menu dropdown-menu-end">' +
-      '<a class="dropdown-item" href="#" data-action="copy">Copy</a>' +
-      '<a class="dropdown-item" href="#" data-action="delete">Delete</a>' +
-    '</div>';
+    const dd = document.createElement('div');
+    dd.className = 'dropdown';
+    dd.innerHTML =
+      '<a class="dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">' +
+        '<i class="mdi mdi-dots-vertical"></i>' +
+      '</a>' +
+      '<div class="dropdown-menu dropdown-menu-end">' +
+        '<a class="dropdown-item" href="#" data-action="copy">Copy</a>' +
+        '<a class="dropdown-item" href="#" data-action="delete">Delete</a>' +
+      '</div>';
 
-  // 말풍선 래퍼
-  const wrap = document.createElement('div');
-  wrap.className = 'ctext-wrap d-flex align-items-end';
+    const wrap = document.createElement('div');
+    wrap.className = 'ctext-wrap d-flex align-items-end';
 
-  const bubble = document.createElement('div');
-  bubble.className = 'ctext-wrap-content';
+    const bubble = document.createElement('div');
+    bubble.className = 'ctext-wrap-content';
 
-  // 테마 색상
-  if (isMine) {
-    bubble.classList.add('bg-soft-primary', 'bg-primary-subtle');
-  } else {
-    bubble.classList.add('bg-light');
-  }
+    if (isMine) {
+      bubble.classList.add('bg-soft-primary', 'bg-primary-subtle');
+    } else {
+      bubble.classList.add('bg-light');
+    }
 
-  const h5 = document.createElement('h5');
-  h5.className = 'conversation-name';
+    const h5 = document.createElement('h5');
+    h5.className = 'conversation-name';
 
-  const nameSpan = document.createElement('span');
-  nameSpan.className = 'name fw-semibold';
-  // conv.appendChild(dd);  3점
- //상대방 메시지라면 이름/직급을 말풍선 위에 표시
-  if (!isMine) {
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'sender-name fw-semibold mb-1';
-    nameDiv.textContent = msg.fullName + (msg.senderRank ? ' ' + msg.senderRank : '');
-    conv.appendChild(nameDiv);   // wrap 위에 붙이기
-  }
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'name fw-semibold';
 
-  const p = document.createElement('p');
-  p.className = 'mb-0';
-  p.innerHTML = (msg.content || '').replace(/\n/g, "<br>");
+    if (!isMine) {
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'sender-name fw-semibold mb-1';
+      nameDiv.textContent = msg.fullName + (msg.senderRank ? ' ' + msg.senderRank : '');
+      conv.appendChild(nameDiv);
+    }
 
-  h5.appendChild(nameSpan);
-  bubble.appendChild(h5);
-  bubble.appendChild(p);
+    const p = document.createElement('p');
+    p.className = 'mb-0';
+    p.innerHTML = (msg.content || '').replace(/\n/g, "<br>");
 
-  const timeSpan = document.createElement('span');
-  timeSpan.className = 'message-time small text-muted ms-2 me-2';
-  timeSpan.textContent = formatTime(msg.createdAt);
+    h5.appendChild(nameSpan);
+    bubble.appendChild(h5);
+    bubble.appendChild(p);
 
-  // 순서 배치
-  if (isMine) {
-    // 오른쪽: [시간][말풍선]
-    wrap.appendChild(timeSpan);
-    wrap.appendChild(bubble);
-  } else {
-    // 왼쪽: [말풍선][시간]
-    wrap.appendChild(bubble);
-    wrap.appendChild(timeSpan);
-  }
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'message-time small text-muted ms-2 me-2';
+    timeSpan.textContent = formatTime(msg.createdAt);
 
-  
-  conv.appendChild(wrap);
-  li.appendChild(conv);
-  $list.appendChild(li);
+    if (isMine) {
+      wrap.appendChild(timeSpan);
+      wrap.appendChild(bubble);
+    } else {
+      wrap.appendChild(bubble);
+      wrap.appendChild(timeSpan);
+    }
 
-  $list.parentElement.scrollTop = $list.parentElement.scrollHeight;
+    conv.appendChild(wrap);
+    li.appendChild(conv);
+    $list.appendChild(li);
+
+    $list.parentElement.scrollTop = $list.parentElement.scrollHeight;
   }
 
   // =========================
@@ -352,10 +350,14 @@ function appendMessage(raw) {
     if (!stompClient || !stompClient.connected) return;
     const content = $input.value.trim();
     if (!content) return;
+    
+   // console.log('meta.roomId =', meta.roomId, 'chatroomId var =', chatroomId);
+    const dest = appSend(chatroomId);
+    //console.log('SEND to =>', dest);
+   // console.log("보내는중:", chatroomId, content);
 
-    stompClient.send(APP_SEND, {}, JSON.stringify({
-   		chatroomId: roomId,
-    	chatMessageContent: content
+    stompClient.send(`/app/rooms/${chatroomId}/send`, {}, JSON.stringify({
+        chatMessageContent: content
     }));
     
     $input.value = '';
@@ -364,11 +366,14 @@ function appendMessage(raw) {
 
   function markReadIfNeeded() {
     if (!stompClient || !stompClient.connected || lastMessageId === 0) return;
-    stompClient.send(APP_READ, {}, JSON.stringify({
-    	chatroomId: roomId,
-    	chatMessageId: lastMessageId
-    }));
+    stompClient.send(appRead(chatroomId),
+      { 'content-type': 'application/json' },
+      JSON.stringify({ chatMessageId: lastMessageId })
+    );
   }
+  
+  const dest = appRead(chatroomId);
+  console.log('READ to =>', dest, ' lastMessageId=', lastMessageId);
 
   function setConnected(connected) {
     if (connected) {
@@ -386,9 +391,8 @@ function appendMessage(raw) {
   function connect() {
     setConnected(false);
 
-    const sock = new SockJS('/ws-stomp');
-    stompClient = Stomp.over(sock);
-    // stompClient.debug = null; // 로그 줄이고 싶으면 주석 해제
+    const socket = new SockJS("/ws-stomp", null, { withCredentials: true });
+    stompClient = Stomp.over(socket);
 
     const headers = getCsrfHeaders();
 
@@ -397,8 +401,7 @@ function appendMessage(raw) {
       setConnected(true);
       console.log('Connected: ' + frame);
 
-      // 구독
-      stompClient.subscribe(topicRoom(roomId), function (message) {
+      stompClient.subscribe(topicRoom(chatroomId), function (message) {
         try {
           appendMessage(JSON.parse(message.body));
         } catch (e) {
@@ -406,8 +409,8 @@ function appendMessage(raw) {
         }
       });
 
-      stompClient.subscribe(topicRead(roomId), function (message) {
-        // 필요 시 읽음 UI 반영
+      stompClient.subscribe(topicRead(chatroomId), function (message) {
+        // 읽음 UI 반영 가능
       });
 
       if (document.hasFocus()) markReadIfNeeded();
@@ -419,18 +422,25 @@ function appendMessage(raw) {
       setTimeout(connect, delay);
     });
 
-    sock.onclose = function() { setConnected(false); };
+    socket.onclose = function() { setConnected(false); };
   }
-
-  // 이벤트 바인딩
+ 
   document.getElementById('send-btn').addEventListener('click', sendMessage);
   document.getElementById('chat-input').addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
   window.addEventListener('focus', markReadIfNeeded);
 
-  connect();
+  
+//예: 페이지 열릴 때 호출
+  
+    $(document).ready(function () {
+        loadMessages(chatroomId); // DB에서 이전 메시지 불러오기
+        connect();                // WebSocket 연결
+      });
+
 </script>
+
 
 <div><jsp:include page ="../nav/footer.jsp"></jsp:include></div>
 <div><jsp:include page ="../nav/javascript.jsp"></jsp:include></div>
