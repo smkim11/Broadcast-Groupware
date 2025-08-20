@@ -1,5 +1,6 @@
 package com.example.broadcastgroupware.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -7,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
-import com.example.broadcastgroupware.domain.VehicleUseReason;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.PageDto;
@@ -57,9 +57,22 @@ public class ReservationService {
 
 	// 차량예약
 	public boolean carReservation(VehicleReservation vehicleReservation) {
-		
-		return reservationMapper.carReservation(vehicleReservation);
+
+	    // 1) 시작/종료 시간 null 체크
+	    if(vehicleReservation.getVehicleReservationStartTime() == null || vehicleReservation.getVehicleReservationEndTime() == null) {
+	        throw new IllegalArgumentException("예약 시작/종료 시간이 필요합니다.");
+	    }
+
+	    // 2) 겹치는 예약이 있는지 확인
+	    int count = reservationMapper.checkReservations(vehicleReservation);
+
+	    if(count > 0) {
+	        return false; // 겹치는 예약 있음
+	    } else {
+	        // 3) 겹치지 않으면 예약 저장
+	        reservationMapper.carReservation(vehicleReservation);
+	        return true;
+	    }
 	}
-
-
+	
 }

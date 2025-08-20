@@ -3,6 +3,7 @@ package com.example.broadcastgroupware.mapper;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
@@ -30,6 +31,10 @@ public interface ReservationMapper {
 	void modifyVehicleStatus(CarToggle carToggle);
 	void insertVehicleReason(CarToggle carToggle);
 
+	// 기존 예약이랑 겹치는지 확인
+	int checkReservations(VehicleReservation vehicleReservation);
+	
+	// 차량 예약
 	boolean carReservation(VehicleReservation vehicleReservation);
 
 }

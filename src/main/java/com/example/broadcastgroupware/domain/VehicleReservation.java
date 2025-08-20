@@ -11,4 +11,5 @@ public class VehicleReservation {
 	private String vehicleReservationEndTime;
 	private String createDate;
 	private String updateDate;
+	
 }

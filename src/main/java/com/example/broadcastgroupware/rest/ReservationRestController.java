@@ -4,7 +4,9 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Vehicle;
@@ -77,18 +79,23 @@ public class ReservationRestController {
 	
 	// 차량예약
 	@PostMapping("/car/CarReservation")
-	public String CarReservation(VehicleReservation vehicleReservation) {
-		
-		log.info("=== Ajax로 전달된 차량 정보(차량예약) ===", "");
-		log.info("userId: {}", vehicleReservation.getUserId());
-		log.info("vehicleId: {}", vehicleReservation.getVehicleId());
-		log.info("vehicleReservationStartTime: {}", vehicleReservation.getVehicleReservationStartTime());
-		log.info("vehicleReservationEndTime: {}", vehicleReservation.getVehicleReservationEndTime());
-		
-		boolean success = reservationService.carReservation(vehicleReservation);
-		
-		return success ? "예약 성공" : "예약 실패";
-		
+	@ResponseBody
+	public String CarReservation(@RequestBody VehicleReservation vehicleReservation) {
+
+	    log.info("=== Ajax로 전달된 차량 정보(차량예약) ===");
+	    log.info("userId: {}", vehicleReservation.getUserId());
+	    log.info("vehicleId: {}", vehicleReservation.getVehicleId());
+	    log.info("vehicleReservationStartTime: {}", vehicleReservation.getVehicleReservationStartTime());
+	    log.info("vehicleReservationEndTime: {}", vehicleReservation.getVehicleReservationEndTime());
+
+	    boolean success = reservationService.carReservation(vehicleReservation);
+
+	    if(!success) {
+	        return "선택한 시간과 기존 예약이 겹칩니다.";
+	    }
+
+	    return "예약 성공";
 	}
+
 	
 }

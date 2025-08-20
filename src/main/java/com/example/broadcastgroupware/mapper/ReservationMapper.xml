@@ -10,7 +10,7 @@
 	
 	<!-- 예약리스트 -->
 	<select id="getCarReservationList">
-		SELECT 
+		SELECT DISTINCT
 			v.vehicle_id AS vehicleId,
 			v.vehicle_status AS vehicleStatus,
 			v.vehicle_no AS vehicleNo,
@@ -63,10 +63,26 @@
 		VALUES(#{vehicleId}, #{vehicleUseReasonContent}, #{vehicleUseReasonStartDate}, #{vehicleUseReasonEndDate})
 	</insert>
 	
+	<!-- 기존 예약이랑 겹치는지 확인 -->
+	<select id="checkReservations" parameterType="com.example.broadcastgroupware.domain.VehicleReservation" resultType="int">
+	    SELECT COUNT(*)
+	    FROM vehicle_reservation
+	    WHERE vehicle_id = #{vehicleId}
+	      AND vehicle_reservation_start_time &lt;= STR_TO_DATE(#{vehicleReservationStartTime}, '%Y-%m-%d %H:%i:%s')
+	      AND vehicle_reservation_end_time &gt;= STR_TO_DATE(#{vehicleReservationEndTime}, '%Y-%m-%d %H:%i:%s')
+	</select>
+	
 	<!-- 차량 예약 -->
-	<insert id="carReservation">
-		INSERT INTO vehicle_reservation(user_id, vehicle_id, vehicle_reservation_start_time, vehicle_reservation_end_time)
-		VALUES(#{userId}, #{vehicleId}, #{vehicleReservationStartTime}, #{vehicleReservationEndTime})
+	<insert id="carReservation" parameterType="com.example.broadcastgroupware.domain.VehicleReservation">
+	    INSERT INTO vehicle_reservation(
+	        user_id, vehicle_id, vehicle_reservation_start_time, vehicle_reservation_end_time
+	    )
+	    VALUES(
+	        #{userId},
+	        #{vehicleId},
+	        STR_TO_DATE(#{vehicleReservationStartTime}, '%Y-%m-%d %H:%i:%s'),
+	        STR_TO_DATE(#{vehicleReservationEndTime}, '%Y-%m-%d %H:%i:%s')
+	    )
 	</insert>
 
 </mapper>

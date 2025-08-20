@@ -595,7 +595,7 @@ table tr:nth-child(even) {
 	                    drawTimeLabelLocal(overlapEndX, new Date(Math.min(selectedEnd, reservationEnd)));
 	                }
 	
-	                // 오른쪽 초록
+	                // 선택 블루
 	                if (selEndX > overlapEndX) {
 	                    ctx.fillStyle = "blue";
 	                    ctx.fillRect(overlapEndX, 15, selEndX - overlapEndX, 20);
@@ -1014,15 +1014,16 @@ table tr:nth-child(even) {
 		        $.ajax({
 		            url: "/api/car/CarReservation",
 		            type: "POST",
-		            data: {
+		            contentType: "application/json",
+		            data: JSON.stringify({
 		                userId: userId,
 		                vehicleId: vehicleId,
 		                vehicleReservationStartTime: startDateTime,
 		                vehicleReservationEndTime: endDateTime
-		            },
+		            }),
 		            success: function(res) {
-		                alert("예약 완료");
-		                location.reload(); // 예약 후 새로고침
+		                alert(res);
+		                location.reload();
 		            },
 		            error: function(err) {
 		                console.error("예약 실패", err);
