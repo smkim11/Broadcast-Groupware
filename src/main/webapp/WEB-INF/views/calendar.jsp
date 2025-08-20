@@ -81,6 +81,7 @@
                                                 <form class="needs-validation" name="event-form" id="form-event" novalidate>
                                                     <input type="hidden" name="calendarId" id="eventid">
                                                     <input type="hidden" name="userId" id="event-user-id">
+                                                    <input type="hidden" name="loginUser" id="event-login-user" value="${loginUser}">
                                                     <div class="row">
                                                         <div class="col-12">
                                                             <div class="mb-3">
@@ -118,9 +119,18 @@
                                                                 <!-- 상세보기시 select가 아닌 input으로 보이며 수정불가 -->
                                                                 <input class="form-control" type="hidden" id="event-type-read"/>
                                                                 <select class="form-control form-select" name="calendarType" id="event-type">
-                                                                    <option>개인</option>
-                                                                    <option>팀</option>
-                                                                    <option>전체</option>
+                                                                	<!-- 관리자일때만 공개범위 전체로 설정가능 -->
+	                                                                <c:choose>
+	                                                                	<c:when test="${role eq 'admin' }">
+		                                                                	<option>개인</option>
+		                                                                    <option>팀</option>
+		                                                                    <option>전체</option>
+	                                                                	</c:when>
+	                                                                	<c:otherwise>
+	                                                                		<option>개인</option>
+		                                                                    <option>팀</option>
+	                                                                	</c:otherwise>
+	                                                                </c:choose>
                                                                 </select>
                                                                 <div class="invalid-feedback">공개범위를 선택하세요.</div>
                                                             </div>
