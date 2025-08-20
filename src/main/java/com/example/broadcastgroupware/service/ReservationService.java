@@ -54,16 +54,5 @@ public class ReservationService {
 		reservationMapper.insertVehicleReason(carToggle); // reason테이블에 추가
 	}
 
-	// 이슈차량리스트
-	public List<Vehicle> issueCarList() {
-		return reservationMapper.issueCarList();
-	}
-	
-	// 이슈차량정보
-	public List<VehicleUseReason> issueCarData(int vehicleId) {
-		return reservationMapper.issueCarData(vehicleId);
-	}
-
-
 
 }

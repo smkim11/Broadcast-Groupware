@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.example.broadcastgroupware.domain.Vehicle;
-import com.example.broadcastgroupware.domain.VehicleUseReason;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.PageDto;
@@ -29,12 +28,5 @@ public interface ReservationMapper {
 	// 차량 비활성 <-> 활성화
 	void modifyVehicleStatus(CarToggle carToggle);
 	void insertVehicleReason(CarToggle carToggle);
-
-	// 이슈차량리스트
-	List<Vehicle> issueCarList();
-	
-	// 이슈차량정보
-	List<VehicleUseReason> issueCarData(int vehicleId);
-
 
 }

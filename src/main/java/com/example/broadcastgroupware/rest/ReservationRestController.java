@@ -3,10 +3,9 @@ package com.example.broadcastgroupware.rest;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Vehicle;
@@ -75,18 +74,6 @@ public class ReservationRestController {
 	@GetMapping("/car/adminCarList")
 	public List<Vehicle> adminCarList() {
 		return reservationService.adminCarList();
-	}
-	
-	// 이슈 차량리스트
-	@GetMapping("/car/issueCarList")
-	public List<Vehicle> issueCarList() {
-		return reservationService.issueCarList();
-	}
-	
-	// 이슈차량 리스트에 대한 정보
-	@GetMapping("/car/issueCarData")
-	public List<VehicleUseReason> issueCarData(@RequestBody int vehicleId) {
-		return reservationService.issueCarData(vehicleId);
 	}
 	
 }

@@ -23,15 +23,6 @@
 
 <style>
 
-.main-container {
-    padding-top: 80px;
-    padding-bottom: 60px;
-    width: 1000px;
-    margin: 0 auto;
-    font-family: 'Arial', sans-serif;
-    background-color: #fdfdfd;
-}
-
 #reservationForm {
     display: flex;
     flex-wrap: wrap;
@@ -292,8 +283,25 @@ table tr:nth-child(even) {
 <header>
     <jsp:include page ="../nav/header.jsp"></jsp:include>
 </header>
-
-	<div class="main-container">
+<div class="main-content">
+	<div class="page-content">
+		<div class="container-fluid">
+		
+	<!-- 페이지 타이틀 영역 (제목 + 경로 표시) -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-flex align-items-center justify-content-between">
+                        <h4 class="mb-0">차량 예약</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item">예약</li>
+                                <li class="breadcrumb-item active">차량</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+	
 		<form id="reservationForm" action="/api/car" method="post">
 		    <label>차량선택</label>
 		    <select>
@@ -361,8 +369,7 @@ table tr:nth-child(even) {
 			<select name="adminType" id="adminType">
 				<option value="등록">등록</option>
 				<option value="수정">수정</option>
-				<option value="이슈등록">이슈등록</option>
-				<option value="이슈수정">이슈수성</option>
+				<option value="이슈등록">차량관리</option>
 			</select>
 			
 			<!-- 등록 폼 -->
@@ -430,27 +437,11 @@ table tr:nth-child(even) {
 				<button type="submit">변경</button>
 			</form>
 			
-			<!-- 이슈수정 폼 -->
-			<form id="issueModifyForm" class="form-section" style="display:none;">
-			    <!-- 차량 선택 -->
-			   	<label>차량 선택</label>
-			    <select id="issueVehicleSelect">
-			        <option value="">-- 차량 선택 --</option>
-			    </select><br>
-			
-			    <!-- 선택된 차량 이슈 정보 -->
-			    <label>이슈 날짜</label>
-			    <input type="date" name="issueDate"><br>
-			
-			    <label>이슈 내용</label>
-			    <input type="text" name="issueContent" placeholder="이슈 내용 입력"><br>
-			
-			    <button class="close1" type="button">닫기</button>
-			    <button type="submit">수정</button>
-			</form>
 			
 		</div>
-	</div>
+     </div>
+   </div>
+ </div>
 
 <script>
 
@@ -876,7 +867,7 @@ table tr:nth-child(even) {
 				});
 		    });
 		    
-		    
+	    
 		// 수정, 이슈등록에 사용할 차량 리스트
 	    $(document).ready(function() {
 	        $.ajax({
@@ -886,60 +877,30 @@ table tr:nth-child(even) {
 	              
 	            	 var selects = [$('#modifyVehicleSelect'), $('#toggleVehicleSelect')];
 
-	                 selects.forEach(function(select) {
+	            	 selects.forEach(function(select) {
 	                     select.empty();
 	                     select.append('<option value="">-- 차량 선택 --</option>');
+	                     
 	                     vehicleList.forEach(function(vehicle) {
-	                         select.append('<option value="' + vehicle.vehicleId + '">' + vehicle.vehicleNo + '</option>');
+	                         // Y/N 값 변환
+	                         var statusText = vehicle.vehicleStatus === 'Y' ? '활성화' : '비활성화';
+
+	                         // 옵션 추가
+	                         select.append(
+	                             '<option value="' + vehicle.vehicleId + '">' 
+	                             + vehicle.vehicleNo + ' (' + statusText + ')' 
+	                             + '</option>'
+	                         );
 	                     });
 	                 });
 	             },
+	             
 	            error: function(err) {
 	                console.error('차량 목록을 불러오는데 실패했습니다.', err);
 	            }
 	        });
 	    });
 		
-		 // 이슈 수정에 사용할 차량 리스트
-	    $(document).ready(function() {
-	        $.ajax({
-	            url: '/api/car/issueCarList',
-	            method: 'GET',
-	            success: function(vehicleList) {
-	              
-	            	var select = $('#issueVehicleSelect');
-	                select.empty();
-	                select.append('<option value="">-- 차량 선택 --</option>');
-	                vehicleList.forEach(function(vehicle) {
-	                    select.append('<option value="' + vehicle.vehicleId + '">' + vehicle.vehicleNo + '</option>');
-	                });
-	            },
-	            error: function(err) {
-	                console.error('차량 목록을 불러오는데 실패했습니다.', err);
-	            }
-	        });
-	    });
-		 
-		// 차량 선택 시 해당 이슈 데이터 불러오기
-		 $(document).on('change', '#issueVehicleSelect', function() {
-		     var vehicleId = $(this).val();
-		     if(!vehicleId) return;
-		     // console.log('vehicleId: ', vehicleId);
-
-		     $.ajax({
-		         url: '/api/car/issueCarData/' + vehicleId,
-		         method: 'GET',
-		         success: function(data) {
-		             $('input[name="issueStartDate"]').val(data.reasonStartDate);
-		             $('input[name="issueEndDate"]').val(data.reasonEndDate);
-		             $('input[name="issueContent"]').val(data.reason);
-		         },
-		         error: function(err) {
-		             console.error('이슈 데이터 불러오기 실패', err);
-		         }
-		     });
-		 });
-
 		    // 모달 열 때 호출
 		    $('#toggleModalOpenBtn').on('click', function() {
 		        $('#carToggle').show();
@@ -964,7 +925,6 @@ table tr:nth-child(even) {
 		        addForm.style.display = "none";
 		        modifyForm.style.display = "none";
 		        toggleForm.style.display = "none";
-		        issueModifyForm.style.display = "none";
 
 		        // 선택한 폼만 보이기
 		        if (type === "등록") {
@@ -973,9 +933,7 @@ table tr:nth-child(even) {
 		            modifyForm.style.display = "block";
 		        } else if (type === "이슈등록") {
 		            toggleForm.style.display = "block";
-		        } else if (type === "이슈수정") {
-		        	issueModifyForm.style.display = "block";
-		        }	    
+		        }     
 		        
 		    }
 
@@ -985,7 +943,7 @@ table tr:nth-child(even) {
 		    });
 		});
 		
-		// Flatpickr 초기화
+		// Flatpickr 초기화(이슈등록)
 		flatpickr("#issueDate", {
 		    mode: "range",      // 날짜 범위 선택 가능
 		    dateFormat: "Y-m-d",
@@ -1007,6 +965,7 @@ table tr:nth-child(even) {
 		        // console.log('비활성 종료시간 :', endDate);
 		    }
 		});
+		
 
 		// 날짜 포맷 YYYY-MM-DD
 		function formatDate(date) {

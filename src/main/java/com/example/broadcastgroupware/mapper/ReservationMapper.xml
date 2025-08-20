@@ -64,19 +64,5 @@
 		VALUES(#{vehicleId}, #{vehicleUseReasonContent}, #{vehicleUseReasonStartDate}, #{vehicleUseReasonEndDate})
 	</insert>
 	
-	<!-- 이슈차량 리스트 -->
-	<select id="issueCarList">
-		SELECT vehicle_id AS vehicleId, vehicle_no AS vehicleNo
-		FROM vehicle
-		WHERE vehicle_status = 'N'
-	</select>
-	
-	<!-- 이슈차량 정보 -->
-	<select id="issueCarData" parameterType="int" resultType="com.example.broadcastgroupware.domain.VehicleUseReason">
-		SELECT vehicle_id AS vehicleId, vehicel_use_reason_content AS reason,
-		vehicle_use_reason_start_date AS reasonStartDate, vehicle_use_reason_end_date AS reasonEndDate
-		FROM vehicle_use_reason
-		WHERE vehicle_id = #{vehicleId}
-	</select>
-	
+
 </mapper>
