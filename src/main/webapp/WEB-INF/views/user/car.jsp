@@ -361,7 +361,8 @@ table tr:nth-child(even) {
 			<select name="adminType" id="adminType">
 				<option value="등록">등록</option>
 				<option value="수정">수정</option>
-				<option value="비활성화">비활성화</option>
+				<option value="이슈등록">이슈등록</option>
+				<option value="이슈수정">이슈수성</option>
 			</select>
 			
 			<!-- 등록 폼 -->
@@ -401,7 +402,7 @@ table tr:nth-child(even) {
 				<button type="submit">수정</button>
 			</form>
 			
-			<!-- 비활성화 폼 -->
+			<!-- 이슈등록 폼 -->
 			<form id="carToggle" class="form-section" style="display:none;">
 				<label for="vehicleSelect">차량 선택</label>
 				<select id="toggleVehicleSelect">
@@ -427,8 +428,27 @@ table tr:nth-child(even) {
 				<input type="text" id="toggleReason" name="vehicelUseReasonContent" placeholder="ex: 사고, 수리(완료),">
 				<button class="close1" type="button">닫기</button>
 				<button type="submit">변경</button>
-				
 			</form>
+			
+			<!-- 이슈수정 폼 -->
+			<form id="issueModifyForm" class="form-section" style="display:none;">
+			    <!-- 차량 선택 -->
+			   	<label>차량 선택</label>
+			    <select id="issueVehicleSelect">
+			        <option value="">-- 차량 선택 --</option>
+			    </select><br>
+			
+			    <!-- 선택된 차량 이슈 정보 -->
+			    <label>이슈 날짜</label>
+			    <input type="date" name="issueDate"><br>
+			
+			    <label>이슈 내용</label>
+			    <input type="text" name="issueContent" placeholder="이슈 내용 입력"><br>
+			
+			    <button class="close1" type="button">닫기</button>
+			    <button type="submit">수정</button>
+			</form>
+			
 		</div>
 	</div>
 
@@ -610,7 +630,6 @@ table tr:nth-child(even) {
 	        }
 	    });
 	}
-	
 	
 		// 시간 드롭다운
 		function populateTimeOptions(selectId, firstOptionLabel){
@@ -858,28 +877,68 @@ table tr:nth-child(even) {
 		    });
 		    
 		    
-		 // 수정, 비활성에 사용할 차량 리스트
-		    $(document).ready(function() {
-		        $.ajax({
-		            url: '/api/car/adminCarList',
-		            method: 'GET',
-		            success: function(vehicleList) {
-		              
-		            	 var selects = [$('#modifyVehicleSelect'), $('#toggleVehicleSelect')];
+		// 수정, 이슈등록에 사용할 차량 리스트
+	    $(document).ready(function() {
+	        $.ajax({
+	            url: '/api/car/adminCarList',
+	            method: 'GET',
+	            success: function(vehicleList) {
+	              
+	            	 var selects = [$('#modifyVehicleSelect'), $('#toggleVehicleSelect')];
 
-		                 selects.forEach(function(select) {
-		                     select.empty();
-		                     select.append('<option value="">-- 차량 선택 --</option>');
-		                     vehicleList.forEach(function(vehicle) {
-		                         select.append('<option value="' + vehicle.vehicleId + '">' + vehicle.vehicleNo + '</option>');
-		                     });
-		                 });
-		             },
-		            error: function(err) {
-		                console.error('차량 목록을 불러오는데 실패했습니다.', err);
-		            }
-		        });
-		    });
+	                 selects.forEach(function(select) {
+	                     select.empty();
+	                     select.append('<option value="">-- 차량 선택 --</option>');
+	                     vehicleList.forEach(function(vehicle) {
+	                         select.append('<option value="' + vehicle.vehicleId + '">' + vehicle.vehicleNo + '</option>');
+	                     });
+	                 });
+	             },
+	            error: function(err) {
+	                console.error('차량 목록을 불러오는데 실패했습니다.', err);
+	            }
+	        });
+	    });
+		
+		 // 이슈 수정에 사용할 차량 리스트
+	    $(document).ready(function() {
+	        $.ajax({
+	            url: '/api/car/issueCarList',
+	            method: 'GET',
+	            success: function(vehicleList) {
+	              
+	            	var select = $('#issueVehicleSelect');
+	                select.empty();
+	                select.append('<option value="">-- 차량 선택 --</option>');
+	                vehicleList.forEach(function(vehicle) {
+	                    select.append('<option value="' + vehicle.vehicleId + '">' + vehicle.vehicleNo + '</option>');
+	                });
+	            },
+	            error: function(err) {
+	                console.error('차량 목록을 불러오는데 실패했습니다.', err);
+	            }
+	        });
+	    });
+		 
+		// 차량 선택 시 해당 이슈 데이터 불러오기
+		 $(document).on('change', '#issueVehicleSelect', function() {
+		     var vehicleId = $(this).val();
+		     if(!vehicleId) return;
+		     // console.log('vehicleId: ', vehicleId);
+
+		     $.ajax({
+		         url: '/api/car/issueCarData/' + vehicleId,
+		         method: 'GET',
+		         success: function(data) {
+		             $('input[name="issueStartDate"]').val(data.reasonStartDate);
+		             $('input[name="issueEndDate"]').val(data.reasonEndDate);
+		             $('input[name="issueContent"]').val(data.reason);
+		         },
+		         error: function(err) {
+		             console.error('이슈 데이터 불러오기 실패', err);
+		         }
+		     });
+		 });
 
 		    // 모달 열 때 호출
 		    $('#toggleModalOpenBtn').on('click', function() {
@@ -889,7 +948,7 @@ table tr:nth-child(even) {
 		    // 비활성화 폼에서 선택한 차량 가져오기
 		    $('#toggleVehicleSelect').change(function() {
 		        var selectedId = $(this).val();
-		        console.log('선택한 차량 ID (비활성화 폼):', selectedId);
+		        console.log('선택한 차량 ID (이슈등록 폼):', selectedId);
 		        $('#carToggle input[name="vehicleId"]').val(selectedId); 
 		    });
 
@@ -899,23 +958,26 @@ table tr:nth-child(even) {
 		        $('input[name="vehicleId"]').val(selectedId);
 		    });
 
-
-		    
 		    // 폼 전환
 		    function showForm(type) {
 		        // 모든 폼 숨기기
 		        addForm.style.display = "none";
 		        modifyForm.style.display = "none";
 		        toggleForm.style.display = "none";
+		        issueModifyForm.style.display = "none";
 
 		        // 선택한 폼만 보이기
 		        if (type === "등록") {
 		            addForm.style.display = "block";
 		        } else if (type === "수정") {
 		            modifyForm.style.display = "block";
-		        } else if (type === "비활성화") {
+		        } else if (type === "이슈등록") {
 		            toggleForm.style.display = "block";
-		        }		    }
+		        } else if (type === "이슈수정") {
+		        	issueModifyForm.style.display = "block";
+		        }	    
+		        
+		    }
 
 		    // select 값 바뀔 때 폼 전환
 		    adminTypeSelect.addEventListener("change", function() {
@@ -942,7 +1004,7 @@ table tr:nth-child(even) {
 		        }
 		        
 		        // console.log('비활성 시작시간 : ', startDate);
-		        //  console.log('비활성 종료시간 :', endDate);
+		        // console.log('비활성 종료시간 :', endDate);
 		    }
 		});
 

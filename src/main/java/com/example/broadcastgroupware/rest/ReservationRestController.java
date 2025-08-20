@@ -4,10 +4,13 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Vehicle;
+import com.example.broadcastgroupware.domain.VehicleUseReason;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.service.ReservationService;
 
@@ -74,5 +77,16 @@ public class ReservationRestController {
 		return reservationService.adminCarList();
 	}
 	
+	// 이슈 차량리스트
+	@GetMapping("/car/issueCarList")
+	public List<Vehicle> issueCarList() {
+		return reservationService.issueCarList();
+	}
+	
+	// 이슈차량 리스트에 대한 정보
+	@GetMapping("/car/issueCarData")
+	public List<VehicleUseReason> issueCarData(@RequestBody int vehicleId) {
+		return reservationService.issueCarData(vehicleId);
+	}
 	
 }

@@ -8,6 +8,7 @@
 		FROM vehicle
 	</select>
 	
+	<!-- 예약리스트 -->
 	<select id="getCarReservationList">
 		SELECT 
 			v.vehicle_id AS vehicle,
@@ -31,31 +32,51 @@
 		LIMIT #{beginRow}, #{rowPerPage}
 	</select>
 	
+	<!-- 차량등록 -->
 	<insert id="addCar" parameterType="com.example.broadcastgroupware.domain.Vehicle">
 		INSERT INTO vehicle(vehicle_status, vehicle_no, vehicle_type, vehicle_name)
 		VALUES('Y', #{vehicleNo}, #{vehicleType}, #{vehicleName})
 	</insert>
 	
+	<!-- 관리자용 차량리스트 -->
 	<select id="adminCarList" resultType="com.example.broadcastgroupware.domain.Vehicle">
 		SELECT vehicle_id AS vehicleId, vehicle_status AS vehicleStatus, vehicle_no AS vehicleNo,
 		vehicle_type AS vehicleType, vehicle_name AS vehicleName
 		FROM vehicle
 	</select>
 	
+	<!-- 차량 정보 수정 -->
 	<update id="modifyCar">
 		UPDATE vehicle SET vehicle_no = #{vehicleNo}, vehicle_type = #{vehicleType}, vehicle_name = #{vehicleName}
 		WHERE vehicle_id = #{vehicleId}
 	</update>
 	
+	<!-- 이슈등록시 상태값 변경 -->
 	<update id="modifyVehicleStatus">
 		UPDATE vehicle SET vehicle_status = #{vehicleStatus}
 		WHERE vehicle_id = #{vehicleId}
 	</update>
 	
+	<!-- 이슈등록 -->
 	<insert id="insertVehicleReason">
 		INSERT INTO vehicle_use_reason(vehicle_id, vehicel_use_reason_content
 								, vehicle_use_reason_start_date, vehicle_use_reason_end_date)
 		VALUES(#{vehicleId}, #{vehicleUseReasonContent}, #{vehicleUseReasonStartDate}, #{vehicleUseReasonEndDate})
 	</insert>
+	
+	<!-- 이슈차량 리스트 -->
+	<select id="issueCarList">
+		SELECT vehicle_id AS vehicleId, vehicle_no AS vehicleNo
+		FROM vehicle
+		WHERE vehicle_status = 'N'
+	</select>
+	
+	<!-- 이슈차량 정보 -->
+	<select id="issueCarData" parameterType="int" resultType="com.example.broadcastgroupware.domain.VehicleUseReason">
+		SELECT vehicle_id AS vehicleId, vehicel_use_reason_content AS reason,
+		vehicle_use_reason_start_date AS reasonStartDate, vehicle_use_reason_end_date AS reasonEndDate
+		FROM vehicle_use_reason
+		WHERE vehicle_id = #{vehicleId}
+	</select>
 	
 </mapper>
