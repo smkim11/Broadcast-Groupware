@@ -148,7 +148,10 @@ document.addEventListener("DOMContentLoaded", function(){
 			document.getElementById("eventid").value = o.id; 
 			console.log("id:",o.id);
 			document.getElementById("event-user-id").value = o.extendedProps.userId,
+			// 작성자 userId
 			console.log("userId:",o.extendedProps.userId);
+			// 로그인한 직원 userId
+			console.log("loginUser:",document.getElementById("event-login-user").value);
             document.getElementById("event-title").value = o.title,
 			document.getElementById("event-location").value = o.extendedProps.location,
             document.getElementById("event-type").value = o.extendedProps.type,
@@ -164,6 +167,15 @@ document.addEventListener("DOMContentLoaded", function(){
 			    : moment(o.start).format("YYYY-MM-DDTHH:mm"),
 			document.getElementById("event-memo").value = o.extendedProps.memo || "",
             document.getElementById("btn-delete-event").removeAttribute("hidden");
+			// 일정 작성자가 본인이면 삭제,수정버튼이 보이고, 아닐경우 닫기버튼만 보인다
+			if(Number(o.extendedProps.userId) === Number(document.getElementById("event-login-user").value)){
+				document.getElementById("edit-event-btn").removeAttribute("hidden");
+				document.getElementById("btn-delete-event").removeAttribute("hidden");
+			}else{
+				document.getElementById("edit-event-btn").setAttribute("hidden", true);
+				document.getElementById("btn-delete-event").setAttribute("hidden", true);
+			}
+			
         },
         dateClick: function(e){
 			// 수정,삭제버튼 숨기고 저장버튼을 보이게
