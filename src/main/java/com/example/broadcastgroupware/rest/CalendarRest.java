@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Calendar;
+import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.CalendarService;
 
 import jakarta.servlet.http.HttpSession;
@@ -21,7 +22,10 @@ public class CalendarRest {
 	
 	// 일정 등록
 	@PostMapping("/insertCalendar")
-	public void insertCalendar(@RequestBody Calendar calendar) {
+	public void insertCalendar(@RequestBody Calendar calendar, HttpSession session) {
+		// 로그인한 직원의 userId입력
+		UserSessionDto user = (UserSessionDto)session.getAttribute("loginUser");
+		calendar.setUserId(user.getUserId());
 		calendarService.insertCalendar(calendar);
 	}
 

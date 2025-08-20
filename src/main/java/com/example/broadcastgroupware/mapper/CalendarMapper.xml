@@ -16,7 +16,7 @@
 	<insert id="insertCalendar" parameterType="com.example.broadcastgroupware.domain.Calendar">
 		INSERT INTO calendar(user_id,calendar_title,calendar_location,calendar_type,
 			calendar_memo,calendar_start_time,calendar_end_time) 
-		VALUES(53,#{calendarTitle},#{calendarLocation},#{calendarType},#{calendarMemo}
+		VALUES(#{userId},#{calendarTitle},#{calendarLocation},#{calendarType},#{calendarMemo}
 			,#{calendarStartTime},#{calendarEndTime})
 	</insert>
 	
