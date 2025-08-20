@@ -35,9 +35,11 @@ public class ReservationController {
 	    if(loginUser != null) {
 	    	model.addAttribute("username", loginUser.getUsername());
 	    	model.addAttribute("role", loginUser.getRole());
+	    	model.addAttribute("userId", loginUser.getUserId());
 	    	
 	    	log.info("username: {}", loginUser.getUsername());
 	    	log.info("role: {}", loginUser.getRole());
+	    	log.info("userId: {}", loginUser.getUserId());
 	    	
 	    }
 		

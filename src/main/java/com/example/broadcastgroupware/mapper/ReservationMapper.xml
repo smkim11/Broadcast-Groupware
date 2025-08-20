@@ -11,8 +11,8 @@
 	<!-- 예약리스트 -->
 	<select id="getCarReservationList">
 		SELECT 
-			v.vehicle_id AS vehicle,
-			v.vehicle_status AS status,
+			v.vehicle_id AS vehicleId,
+			v.vehicle_status AS vehicleStatus,
 			v.vehicle_no AS vehicleNo,
 			v.vehicle_type AS vehicleType,
 			v.vehicle_name AS vehicleName,
@@ -27,7 +27,6 @@
 		FROM vehicle v
 		LEFT JOIN vehicle_reservation r
 			ON v.vehicle_id = r.vehicle_id
-		WHERE v.vehicle_status = 'Y'
 		ORDER BY v.vehicle_id
 		LIMIT #{beginRow}, #{rowPerPage}
 	</select>
@@ -64,5 +63,10 @@
 		VALUES(#{vehicleId}, #{vehicleUseReasonContent}, #{vehicleUseReasonStartDate}, #{vehicleUseReasonEndDate})
 	</insert>
 	
+	<!-- 차량 예약 -->
+	<insert id="carReservation">
+		INSERT INTO vehicle_reservation(user_id, vehicle_id, vehicle_reservation_start_time, vehicle_reservation_end_time)
+		VALUES(#{userId}, #{vehicleId}, #{vehicleReservationStartTime}, #{vehicleReservationEndTime})
+	</insert>
 
 </mapper>

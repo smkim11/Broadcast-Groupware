@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.broadcastgroupware.domain.Vehicle;
+import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.domain.VehicleUseReason;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
@@ -52,6 +53,12 @@ public class ReservationService {
 	public void carToggle(CarToggle carToggle) {
 		reservationMapper.modifyVehicleStatus(carToggle); // 스테이터스 'Y' -> 'N'으로 변경
 		reservationMapper.insertVehicleReason(carToggle); // reason테이블에 추가
+	}
+
+	// 차량예약
+	public boolean carReservation(VehicleReservation vehicleReservation) {
+		
+		return reservationMapper.carReservation(vehicleReservation);
 	}
 
 

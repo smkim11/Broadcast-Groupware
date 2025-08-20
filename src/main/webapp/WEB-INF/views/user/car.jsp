@@ -331,6 +331,7 @@ table tr:nth-child(even) {
 				</c:if>
 			</div>
 		
+		
 		<table border="1">
 		<tr>
 		    <th>차량정보</th>
@@ -352,10 +353,20 @@ table tr:nth-child(even) {
 		             data-end="${c.reservationEnd}">
 		        </div>
 		    </td>
-		    <td><button>예약하기</button></td>
+		    <td>
+		    	<c:choose>
+		    		<c:when test="${c.vehicleStatus eq 'Y' }">
+		    			<button class="reservationBtn" data-vehicle-id="${c.vehicleId}">예약하기</button>
+		    		</c:when>
+		    		<c:otherwise>
+		    			<button>예약불가</button>
+		    		</c:otherwise>
+		    	</c:choose>
+		    </td>
 		</tr>
 		</c:forEach>
 		</table>
+		
 		
 	</div>
 	
@@ -445,6 +456,8 @@ table tr:nth-child(even) {
 
 <script>
 
+	const userId = "<c:out value='${loginUser.userId}'/>";
+	
 	//초기 날짜 세팅: 현재시간 ~ 23:59
 	let today = new Date();
 	selectedStartDate = new Date(today);
@@ -725,16 +738,22 @@ table tr:nth-child(even) {
 		    var endDate = selectedEndDate;
 		    var startTime = document.getElementById("startTime").value;
 		    var endTime = document.getElementById("endTime").value;
-	
+		    
+		    // 대여시간 > 반납시간 방지 - 대여시간 이후 반납시간을 선택
 		    var startDateTime = formatDateTime(startDate, startTime);
 		    var endDateTime = formatDateTime(endDate, endTime);
-		    
+
+		    const startDT = new Date(startDateTime.replace(" ", "T"));
+		    const endDT = new Date(endDateTime.replace(" ", "T"));
+
 		    if(vehicleType == '') {
 				alert('차량타입을 선택하세요.')
 		    } else if(endDate == '') {
 				alert('대여 기간을 선택하세여.')
 		    } else if(startTime == '') {
 				alert('대여시간을 선택하세요.')
+		    } else if(startDT  > endDT) {
+				alert('대여 시간 이후에 반납시간을 선택하세요')
 		    }
 		    
 		    const rows = document.querySelectorAll("table tr");
@@ -746,6 +765,8 @@ table tr:nth-child(even) {
 		            rows[i].style.display = "none";
 		        }
 		    }
+		    
+		    drawCharts();
 	
 		    console.log("차량 타입:", vehicleType);
 		    console.log("대여일시:", startDateTime);
@@ -943,6 +964,14 @@ table tr:nth-child(even) {
 		    });
 		});
 		
+		// 날짜 포맷 YYYY-MM-DD
+		function formatDate(date) {
+		    let y = date.getFullYear();
+		    let m = ("0" + (date.getMonth() + 1)).slice(-2);
+		    let d = ("0" + date.getDate()).slice(-2);
+		    return y + "-" + m + "-" + d;
+		}
+		
 		// Flatpickr 초기화(이슈등록)
 		flatpickr("#issueDate", {
 		    mode: "range",      // 날짜 범위 선택 가능
@@ -966,14 +995,42 @@ table tr:nth-child(even) {
 		    }
 		});
 		
-
-		// 날짜 포맷 YYYY-MM-DD
-		function formatDate(date) {
-		    let y = date.getFullYear();
-		    let m = ("0" + (date.getMonth() + 1)).slice(-2);
-		    let d = ("0" + date.getDate()).slice(-2);
-		    return y + "-" + m + "-" + d;
-		}
+		// 예약 버튼 이벤트 (모든 버튼에 적용)
+		document.querySelectorAll(".reservationBtn").forEach(function(btn) {
+		    btn.addEventListener("click", function() {
+		        // 선택한 날짜와 시간
+		        var startDateTime = formatDateTime(selectedStartDate, document.getElementById("startTime").value);
+		        var endDateTime = formatDateTime(selectedEndDate, document.getElementById("endTime").value);
+		
+		        // 차량 ID
+		        const vehicleId = this.dataset.vehicleId;
+		        
+		        console.log("userId:", userId);
+		        console.log("vehicleId:", vehicleId);
+		        console.log("start:", startDateTime);
+		        console.log("end:", endDateTime);		     
+		
+		        // AJAX 호출
+		        $.ajax({
+		            url: "/api/car/CarReservation",
+		            type: "POST",
+		            data: {
+		                userId: userId,
+		                vehicleId: vehicleId,
+		                vehicleReservationStartTime: startDateTime,
+		                vehicleReservationEndTime: endDateTime
+		            },
+		            success: function(res) {
+		                alert("예약 완료");
+		                location.reload(); // 예약 후 새로고침
+		            },
+		            error: function(err) {
+		                console.error("예약 실패", err);
+		                alert("예약에 실패했습니다.");
+		            }
+		        });
+		    });
+		});
 
 </script>
 

@@ -3,13 +3,12 @@ package com.example.broadcastgroupware.rest;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Vehicle;
-import com.example.broadcastgroupware.domain.VehicleUseReason;
+import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.service.ReservationService;
 
@@ -57,7 +56,7 @@ public class ReservationRestController {
 	public String carToggle(CarToggle carToggle) {
 		
 		/*
-		log.info("=== Ajax로 전달된 차량 정보 ===", "");
+		log.info("=== Ajax로 전달된 차량 정보(이슈등록) ===", "");
 		log.info("vehicleId: {}", carToggle.getVehicleId());
 		log.info("reasonContent: {}", carToggle.getVehicleUseReasonContent());
 		log.info("reasonStartDate: {}", carToggle.getVehicleUseReasonStartDate());
@@ -74,6 +73,22 @@ public class ReservationRestController {
 	@GetMapping("/car/adminCarList")
 	public List<Vehicle> adminCarList() {
 		return reservationService.adminCarList();
+	}
+	
+	// 차량예약
+	@PostMapping("/car/CarReservation")
+	public String CarReservation(VehicleReservation vehicleReservation) {
+		
+		log.info("=== Ajax로 전달된 차량 정보(차량예약) ===", "");
+		log.info("userId: {}", vehicleReservation.getUserId());
+		log.info("vehicleId: {}", vehicleReservation.getVehicleId());
+		log.info("vehicleReservationStartTime: {}", vehicleReservation.getVehicleReservationStartTime());
+		log.info("vehicleReservationEndTime: {}", vehicleReservation.getVehicleReservationEndTime());
+		
+		boolean success = reservationService.carReservation(vehicleReservation);
+		
+		return success ? "예약 성공" : "예약 실패";
+		
 	}
 	
 }
