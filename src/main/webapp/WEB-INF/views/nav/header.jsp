@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="ko">
 
@@ -189,13 +190,32 @@
                         </div>
 
                         <div class="dropdown d-inline-block">
-                            <button type="button" class="btn header-item waves-effect" id="page-header-user-dropdown"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <img class="rounded-circle header-profile-user" src="${pageContext.request.contextPath}/resources/images/users/avatar-4.jpg"
-                                    alt="Header Avatar">
-                                <span class="d-none d-xl-inline-block ms-1 fw-medium font-size-15">Marcus</span>
-                                <i class="uil-angle-down d-none d-xl-inline-block font-size-15"></i>
-                            </button>
+							   <c:set var="me" value="${sessionScope.loginUser}" />
+							
+							<c:if test="${not empty me}">
+							  <button type="button" class="btn header-item waves-effect" id="page-header-user-dropdown"
+							          data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							
+							      <c:choose>
+							        <c:when test="${not empty me.userimagesName}">
+							          <img class="rounded-circle header-profile-user"
+							               src="<c:url value='${pageContext.request.contextPath}/resources/images/users/${me.userimagesName}'/>"
+							               alt="Header Avatar" />
+							        </c:when>
+							        <c:otherwise>
+							          <img class="rounded-circle header-profile-user"
+							               src="<c:url value='${pageContext.request.contextPath}/resources/images/users/avatar-4.jpg'/>"
+							               alt="Header Avatar" />
+							        </c:otherwise>
+							      </c:choose>
+							
+							      <span class="d-none d-xl-inline-block ms-1 fw-medium font-size-15">
+							        ${me.fullName} ${me.userRank}
+							      </span>
+							
+							      <i class="uil-angle-down d-none d-xl-inline-block font-size-15"></i>
+							  </button>
+							</c:if>
                             <div class="dropdown-menu dropdown-menu-end">
                                 <!-- item-->
                                 <a class="dropdown-item" href="#"><i class="uil uil-user-circle font-size-18 align-middle text-muted me-1"></i> <span class="align-middle">마이페이지</span></a>
