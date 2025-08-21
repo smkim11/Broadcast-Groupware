@@ -73,7 +73,7 @@
 
 .red-box { background-color: red; } 
 .blue-box { background-color: blue; } 
-.gray-box { background-color: gray; } 
+.gray-box { background-color: #e8e6e6; } 
 
 .addCar {
     padding: 6px 12px;
@@ -332,41 +332,13 @@ table tr:nth-child(even) {
 			</div>
 		
 		
-		<table border="1">
-		<tr>
-		    <th>차량정보</th>
-		    <th>예약 현황</th>
-		    <th>예약하기</th>
-		</tr>
-		
-		<c:forEach var="c" items="${carReservationList}">
-			<input type="hidden" value="${c.vehicleId}">
-		<tr>
-		    <td>
-		        <div class="vehicleNo">${c.vehicleNo}</div> 
-		        <div class="vehicleName">${c.vehicleName}</div> 
-		        <div class="vehicleType">${c.vehicleType}</div>
-		    </td>
-		    <td>
-		        <div class="chart-container"
-		             data-start="${c.reservationStart}"
-		             data-end="${c.reservationEnd}">
-		        </div>
-		    </td>
-		    <td>
-		    	<c:choose>
-		    		<c:when test="${c.vehicleStatus eq 'Y' }">
-		    			<button class="reservationBtn" data-vehicle-id="${c.vehicleId}">예약하기</button>
-		    		</c:when>
-		    		<c:otherwise>
-		    			<button>예약불가</button>
-		    		</c:otherwise>
-		    	</c:choose>
-		    </td>
-		</tr>
-		</c:forEach>
-		</table>
-		
+	<table border="1" id="carTable">
+	    <tr>
+	        <th>차량정보</th>
+	        <th>예약 현황</th>
+	        <th>예약하기</th>
+	    </tr>
+	</table>
 		
 	</div>
 	
@@ -456,11 +428,64 @@ table tr:nth-child(even) {
 
 <script>
 
+	// 예약 리스트
+	document.addEventListener("DOMContentLoaded", function() {
+	    var carTable = document.getElementById("carTable");
+	
+	    fetch("/api/user/car?page=1&size=10")
+	        .then(function(res) { return res.json(); })
+	        .then(function(data) {
+	            var carReservationList = data.carReservationList;
+	
+	            for (var i = 0; i < carReservationList.length; i++) {
+	                var c = carReservationList[i];
+	                var tr = document.createElement("tr");
+	
+	                // 차량 정보 td
+	                var tdInfo = document.createElement("td");
+	                tdInfo.innerHTML = '<div class="vehicleNo">' + c.vehicleNo + '</div>' +
+	                                   '<div class="vehicleName">' + c.vehicleName + '</div>' +
+	                                   '<div class="vehicleType">' + c.vehicleType + '</div>';
+	                tr.appendChild(tdInfo);
+	
+	                // 예약 현황 td
+	                var tdChart = document.createElement("td");
+	                tdChart.innerHTML = '<div class="chart-container" data-start="' + c.reservationStart + '" data-end="' + c.reservationEnd + '"></div>';
+	                tr.appendChild(tdChart);
+	
+	                // 예약 버튼 td
+	                var tdBtn = document.createElement("td");
+	                if (c.vehicleStatus === "Y") {
+	                    tdBtn.innerHTML = '<button class="reservationBtn" data-vehicle-id="' + c.vehicleId + '">예약하기</button>';
+	                } else {
+	                    tdBtn.innerHTML = '<button>예약불가</button>';
+	                }
+	                tr.appendChild(tdBtn);
+	
+	                // 숨겨진 input 추가
+	                var hiddenInput = document.createElement("input");
+	                hiddenInput.type = "hidden";
+	                hiddenInput.value = c.vehicleId;
+	                tr.appendChild(hiddenInput);
+	
+	                carTable.appendChild(tr);
+	            }
+	            
+	            drawCharts();
+	        })
+	        .catch(function(err) {
+	            console.error("차량 데이터 로드 실패:", err);
+	        });
+	});
+
+	
+	// model로 받은 userId값 변수선언
 	const userId = "<c:out value='${loginUser.userId}'/>";
 	
 	//초기 날짜 세팅: 현재시간 ~ 23:59
 	let today = new Date();
 	selectedStartDate = new Date(today);
+	selectedStartDate.setHours(0,0,0,0);
 	selectedEndDate = new Date(today);
 	selectedEndDate.setHours(23,59,59,999);
 	let drawnTimes = new Set(); // 중복 시간 출력 방지용
@@ -531,7 +556,7 @@ table tr:nth-child(even) {
 	        }
 	
 	        // 1) 전체 바 (파랑)
-	        ctx.fillStyle = "gray";
+	        ctx.fillStyle = "#e8e6e6";
 	        ctx.fillRect(0, 15, canvas.width, 20);
 	        drawTimeLabelLocal(0, start);
 	
@@ -581,7 +606,7 @@ table tr:nth-child(even) {
 	
 	                // 왼쪽 초록
 	                if (selStartX < overlapStartX) {
-	                    ctx.fillStyle = "gray";
+	                    ctx.fillStyle = "#e8e6e6";
 	                    ctx.fillRect(selStartX, 15, overlapStartX - selStartX, 20);
 	                    drawTimeLabelLocal(selStartX, clippedStart);
 	                    drawTimeLabelLocal(overlapStartX, new Date(Math.max(selectedStart, reservationStart)));
@@ -628,7 +653,7 @@ table tr:nth-child(even) {
 	                grayEndX = Math.max(0, reservedStartX);
 	            }
 	            if (grayEndX > grayStartX) {
-	                ctx.fillStyle = "gray";
+	                ctx.fillStyle = "#e8e6e6";
 	                ctx.fillRect(grayStartX, 15, grayEndX - grayStartX, 20);
 	            }
 	        }
@@ -707,6 +732,7 @@ table tr:nth-child(even) {
 		                selectedStartDate.setHours(0,0,0,0);
 		                selectedEndDate.setHours(23,59,59,999);
 		            }
+		            
 		            drawCharts();
 		        }
 		    });
@@ -718,6 +744,7 @@ table tr:nth-child(even) {
 		
 		    document.getElementById("search").addEventListener("click", function(e){
 		        e.preventDefault();
+		        
 		        drawCharts();
 		    });
 		});
@@ -749,11 +776,13 @@ table tr:nth-child(even) {
 		    if(vehicleType == '') {
 				alert('차량타입을 선택하세요.')
 		    } else if(endDate == '') {
-				alert('대여 기간을 선택하세여.')
+				alert('예약 기간을 선택하세여.')
 		    } else if(startTime == '') {
-				alert('대여시간을 선택하세요.')
+				alert('예약시간을 선택하세요.')
 		    } else if(startDT  > endDT) {
-				alert('대여 시간 이후에 반납시간을 선택하세요')
+				alert('예약 시간 이후에 반납시간을 선택하세요')
+		    } else if(startDT == endDT) {
+				alert('예약시간과 반납시간이 같습니다.')
 		    }
 		    
 		    const rows = document.querySelectorAll("table tr");
@@ -996,21 +1025,31 @@ table tr:nth-child(even) {
 		});
 		
 		// 예약 버튼 이벤트 (모든 버튼에 적용)
-		document.querySelectorAll(".reservationBtn").forEach(function(btn) {
-		    btn.addEventListener("click", function() {
-		        // 선택한 날짜와 시간
+		document.getElementById("carTable").addEventListener("click", function(e){
+		    if(e.target && e.target.classList.contains("reservationBtn")){
+		        var vehicleId = e.target.dataset.vehicleId;
 		        var startDateTime = formatDateTime(selectedStartDate, document.getElementById("startTime").value);
 		        var endDateTime = formatDateTime(selectedEndDate, document.getElementById("endTime").value);
 		
-		        // 차량 ID
-		        const vehicleId = this.dataset.vehicleId;
+		        if(!userId) {
+					alert('로그인이 필요합니다.')
+					return;
+		        } else if(!vehicleId) {
+					alert('차량선택에 에러가 발생했습니다.')
+					return;
+		        } else if(!startDateTime) {
+					alert('대여시간을 선택해주세요.')
+					return;
+		        } else if(!endDateTime) {
+					alert('반납시간을 선택해주세요.')
+					return;
+		        }
 		        
 		        console.log("userId:", userId);
 		        console.log("vehicleId:", vehicleId);
 		        console.log("start:", startDateTime);
 		        console.log("end:", endDateTime);		     
 		
-		        // AJAX 호출
 		        $.ajax({
 		            url: "/api/car/CarReservation",
 		            type: "POST",
@@ -1023,6 +1062,7 @@ table tr:nth-child(even) {
 		            }),
 		            success: function(res) {
 		                alert(res);
+		                // 예약 후 리스트 다시 로드
 		                location.reload();
 		            },
 		            error: function(err) {
@@ -1030,8 +1070,9 @@ table tr:nth-child(even) {
 		                alert("예약에 실패했습니다.");
 		            }
 		        });
-		    });
+		    }
 		});
+
 
 </script>
 

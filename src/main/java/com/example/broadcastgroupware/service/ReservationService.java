@@ -1,7 +1,8 @@
 package com.example.broadcastgroupware.service;
 
-import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,16 +21,20 @@ public class ReservationService {
 	public ReservationService(ReservationMapper reservationMapper) {
 		this.reservationMapper = reservationMapper;
 	}
-
-	public int getTotalCount() {
-		
-		return reservationMapper.getTotalCount();
-	}
 	
 	// 예약 리스트 조회
-	public List<CarReservationDto> getCarReservationList(PageDto pageDto) {
-		
-		return reservationMapper.getCarReservationList(pageDto);
+	public List<CarReservationDto> getCarReservationListByDate(String today, PageDto pageDto) {
+	    Map<String, Object> param = new HashMap<>();
+	    param.put("today", today);
+	    param.put("beginRow", pageDto.getBeginRow());
+	    param.put("rowPerPage", pageDto.getRowPerPage());
+
+	    return reservationMapper.getCarReservationListByDate(param);
+	}
+
+
+	public int getTotalCountByDate(String today) {
+	    return reservationMapper.getTotalCountByDate(today);
 	}
 
 	// 차량등록
@@ -74,5 +79,6 @@ public class ReservationService {
 	        return true;
 	    }
 	}
+
 	
 }

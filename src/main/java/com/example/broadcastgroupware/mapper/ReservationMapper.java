@@ -1,22 +1,22 @@
 package com.example.broadcastgroupware.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
-import com.example.broadcastgroupware.dto.PageDto;
 
 @Mapper
 public interface ReservationMapper {
 
-	List<CarReservationDto> getCarReservationList(PageDto pageDto);
+	// 예약 리스트
+	List<CarReservationDto> getCarReservationListByDate(Map<String, Object> param);
 
-	int getTotalCount();
+	int getTotalCountByDate(String today);
 
 	// 차량등록
 	void addCar(Vehicle vehicle);
@@ -36,5 +36,6 @@ public interface ReservationMapper {
 	
 	// 차량 예약
 	boolean carReservation(VehicleReservation vehicleReservation);
+
 
 }

@@ -3,13 +3,17 @@
 <mapper
 	namespace="com.example.broadcastgroupware.mapper.ReservationMapper">
 	
-	<select id="getTotalCount" resultType="int">
-		SELECT COUNT(*)
-		FROM vehicle
+	<select id="getTotalCountByDate" resultType="int">
+	    SELECT COUNT(DISTINCT v.vehicle_id)
+	    FROM vehicle v
+	    LEFT JOIN vehicle_reservation r
+	        ON v.vehicle_id = r.vehicle_id
+	        AND DATE(r.vehicle_reservation_start_time) = #{today}
 	</select>
+
 	
 	<!-- 예약리스트 -->
-	<select id="getCarReservationList">
+	<select id="getCarReservationListByDate">
 		SELECT DISTINCT
 			v.vehicle_id AS vehicleId,
 			v.vehicle_status AS vehicleStatus,
@@ -27,6 +31,7 @@
 		FROM vehicle v
 		LEFT JOIN vehicle_reservation r
 			ON v.vehicle_id = r.vehicle_id
+			AND DATE(r.vehicle_reservation_start_time) = #{today}
 		ORDER BY v.vehicle_id
 		LIMIT #{beginRow}, #{rowPerPage}
 	</select>

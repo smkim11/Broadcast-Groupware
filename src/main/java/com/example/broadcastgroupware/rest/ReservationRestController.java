@@ -1,19 +1,26 @@
 package com.example.broadcastgroupware.rest;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
+import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
+import com.example.broadcastgroupware.dto.PageDto;
+import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ReservationService;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -25,6 +32,37 @@ public class ReservationRestController {
 	
 	public ReservationRestController(ReservationService reservationService) {
 		this.reservationService = reservationService;
+	}
+
+	// 차량 예약 리스트 조회 (페이징)
+	@GetMapping("/user/car")
+	public Map<String, Object> carList(HttpSession sesstion,
+									   @RequestParam(value = "page", defaultValue = "1") int page,
+									   @RequestParam(value = "size", defaultValue = "10") int size,
+									   @RequestParam(value = "date", required = false) String date,
+								        @RequestParam(value = "time", required = false) String time) {
+
+		UserSessionDto loginUser = (UserSessionDto) sesstion.getAttribute("loginUser");
+
+		Map<String, Object> response = new HashMap<>();
+
+		if (loginUser != null) {
+			response.put("username", loginUser.getUsername());
+			response.put("role", loginUser.getRole());
+			response.put("userId", loginUser.getUserId());
+		}
+		
+		java.time.LocalDate today = java.time.LocalDate.now();
+	    String todayStr = today.toString();
+
+	    // 오늘 날짜 기준 전체 예약 조회
+	    PageDto pageDto = new PageDto(page, size, reservationService.getTotalCountByDate(todayStr));
+	    List<CarReservationDto> carReservationList = reservationService.getCarReservationListByDate(todayStr, pageDto);
+
+	    response.put("carReservationList", carReservationList);
+	    response.put("pageDto", pageDto);
+
+		return response;
 	}
 
 	// 차량 등록
