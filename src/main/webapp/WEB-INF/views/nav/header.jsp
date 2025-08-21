@@ -134,7 +134,7 @@
                                     <a href="javascript:void(0);" class="text-dark notification-item">
                                         <div class="d-flex align-items-start">
                                             <div class="flex-shrink-0 me-3">
-                                                <img src="${pageContext.request.contextPath}/resources/images/users/avatar-3.jpg" class="rounded-circle avatar-xs" alt="user-pic">
+                                                <img src="${pageContext.request.contextPath}/resources/images/users/user.png" class="rounded-circle avatar-xs" alt="user-pic">
                                             </div>
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-1">James Lemire</h6>
@@ -167,7 +167,7 @@
                                     <a href="javascript:void(0);" class="text-dark notification-item">
                                         <div class="d-flex align-items-start">
                                             <div class="flex-shrink-0 me-3">
-                                                <img src="${pageContext.request.contextPath}/resources/images/users/avatar-4.jpg" class="rounded-circle avatar-xs" alt="user-pic">
+                                                <img src="${pageContext.request.contextPath}/resources/images/users/user.png" class="rounded-circle avatar-xs" alt="user-pic">
                                             </div>
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-1">Salena Layfield</h6>
@@ -188,7 +188,8 @@
                                 </div>
                             </div>
                         </div>
-
+                        
+					<!-- 로그인한 유저 이름 직급 -->
                         <div class="dropdown d-inline-block">
 							   <c:set var="me" value="${sessionScope.loginUser}" />
 							
@@ -204,7 +205,7 @@
 							        </c:when>
 							        <c:otherwise>
 							          <img class="rounded-circle header-profile-user"
-							               src="<c:url value='${pageContext.request.contextPath}/resources/images/users/avatar-4.jpg'/>"
+							               src="<c:url value='${pageContext.request.contextPath}/resources/images/users/avatar-default.png'/>"
 							               alt="Header Avatar" />
 							        </c:otherwise>
 							      </c:choose>

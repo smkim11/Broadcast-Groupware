@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.broadcastgroupware.mapper.ChatListMapper">
+	
+	<!-- 조직도 트리용 select
+		 - user 를 기준으로 team, department 를 LEFT JOIN
+		 - 부서/팀/사용자 정보가 한 줄로 나오도록 구성
+	-->
+	
+	<select id="selectUsersRow" resultType="com.example.broadcastgroupware.dto.ChatUserRowDto">
+		SELECT
+			d.department_id 	AS departmentId,
+			d.department_name 	AS departmentName,
+			t.team_id 			AS teamId,
+			t.team_name 		AS teamName,
+			u.user_id 			AS userId,
+			u.full_name			AS fullName,
+			u.user_rank 		AS userRank
+		FROM `user` u
+			LEFT JOIN (
+			    SELECT dh.user_id, dh.team_id
+			    FROM deployment_history dh
+			    INNER JOIN (
+			        SELECT user_id, MAX(create_date) AS latest_date
+			        FROM deployment_history
+			        GROUP BY user_id
+			    ) latest
+				    ON dh.user_id = latest.user_id
+				    AND dh.create_date = latest.latest_date
+				) dh ON u.user_id = dh.user_id
+			LEFT JOIN team t
+				ON t.team_id = dh.team_id
+			LEFT JOIN department d
+				ON d.department_id = t.department_id
+		WHERE u.user_resign_date IS NULL					<!--  퇴사자 여부 확인 위해 -->
+		ORDER BY d.department_name, t.team_name, u.full_name
+	</select>
+	
+
+</mapper>
