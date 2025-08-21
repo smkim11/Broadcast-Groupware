@@ -276,7 +276,7 @@
                             </li>
 
                             <li>
-                                <a href="calendar.html" class="waves-effect">
+                                <a href="calendar" class="waves-effect">
                                     <i class="uil-calender"></i>
                                     <span>캘린더</span>
                                 </a>
