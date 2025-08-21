@@ -9,6 +9,7 @@ import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
+import com.example.broadcastgroupware.dto.MyReservationDto;
 
 @Mapper
 public interface ReservationMapper {
@@ -36,6 +37,9 @@ public interface ReservationMapper {
 	
 	// 차량 예약
 	boolean carReservation(VehicleReservation vehicleReservation);
+
+	// 본인차량 예약조회
+	List<MyReservationDto> myReservationList(int userId);
 
 
 }

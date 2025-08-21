@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,7 @@ import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
+import com.example.broadcastgroupware.dto.MyReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.dto.ReservationPeriod;
 import com.example.broadcastgroupware.dto.UserSessionDto;
@@ -104,6 +106,33 @@ public class ReservationRestController {
 	    response.put("pageDto", pageDto);
 
 	    return response;
+	}
+	
+	// 예약 확인
+	@GetMapping("/user/myReservationList")
+	public Map<String, Object> myReservationList(HttpSession session) {
+		
+		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+		int userId = loginUser.getUserId();
+		log.info("userId: {}", userId);
+
+		Map<String, Object> response = new HashMap<>();
+		
+		List<MyReservationDto> myReservationList = reservationService.myReservationList(userId);
+		
+		if (myReservationList == null || myReservationList.isEmpty()) {
+	        log.warn("myReservationList is empty or null for userId: {}", userId);
+	    } else {
+	        log.info("myReservationList size: {}", myReservationList.size());
+	        for (MyReservationDto r : myReservationList) {
+	            log.info("Reservation: vehicleNo={}, rentDate={}, returnDate={}",
+	                     r.getVehicleNo(), r.getRentDate(), r.getReturnDate());
+	        }
+	    }
+		
+		response.put("myReservationList", myReservationList);
+		
+		return response;
 	}
 
 

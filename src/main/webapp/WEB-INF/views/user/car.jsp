@@ -278,7 +278,79 @@ table tr:nth-child(even) {
 .switch input:checked + .slider:before {
     transform: translateX(26px);
 }
+/* 예약확인 모달 전용 CSS */
+.myReservation-modal {
+    display: none; 
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
 
+.myReservation-modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 95%;           /* 기존보다 조금 넓게 */
+    max-width: 600px;     /* 가로폭 확대 */
+    text-align: center;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.myReservation-modal-content h3 {
+    margin-bottom: 15px;
+    color: blue;
+}
+
+.myReservation-modal-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+.myReservation-modal-content table th,
+.myReservation-modal-content table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.myReservation-modal-content button, 
+.myReservation-modal-content .close1 {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+    transition: 0.3s;
+}
+
+.myReservation-modal-content .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #333;
+}
+
+.myReservation-modal-content .close1 {
+    top: auto;
+    bottom: 10px;
+    right: 10px;
+    background-color: green;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+}
 
 </style>
 
@@ -347,8 +419,7 @@ table tr:nth-child(even) {
 	        <th>예약하기</th>
 	    </tr>
 	</table>
-		
-	</div>
+
 	
 	<!-- 차량등록 모달 -->
 	<div id="carModal" class="modal">
@@ -430,6 +501,28 @@ table tr:nth-child(even) {
 			
 			
 		</div>
+     </div>
+     
+     <!-- 예약확인 모달 -->
+     <div id="confirmReservation" class="myReservation-modal">
+     	<div class="myReservation-modal-content">
+     		<span class="close">&times;</span>
+			<h3>예약 확인</h3>
+     		
+     		<table border="1" id="myReservationList">
+     			<tr>
+     				<th>차량번호</th>
+     				<th>대여 시간</th>
+     				<th>반납 시간</th>
+     				<th>시간 변경</th>
+     				<th>예약 취소</th>
+     			</tr>
+     		</table>
+     		<button class="close1" type="button">닫기</button>
+     	</div>
+     </div>
+     
+     
      </div>
    </div>
  </div>
@@ -995,6 +1088,96 @@ table tr:nth-child(even) {
 		        showForm(this.value);
 		    });
 		});
+
+		
+		// 예약확인 모달
+		document.addEventListener("DOMContentLoaded", function() {
+		    const modal = document.getElementById("confirmReservation"); // 모달
+		    const btn = document.getElementById("myReservation");        // 모달 열기 버튼
+		    const closeBtn = modal.querySelector(".close");              // X 버튼
+		    const closeBtns = modal.querySelectorAll(".close1");         // 닫기 버튼들
+		    const table = document.getElementById("myReservationList");  // 테이블
+		
+		    // 예약 확인 버튼 클릭 시 모달 열기 + 데이터 채우기
+		    btn.addEventListener("click", async function() {
+		        // 테이블 기존 내용 초기화 (헤더 제외)
+		        table.querySelectorAll("tr:not(:first-child)").forEach(tr => tr.remove());
+		
+		        try {
+		            const res = await fetch("/api/user/myReservationList");
+		            if (!res.ok) throw new Error("서버 오류");
+		
+		            const data = await res.json();
+		            const myReservationList = data.myReservationList;
+		
+		            // 예약 목록 테이블에 채우기
+		            myReservationList.forEach(c => {
+		                const tr = document.createElement("tr");
+		
+		                // 차량번호
+		                const tdVehicleNo = document.createElement("td");
+		                tdVehicleNo.textContent = c.vehicleNo;
+		                tr.appendChild(tdVehicleNo);
+		
+		                // 대여 시간
+		                const tdRentDate = document.createElement("td");
+		                tdRentDate.textContent = c.rentDate;
+		                tr.appendChild(tdRentDate);
+		
+		                // 반납 시간
+		                const tdReturnDate = document.createElement("td");
+		                tdReturnDate.textContent = c.returnDate;
+		                tr.appendChild(tdReturnDate);
+		
+		                // 시간 변경 버튼
+		                const tdChange = document.createElement("td");
+		                const changeBtn = document.createElement("button");
+		                changeBtn.textContent = "시간변경";
+		                // 필요하면 이벤트 추가 가능
+		                tdChange.appendChild(changeBtn);
+		                tr.appendChild(tdChange);
+		
+		                // 예약 취소 버튼
+		                const tdCancel = document.createElement("td");
+		                const cancelBtn = document.createElement("button");
+		                cancelBtn.textContent = "취소";
+		                // 필요하면 이벤트 추가 가능
+		                tdCancel.appendChild(cancelBtn);
+		                tr.appendChild(tdCancel);
+		
+		                table.appendChild(tr);
+		            });
+		
+		            // 모달 열기
+		            modal.style.display = "flex";
+		
+				        } catch (err) {
+				            console.error(err);
+				            alert("예약 내역을 가져오는 중 오류가 발생했습니다.");
+				        }
+				    });
+				
+				    // X 버튼 클릭 시 모달 닫기
+				    closeBtn.addEventListener("click", function() {
+				        modal.style.display = "none";
+				    });
+				
+				    // 닫기 버튼들 클릭 시 모달 닫기
+				    closeBtns.forEach(function(b) {
+				        b.addEventListener("click", function() {
+				            modal.style.display = "none";
+				        });
+				    });
+				
+				    // 모달 외부 클릭 시 모달 닫기
+				    window.addEventListener("click", function(event) {
+				        if (event.target === modal) {
+				            modal.style.display = "none";
+				        }
+				    });
+				});
+
+
 		
 		// 날짜 포맷 YYYY-MM-DD
 		function formatDate(date) {
@@ -1076,6 +1259,7 @@ table tr:nth-child(even) {
 		    }
 		});
 
+		
 
 </script>
 

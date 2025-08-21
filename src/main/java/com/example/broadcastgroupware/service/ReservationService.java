@@ -11,6 +11,7 @@ import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
+import com.example.broadcastgroupware.dto.MyReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
 
@@ -82,6 +83,12 @@ public class ReservationService {
 	        reservationMapper.carReservation(vehicleReservation);
 	        return true;
 	    }
+	}
+
+	// 본인 차량 예약조회
+	public List<MyReservationDto> myReservationList(int userId) {
+		
+		return reservationMapper.myReservationList(userId);
 	}
 
 	
