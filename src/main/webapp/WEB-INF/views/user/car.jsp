@@ -75,7 +75,7 @@
 .blue-box { background-color: blue; } 
 .gray-box { background-color: #e8e6e6; } 
 
-.addCar {
+.myReservation, .addCar {
     padding: 6px 12px;
     border: 1px solid #28a745;
     background-color: blue;
@@ -83,6 +83,11 @@
     border-radius: 4px;
     cursor: pointer;
     transition: 0.3s;
+}
+
+.myReservation:hover, .addCar:hover {
+    background-color: blue;
+    border-color: #1e7e34;
 }
 
 .addCar:hover {
@@ -326,9 +331,12 @@ table tr:nth-child(even) {
 					<span class="gray-box"></span> 예약 가능시간
 					<span class="blue-box"></span> 선택시간
 				</div>
-				<c:if test="${role == 'admin'}">
-					<button id="addCar" class="addCar">차량관리</button>
-				</c:if>
+
+					<div class="button-group">
+				        <button id="myReservation" class="myReservation">예약확인</button>
+				        <button id="addCar" class="addCar" style="display:none;">차량관리</button>
+				    </div>
+				
 			</div>
 		
 		
@@ -427,287 +435,283 @@ table tr:nth-child(even) {
  </div>
 
 <script>
-
 	// 예약 리스트
 	document.addEventListener("DOMContentLoaded", function() {
-	    var carTable = document.getElementById("carTable");
-	
-	    fetch("/api/user/car?page=1&size=10")
-	        .then(function(res) { return res.json(); })
-	        .then(function(data) {
-	            var carReservationList = data.carReservationList;
-	
-	            for (var i = 0; i < carReservationList.length; i++) {
-	                var c = carReservationList[i];
-	                var tr = document.createElement("tr");
-	
-	                // 차량 정보 td
-	                var tdInfo = document.createElement("td");
-	                tdInfo.innerHTML = '<div class="vehicleNo">' + c.vehicleNo + '</div>' +
-	                                   '<div class="vehicleName">' + c.vehicleName + '</div>' +
-	                                   '<div class="vehicleType">' + c.vehicleType + '</div>';
-	                tr.appendChild(tdInfo);
-	
-	                // 예약 현황 td
-	                var tdChart = document.createElement("td");
-	                tdChart.innerHTML = '<div class="chart-container" data-start="' + c.reservationStart + '" data-end="' + c.reservationEnd + '"></div>';
-	                tr.appendChild(tdChart);
-	
-	                // 예약 버튼 td
-	                var tdBtn = document.createElement("td");
-	                if (c.vehicleStatus === "Y") {
-	                    tdBtn.innerHTML = '<button class="reservationBtn" data-vehicle-id="' + c.vehicleId + '">예약하기</button>';
-	                } else {
-	                    tdBtn.innerHTML = '<button>예약불가</button>';
-	                }
-	                tr.appendChild(tdBtn);
-	
-	                // 숨겨진 input 추가
-	                var hiddenInput = document.createElement("input");
-	                hiddenInput.type = "hidden";
-	                hiddenInput.value = c.vehicleId;
-	                tr.appendChild(hiddenInput);
-	
-	                carTable.appendChild(tr);
-	            }
-	            
-	            drawCharts();
-	        })
-	        .catch(function(err) {
-	            console.error("차량 데이터 로드 실패:", err);
-	        });
+		var carTable = document.getElementById("carTable");
+
+		fetch("/api/user/car?page=1&size=10")
+			.then(function(res) {
+				return res.json();
+			
+			})
+			.then(function(data) {
+				var carReservationList = data.carReservationList;
+				
+				if (data.role === 'admin') {
+		            document.getElementById('addCar').style.display = 'inline-block';
+		        }
+
+				for (var i = 0; i < carReservationList.length; i++) {
+					var c = carReservationList[i];
+					var tr = document.createElement("tr");
+
+					// 차량 정보 td
+					var tdInfo = document.createElement("td");
+					tdInfo.innerHTML = '<div class="vehicleNo">' + c.vehicleNo + '</div>' +
+									   '<div class="vehicleName">' + c.vehicleName + '</div>' +
+									   '<div class="vehicleType">' + c.vehicleType + '</div>';
+					tr.appendChild(tdInfo);
+
+					// 예약 현황 td
+					var tdChart = document.createElement("td");
+					tdChart.innerHTML = '<div class="chart-container" data-reservations=\'' + JSON.stringify(c.reservationPeriods) + '\'></div>';
+					tr.appendChild(tdChart);
+
+					// 예약 버튼 td
+					var tdBtn = document.createElement("td");
+					if (c.vehicleStatus === "Y") {
+						tdBtn.innerHTML = '<button class="reservationBtn" data-vehicle-id="' + c.vehicleId + '">예약하기</button>';
+					} else {
+						tdBtn.innerHTML = '<button>예약불가</button>';
+					}
+					tr.appendChild(tdBtn);
+
+					// 숨겨진 input 추가
+					var hiddenInput = document.createElement("input");
+					hiddenInput.type = "hidden";
+					hiddenInput.value = c.vehicleId;
+					tr.appendChild(hiddenInput);
+
+					carTable.appendChild(tr);
+				}
+
+				drawCharts();
+			})
+			.catch(function(err) {
+				console.error("차량 데이터 로드 실패:", err);
+			});
 	});
 
-	
-	// model로 받은 userId값 변수선언
+	// 로그인 사용자 ID
 	const userId = "<c:out value='${loginUser.userId}'/>";
-	
-	//초기 날짜 세팅: 현재시간 ~ 23:59
+
+	// 초기 날짜 세팅: 현재시간 ~ 23:59
 	let today = new Date();
 	selectedStartDate = new Date(today);
 	selectedStartDate.setHours(0,0,0,0);
 	selectedEndDate = new Date(today);
 	selectedEndDate.setHours(23,59,59,999);
-	let drawnTimes = new Set(); // 중복 시간 출력 방지용
-	drawCharts();
-	
+	let drawnTimes = new Set(); // 중복 시간 출력 방지
+
 	// 시간 라벨 표시 함수
 	function drawTimeLabel(ctx, x, date) {
-	    const hourStr = date.getHours().toString().padStart(2,'0') + ":00";
-	    if(hourStr === "00:00") return; // 00:00은 표시 안함
-	    const key = x + "-" + hourStr;
-	    if(drawnTimes.has(key)) return; // 이미 표시된 시간 건너뛰기
-	    ctx.fillStyle = "black";
-	    ctx.font = "10px Arial";
-	    ctx.fillText(hourStr, x, 45); // 막대 아래 표시
-	    drawnTimes.add(key);
-	}
-	
-	// 오늘날짜 체크
-	function isToday(date) {
-	    const now = new Date();
-	    return date.getFullYear() === now.getFullYear() &&
-	           date.getMonth() === now.getMonth() &&
-	           date.getDate() === now.getDate();
+		const hourStr = date.getHours().toString().padStart(2,'0') + ":00";
+		if(hourStr === "00:00") return;
+		const key = x + "-" + hourStr;
+		if(drawnTimes.has(key)) return;
+		ctx.fillStyle = "black";
+		ctx.font = "10px Arial";
+		ctx.fillText(hourStr, x, 45);
+		drawnTimes.add(key);
 	}
 
+	// 오늘날짜 체크
+	function isToday(date) {
+		const now = new Date();
+		return date.getFullYear() === now.getFullYear() &&
+			   date.getMonth() === now.getMonth() &&
+			   date.getDate() === now.getDate();
+	}
 
 	// 차트 그리기 함수
 	function drawCharts() {
-	    const charts = document.querySelectorAll(".chart-container");
+	const charts = document.querySelectorAll(".chart-container");
+
+	charts.forEach(chart => {
+
+		chart.innerHTML = "";
+
+		const localDrawnTimes = new Set();
+
+		let periods = JSON.parse(chart.dataset.reservations || "[]");
+
+		let canvasStart = new Date(selectedStartDate);
+		let canvasEnd = new Date(selectedEndDate);
+
+		const canvas = document.createElement("canvas");
+		chart.appendChild(canvas);
+
+		canvas.width = chart.clientWidth;
+		canvas.height = chart.clientHeight;
+
+		const ctx = canvas.getContext("2d");
+
+		const totalHours = (canvasEnd - canvasStart) / (1000 * 60 * 60);
+		const unitWidth = canvas.width / totalHours;
+
+		const drawTimeLabelLocal = (x, date) => {
+			const hourStr = date.getHours().toString().padStart(2, '0') + ":00";
+			if (hourStr === "00:00") return;
+			const key = x + "-" + hourStr;
+			if (localDrawnTimes.has(key)) return;
+			ctx.fillStyle = "black";
+			ctx.font = "10px Arial";
+			ctx.fillText(hourStr, x, 45);
+			localDrawnTimes.add(key);
+		};
+
+		// 1) 전체 바
+		ctx.fillStyle = "#e8e6e6";
+		ctx.fillRect(0, 15, canvas.width, 20);
+		drawTimeLabelLocal(0, canvasStart);
+
+		// 2) 예약 구간
+		periods.forEach((p, index) => {
+
+			const startStr = p.reservationStart || p.start;
+			const endStr = p.reservationEnd || p.end;
+
+			if (!startStr || !endStr) return;
+
+			const resStart = new Date(startStr.replace(" ", "T"));
+			const resEnd = new Date(endStr.replace(" ", "T"));
+
+			if (isNaN(resStart.getTime()) || isNaN(resEnd.getTime())) {
+				console.log("예약 데이터 변환 실패:", p);
+				return;
+			}
+
+			const displayStart = resStart < canvasStart ? canvasStart : resStart;
+			const displayEnd = resEnd > canvasEnd ? canvasEnd : resEnd;
+
+			if (displayEnd <= displayStart) return;
+
+			const xStart = ((displayStart - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+			const xEnd = ((displayEnd - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+			
+
+			// console.log("예약", index + 1, "=> xStart:", xStart, "xEnd:", xEnd, "width:", xEnd - xStart);
+
+			ctx.fillStyle = "red";
+			ctx.fillRect(xStart, 15, xEnd - xStart, 20);
+
+			drawTimeLabelLocal(xStart, displayStart);
+			drawTimeLabelLocal(xEnd, displayEnd);
+		});
+
+		// 3) 선택 구간
+		const startTimeValue = document.getElementById("startTime").value;
+		const endTimeValue = document.getElementById("endTime").value;
+
+		if (startTimeValue && endTimeValue) {
+
+			const [sh, sm] = startTimeValue.split(":").map(Number);
+			const [eh, em] = endTimeValue.split(":").map(Number);
+
+			const selStart = new Date(selectedStartDate); selStart.setHours(sh, sm, 0);
+			const selEnd = new Date(selectedEndDate); selEnd.setHours(eh, em, 0);
+
+			const cs = new Date(Math.max(selStart, canvasStart));
+			const ce = new Date(Math.min(selEnd, canvasEnd));
+
+			if (ce > cs) {
+
+				const x1 = ((cs - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+				const x2 = ((ce - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+
+				ctx.fillStyle = "blue";
+				ctx.fillRect(x1, 15, x2 - x1, 20);
+
+				drawTimeLabelLocal(x1, cs);
+				drawTimeLabelLocal(x2, ce);
+			}
+		}
+
+		// 4) 날짜 표시 (MM-DD)
+		const oneDay = 1000 * 60 * 60 * 24;
+		ctx.fillStyle = "black";
+		ctx.font = "bold 10px Arial";
+
+		for (let d = new Date(canvasStart); d <= canvasEnd; d = new Date(d.getTime() + oneDay)) {
+			const offsetX = ((d - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+			const month = (d.getMonth() + 1).toString().padStart(2, '0');
+			const day = d.getDate().toString().padStart(2, '0');
+			ctx.fillText(month + "-" + day, offsetX, 10);
+		}
+
+			// 5) 오늘 이전 회색 처리
+			const now = new Date();
+			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+			if (now > canvasStart) {
+				const pastHours = Math.min((today - canvasStart) / (1000 * 60 * 60), totalHours);
+				const pastX = pastHours * unitWidth;
+				let grayStartX = 0;
+				let grayEndX = pastX;
+
+				periods.forEach(p => {
+					const reservationStart = new Date(p.reservationStart);
+					if (reservationStart < today) {
+						const reservedStartX = ((reservationStart - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+						grayEndX = Math.max(0, reservedStartX);
+					}
+				});
+
+				if (grayEndX > grayStartX) {
+					ctx.fillStyle = "#e8e6e6";
+					ctx.fillRect(grayStartX, 15, grayEndX - grayStartX, 20);
+				}
+			}
+		});
+	}
+
+	// 시간 드롭다운
+	function populateTimeOptions(selectId, firstOptionLabel){
+	    const select = document.getElementById(selectId);
+	    select.innerHTML="";
+	    const firstOption = document.createElement("option");
+	    firstOption.value="";
+	    firstOption.textContent=firstOptionLabel;
+	    select.appendChild(firstOption);
 	
-	    charts.forEach(chart => {
-	        chart.innerHTML = "";
-	        const localDrawnTimes = new Set(); // 각 차트별 시간 Set
-	
-	        const reservationStart = new Date(chart.dataset.start);
-	        const reservationEnd = new Date(chart.dataset.end);
-	
-	        let start = selectedStartDate || reservationStart;
-	        let end = selectedEndDate || reservationEnd;
-	        
-	    	 // 오늘 날짜 선택 시 현재 시간 이후로 시작
-	        if (isToday(start)) {
-	            const now = new Date();
-	            if (now > start) {
-	                start = new Date(now); // 시작 시간을 현재 시간으로
-	            }
-	        }
-	
-	        const canvas = document.createElement("canvas");
-	        canvas.width = chart.clientWidth;
-	        canvas.height = chart.clientHeight;
-	        chart.appendChild(canvas);
-	
-	        const ctx = canvas.getContext("2d");
-	        const totalHours = (end - start) / (1000 * 60 * 60);
-	        const unitWidth = canvas.width / totalHours;
-	
-	        // drawTimeLabelLocal 함수
-	        function drawTimeLabelLocal(x, date) {
-	            const hourStr = date.getHours().toString().padStart(2, '0') + ":00";
-	            if (hourStr === "00:00") return;
-	            const key = x + "-" + hourStr;
-	            if (localDrawnTimes.has(key)) return;
-	            ctx.fillStyle = "black";
-	            ctx.font = "10px Arial";
-	            ctx.fillText(hourStr, x, 45);
-	            localDrawnTimes.add(key);
-	        }
-	
-	        // 1) 전체 바 (파랑)
-	        ctx.fillStyle = "#e8e6e6";
-	        ctx.fillRect(0, 15, canvas.width, 20);
-	        drawTimeLabelLocal(0, start);
-	
-	        // 2) 예약 구간 (빨강)
-	        const displayStart = new Date(Math.max(reservationStart, start));
-	        const displayEnd = new Date(Math.min(reservationEnd, end));
-	        if (displayEnd > displayStart) {
-	            // 예약 좌표도 차트 범위 안으로 보정
-	            const redStartX = ((displayStart - start) / (1000 * 60 * 60)) * unitWidth;
-	            const redEndX = ((displayEnd - start) / (1000 * 60 * 60)) * unitWidth;
-	            const redWidth = redEndX - redStartX;
-	
-	            ctx.fillStyle = "red";
-	            ctx.fillRect(redStartX, 15, redWidth, 20);
-	            drawTimeLabelLocal(redStartX, displayStart);
-	            drawTimeLabelLocal(redEndX, displayEnd);
-	        }
-	
-	        // 3) 선택 구간
-	        const startTimeValue = document.getElementById("startTime").value;
-	        const endTimeValue = document.getElementById("endTime").value;
-	        if (startTimeValue && endTimeValue) {
-	            const [startH, startM] = startTimeValue.split(":").map(Number);
-	            const [endH, endM] = endTimeValue.split(":").map(Number);
-	
-	            const selectedStart = new Date(selectedStartDate);
-	            selectedStart.setHours(startH, startM, 0);
-	            const selectedEnd = new Date(selectedEndDate);
-	            selectedEnd.setHours(endH, endM, 0);
-	
-	            // 선택 시간 범위를 차트 표시 구간(start~end) 안으로 보정
-	            const clippedStart = new Date(Math.max(selectedStart, start));
-	            const clippedEnd = new Date(Math.min(selectedEnd, end));
-	
-	            if (clippedEnd > clippedStart) { // 겹칠 때만 그림
-	                const selStartX = ((clippedStart - start) / (1000 * 60 * 60)) * unitWidth;
-	                const selEndX = ((clippedEnd - start) / (1000 * 60 * 60)) * unitWidth;
-	
-	                // 예약 좌표도 보정된 값 사용
-	                const resStartX = ((displayStart - start) / (1000 * 60 * 60)) * unitWidth;
-	                const resEndX = ((displayEnd - start) / (1000 * 60 * 60)) * unitWidth;
-	
-	                // 겹치는 영역 계산
-	                const overlapStartX = Math.max(selStartX, resStartX);
-	                const overlapEndX = Math.min(selEndX, resEndX);
-	                const overlapWidth = Math.max(0, overlapEndX - overlapStartX);
-	
-	                // 왼쪽 초록
-	                if (selStartX < overlapStartX) {
-	                    ctx.fillStyle = "#e8e6e6";
-	                    ctx.fillRect(selStartX, 15, overlapStartX - selStartX, 20);
-	                    drawTimeLabelLocal(selStartX, clippedStart);
-	                    drawTimeLabelLocal(overlapStartX, new Date(Math.max(selectedStart, reservationStart)));
-	                }
-	
-	                // 중복
-	                if (overlapWidth > 0) {
-	                    ctx.fillStyle = "red";
-	                    ctx.fillRect(overlapStartX, 15, overlapWidth, 20);
-	                    drawTimeLabelLocal(overlapStartX, new Date(Math.max(selectedStart, reservationStart)));
-	                    drawTimeLabelLocal(overlapEndX, new Date(Math.min(selectedEnd, reservationEnd)));
-	                }
-	
-	                // 선택 블루
-	                if (selEndX > overlapEndX) {
-	                    ctx.fillStyle = "blue";
-	                    ctx.fillRect(overlapEndX, 15, selEndX - overlapEndX, 20);
-	                    drawTimeLabelLocal(overlapEndX, new Date(Math.min(selectedEnd, reservationEnd)));
-	                    drawTimeLabelLocal(selEndX, clippedEnd);
-	                }
-	            }
-	        }
-	
-	        // 4) 날짜 표시 (MM-DD)
-	        const oneDay = 1000 * 60 * 60 * 24;
-	        ctx.fillStyle = "black";
-	        ctx.font = "bold 10px Arial";
-	        for (let d = new Date(start); d <= end; d = new Date(d.getTime() + oneDay)) {
-	            const offsetX = ((d - start) / (1000 * 60 * 60)) * unitWidth;
-	            const month = (d.getMonth() + 1).toString().padStart(2, '0');
-	            const day = d.getDate().toString().padStart(2, '0');
-	            ctx.fillText(month + "-" + day, offsetX, 10);
-	        }
-	
-	        // 5) 회색 처리 (오늘 이전)
-	        const now = new Date();
-	        if (now > start) {
-	            const pastHours = Math.min((today - start) / (1000 * 60 * 60), totalHours);
-	            const pastX = pastHours * unitWidth;
-	            let grayStartX = 0;
-	            let grayEndX = pastX;
-	            if (reservationStart < today && reservationEnd > start) {
-	                const reservedStartX = ((reservationStart - start) / (1000 * 60 * 60)) * unitWidth;
-	                grayEndX = Math.max(0, reservedStartX);
-	            }
-	            if (grayEndX > grayStartX) {
-	                ctx.fillStyle = "#e8e6e6";
-	                ctx.fillRect(grayStartX, 15, grayEndX - grayStartX, 20);
-	            }
-	        }
-	    });
+	    for(let h=0;h<24;h++){
+	        const hourStr = h.toString().padStart(2,'0');
+	        const option = document.createElement('option');
+	        option.value = hourStr+":00";
+	        option.textContent = hourStr+":00";
+	        select.appendChild(option);
+	    }
 	}
 	
-		// 시간 드롭다운
-		function populateTimeOptions(selectId, firstOptionLabel){
-		    const select = document.getElementById(selectId);
-		    select.innerHTML="";
-		    const firstOption = document.createElement("option");
-		    firstOption.value="";
-		    firstOption.textContent=firstOptionLabel;
-		    select.appendChild(firstOption);
-		
-		    for(let h=0;h<24;h++){
-		        const hourStr = h.toString().padStart(2,'0');
-		        const option = document.createElement('option');
-		        option.value = hourStr+":00";
-		        option.textContent = hourStr+":00";
-		        select.appendChild(option);
-		    }
-		}
-		
-		// 시작시간 유효성
-		function validateStartTime(){
-		    const timeSelect = document.getElementById("startTime");
-		    const selectedTime = timeSelect.value;
-		    if(!selectedTime || !selectedStartDate) return;
-		
-		    const today = new Date();
-		    const [hours, minutes] = selectedTime.split(":").map(Number);
-		
-		    const selectedDateTime = new Date(selectedStartDate.getFullYear(),
-		        selectedStartDate.getMonth(),
-		        selectedStartDate.getDate(),
-		        hours, minutes);
-		
-		    if(selectedStartDate.toDateString() === today.toDateString()){
-		        if(selectedDateTime<today){
-		            alert("선택한 시작시간은 현재 시간 이후여야 합니다.");
-		            timeSelect.value="";
-		        }
-		    }
-		}
-		
-		// yyyy-mm-dd 포맷
-		function formatLocalDate(date){
-		    const yyyy = date.getFullYear();
-		    const mm = String(date.getMonth()+1).padStart(2,'0');
-		    const dd = String(date.getDate()).padStart(2,'0');
-		    return yyyy+"-"+mm+"-"+dd;
-		}
-		
+	// 시작시간 유효성
+	function validateStartTime(){
+	    const timeSelect = document.getElementById("startTime");
+	    const selectedTime = timeSelect.value;
+	    if(!selectedTime || !selectedStartDate) return;
+	
+	    const today = new Date();
+	    const [hours, minutes] = selectedTime.split(":").map(Number);
+	
+	    const selectedDateTime = new Date(selectedStartDate.getFullYear(),
+	        selectedStartDate.getMonth(),
+	        selectedStartDate.getDate(),
+	        hours, minutes);
+	
+	    if(selectedStartDate.toDateString() === today.toDateString()){
+	        if(selectedDateTime<today){
+	            alert("선택한 시작시간은 현재 시간 이후여야 합니다.");
+	            timeSelect.value="";
+	        }
+	    }
+	}
+	
+	// yyyy-mm-dd 포맷
+	function formatLocalDate(date){
+	    const yyyy = date.getFullYear();
+	    const mm = String(date.getMonth()+1).padStart(2,'0');
+	    const dd = String(date.getDate()).padStart(2,'0');
+	    return yyyy+"-"+mm+"-"+dd;
+	}
+
 		document.addEventListener("DOMContentLoaded", function(){
 		    populateTimeOptions("startTime","-- 대여시간 선택 --");
 		    populateTimeOptions("endTime","-- 반납시간 선택 --");
@@ -875,7 +879,6 @@ table tr:nth-child(even) {
 		        });
 		    });
 		    
-		    // 수정
 		    modifyCar.addEventListener("submit", function(e) {
 				e.preventDefault();
 				
@@ -918,7 +921,7 @@ table tr:nth-child(even) {
 		    });
 		    
 	    
-		// 수정, 이슈등록에 사용할 차량 리스트
+		// 이슈등록에 사용할 차량 리스트
 	    $(document).ready(function() {
 	        $.ajax({
 	            url: '/api/car/adminCarList',
@@ -932,7 +935,7 @@ table tr:nth-child(even) {
 	                     select.append('<option value="">-- 차량 선택 --</option>');
 	                     
 	                     vehicleList.forEach(function(vehicle) {
-	                         // Y/N 값 변환
+	                         
 	                         var statusText = vehicle.vehicleStatus === 'Y' ? '활성화' : '비활성화';
 
 	                         // 옵션 추가
@@ -963,7 +966,7 @@ table tr:nth-child(even) {
 		        $('#carToggle input[name="vehicleId"]').val(selectedId); 
 		    });
 
-		    // 수정 폼에서 선택한 차량 가져오기
+		    // 폼에서 선택한 차량 가져오기
 		    $('#modifyVehicleSelect').change(function() {
 		        var selectedId = $(this).val();
 		        $('input[name="vehicleId"]').val(selectedId);

@@ -16,7 +16,7 @@ public interface ReservationMapper {
 	// 예약 리스트
 	List<CarReservationDto> getCarReservationListByDate(Map<String, Object> param);
 
-	int getTotalCountByDate(String today);
+	int getTotalCountByDate(String todayStart);
 
 	// 차량등록
 	void addCar(Vehicle vehicle);

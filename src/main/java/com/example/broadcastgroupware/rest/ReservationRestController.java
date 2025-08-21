@@ -1,9 +1,10 @@
 package com.example.broadcastgroupware.rest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,7 @@ import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.PageDto;
+import com.example.broadcastgroupware.dto.ReservationPeriod;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ReservationService;
 
@@ -36,34 +38,75 @@ public class ReservationRestController {
 
 	// 차량 예약 리스트 조회 (페이징)
 	@GetMapping("/user/car")
-	public Map<String, Object> carList(HttpSession sesstion,
-									   @RequestParam(value = "page", defaultValue = "1") int page,
-									   @RequestParam(value = "size", defaultValue = "10") int size,
-									   @RequestParam(value = "date", required = false) String date,
-								        @RequestParam(value = "time", required = false) String time) {
+	public Map<String, Object> carList(HttpSession session,
+	                                   @RequestParam(value = "page", defaultValue = "1") int page,
+	                                   @RequestParam(value = "size", defaultValue = "10") int size) {
 
-		UserSessionDto loginUser = (UserSessionDto) sesstion.getAttribute("loginUser");
+	    UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 
-		Map<String, Object> response = new HashMap<>();
+	    Map<String, Object> response = new HashMap<>();
 
-		if (loginUser != null) {
-			response.put("username", loginUser.getUsername());
-			response.put("role", loginUser.getRole());
-			response.put("userId", loginUser.getUserId());
-		}
-		
-		java.time.LocalDate today = java.time.LocalDate.now();
-	    String todayStr = today.toString();
+	    if (loginUser != null) {
+	        response.put("username", loginUser.getUsername());
+	        response.put("role", loginUser.getRole());
+	        response.put("userId", loginUser.getUserId());
+	    }
 
-	    // 오늘 날짜 기준 전체 예약 조회
-	    PageDto pageDto = new PageDto(page, size, reservationService.getTotalCountByDate(todayStr));
-	    List<CarReservationDto> carReservationList = reservationService.getCarReservationListByDate(todayStr, pageDto);
+	    String todayStart = java.time.LocalDate.now() + " 00:00:00";
 
-	    response.put("carReservationList", carReservationList);
+	    // 전체 예약 수
+	    int totalCount = reservationService.getTotalCountByDate(todayStart);
+	    PageDto pageDto = new PageDto(page, size, totalCount);
+
+	    // 차량별 예약 리스트 조회
+	    List<CarReservationDto> rawList = reservationService.getCarReservationListByDate(todayStart, pageDto);
+	    Map<Integer, CarReservationDto> mergedMap = new LinkedHashMap<>();
+
+	    for (CarReservationDto c : rawList) {
+	        ReservationPeriod period = null;
+	        if (c.getReservationStart() != null && !c.getReservationStart().isEmpty()) {
+	            period = new ReservationPeriod(c.getReservationStart(), c.getReservationEnd());
+	        }
+
+	        if (mergedMap.containsKey(c.getVehicleId())) {
+	            // 기존 DTO가 있으면 reservationPeriods만 추가
+	            if (period != null) {
+	                mergedMap.get(c.getVehicleId()).getReservationPeriods().add(period);
+	            }
+	        } else {
+	            // 새 DTO이면 periods 추가 후 put
+	            if (period != null) {
+	                c.getReservationPeriods().add(period);
+	            }
+	            mergedMap.put(c.getVehicleId(), c);
+	        }
+	    }
+
+
+
+	    // 로그 출력 (확인용)
+	    /*
+	    mergedMap.values().forEach(c -> {
+	        System.out.println("===== 차량 예약 확인 =====");
+	        System.out.println("vehicleId: " + c.getVehicleId());
+	        System.out.println("vehicleNo: " + c.getVehicleNo());
+	        System.out.println("vehicleName: " + c.getVehicleName());
+	        System.out.println("vehicleType: " + c.getVehicleType());
+	        System.out.println("vehicleStatus: " + c.getVehicleStatus());
+	        System.out.println("reservationPeriods: ");
+	        for (ReservationPeriod p : c.getReservationPeriods()) {
+	            System.out.println("    start: " + p.getReservationStart() + ", end: " + p.getReservationEnd());
+	        }
+	    });
+	    */
+
+	    response.put("carReservationList", new ArrayList<>(mergedMap.values()));
 	    response.put("pageDto", pageDto);
 
-		return response;
+	    return response;
 	}
+
+
 
 	// 차량 등록
 	@PostMapping("/car/addCar")

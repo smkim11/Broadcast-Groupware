@@ -11,29 +11,25 @@
 	        AND DATE(r.vehicle_reservation_start_time) = #{today}
 	</select>
 
-	
 	<!-- 예약리스트 -->
-	<select id="getCarReservationListByDate">
-		SELECT DISTINCT
-			v.vehicle_id AS vehicleId,
-			v.vehicle_status AS vehicleStatus,
-			v.vehicle_no AS vehicleNo,
-			v.vehicle_type AS vehicleType,
-			v.vehicle_name AS vehicleName,
-			CASE 
-				WHEN r.vehicle_reservation_start_time IS NULL THEN ''
-				ELSE DATE_FORMAT(r.vehicle_reservation_start_time, '%Y-%m-%d %H:%i') 
-			END AS reservationStart,
-			CASE 
-				WHEN r.vehicle_reservation_end_time IS NULL THEN ''
-				ELSE DATE_FORMAT(r.vehicle_reservation_end_time, '%Y-%m-%d %H:%i') 
-			END AS reservationEnd
-		FROM vehicle v
+	<select id="getCarReservationListByDate" parameterType="map" resultType="com.example.broadcastgroupware.dto.CarReservationDto">
+	    SELECT
+		    v.vehicle_id AS vehicleId,
+		    v.vehicle_status AS vehicleStatus,
+		    v.vehicle_no AS vehicleNo,
+		    v.vehicle_type AS vehicleType,
+		    v.vehicle_name AS vehicleName,
+		    DATE_FORMAT(r.vehicle_reservation_start_time, '%Y-%m-%d %H:%i') AS reservationStart,
+		    DATE_FORMAT(r.vehicle_reservation_end_time, '%Y-%m-%d %H:%i') AS reservationEnd
+		FROM
+		    (SELECT *
+		     FROM vehicle
+		     ORDER BY vehicle_id
+		     LIMIT #{beginRow}, #{rowPerPage}) v
 		LEFT JOIN vehicle_reservation r
-			ON v.vehicle_id = r.vehicle_id
-			AND DATE(r.vehicle_reservation_start_time) = #{today}
-		ORDER BY v.vehicle_id
-		LIMIT #{beginRow}, #{rowPerPage}
+		    ON v.vehicle_id = r.vehicle_id
+		    AND r.vehicle_reservation_start_time >= #{todayStart}
+		ORDER BY v.vehicle_id, r.vehicle_reservation_start_time
 	</select>
 	
 	<!-- 차량등록 -->
@@ -71,10 +67,10 @@
 	<!-- 기존 예약이랑 겹치는지 확인 -->
 	<select id="checkReservations" parameterType="com.example.broadcastgroupware.domain.VehicleReservation" resultType="int">
 	    SELECT COUNT(*)
-	    FROM vehicle_reservation
-	    WHERE vehicle_id = #{vehicleId}
-	      AND vehicle_reservation_start_time &lt;= STR_TO_DATE(#{vehicleReservationStartTime}, '%Y-%m-%d %H:%i:%s')
-	      AND vehicle_reservation_end_time &gt;= STR_TO_DATE(#{vehicleReservationEndTime}, '%Y-%m-%d %H:%i:%s')
+		FROM vehicle_reservation
+		WHERE vehicle_id = #{vehicleId}
+			AND vehicle_reservation_start_time &lt; STR_TO_DATE(#{vehicleReservationEndTime}, '%Y-%m-%d %H:%i:%s')
+			AND vehicle_reservation_end_time &gt; STR_TO_DATE(#{vehicleReservationStartTime}, '%Y-%m-%d %H:%i:%s')
 	</select>
 	
 	<!-- 차량 예약 -->

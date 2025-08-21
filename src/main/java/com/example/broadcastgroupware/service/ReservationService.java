@@ -14,7 +14,10 @@ import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class ReservationService {
 	private final ReservationMapper reservationMapper;
 
@@ -23,9 +26,9 @@ public class ReservationService {
 	}
 	
 	// 예약 리스트 조회
-	public List<CarReservationDto> getCarReservationListByDate(String today, PageDto pageDto) {
+	public List<CarReservationDto> getCarReservationListByDate(String todayStart, PageDto pageDto) {
 	    Map<String, Object> param = new HashMap<>();
-	    param.put("today", today);
+	    param.put("todayStart", todayStart);
 	    param.put("beginRow", pageDto.getBeginRow());
 	    param.put("rowPerPage", pageDto.getRowPerPage());
 
@@ -70,6 +73,7 @@ public class ReservationService {
 
 	    // 2) 겹치는 예약이 있는지 확인
 	    int count = reservationMapper.checkReservations(vehicleReservation);
+	    log.info("중복 시간 예약: {}", count);
 
 	    if(count > 0) {
 	        return false; // 겹치는 예약 있음
