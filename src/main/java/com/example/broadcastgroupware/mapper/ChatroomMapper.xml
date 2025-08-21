@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.broadcastgroupware.mapper.ChatroomMapper">
+
+	<!-- ===================================채팅방================================ -->
+	<!--  목록 매핑 -->
+	<resultMap id="ChatroomListMap" type="com.example.broadcastgroupware.dto.ChatroomListDto">
+		<id		column="chatroom_id"		property="chatroomId"/>
+		<result column="chatroom_name"		property="chatroomName"/>
+		<result column="last_message"		property="lastMessage"/>
+		<result column="last_message_at"	property="lastMessageAt"/>
+		<result column="unread_count"		property="unreadCount"/>
+		<result column="room_type"			property="roomType"/>
+		<result column="dm_key"				property="dmKey"/>
+		
+	<!-- 서비스에서 아바타이미지 계산용 원재료 -->
+		<result column="peer_user_id"		property="peerUserId"/>
+		<result column="peer_avatar_path"	property="peerAvatarPath"/>
+		<result column="group_avatar_path"	property="groupAvatarPath"/>
+	</resultMap>
+	
+	<!-- 내가 속한 DM 목록(상대 정보 포함) -->
+	<select id="selectDmListByUser" parameterType="int" resultMap="ChatroomListMap">
+		SELECT
+			  c.chatroom_id,
+			  c.room_type,
+			  c.dm_key,
+			  c.last_message_at,
+				  (SELECT m.chat_message_content
+				  	 FROM chat_message m
+				   WHERE m.chatroom_id = c.chatroom_id
+				   ORDER BY m.chat_message_id DESC
+				   LIMIT 1
+				   ) AS last_message,
+			   <!-- 미확인 수는 추후 계산 로직으로 대체 가능 -->
+			   0 AS unread_count,
+			   <!-- 리스트에 기본으로 보여줄 이름(편의상 동명컬럼) -->
+			   peer.full_name AS chatroom_name
+		FROM chatroom c
+			INNER JOIN chatroom_user cu
+				ON cu.chatroom_id = c.chatroom_id
+				AND cu.user_id = #{userId}
+			INNER JOIN `user` peer
+				ON peer.user_id = (
+								   SELECT chu.user_id
+								   FROM chatroom_user chu
+								   WHERE chu.chatroom_id = c.chatroom_id
+								    AND chu.user_id  &lt;&gt; cu.user_id	 <!--  나 자신을 제외 -->
+								   LIMIT 1 
+								   )
+		WHERE c.room_type = 'DM'
+		ORDER BY c.last_message_at DESC, c.create_date DESC
+	</select>
+	
+	  <!-- dm_key로 방 1개 조회 -->
+  <select id="selectByDmKey" parameterType="string" resultType="com.example.broadcastgroupware.domain.Chatroom">
+    SELECT
+      chatroom_id,
+      room_type,
+      dm_key,
+      chatroom_name,
+      chatroom_status,
+      last_message_at,
+      create_date
+    FROM chatroom
+    WHERE dm_key = #{dmKey}
+    LIMIT 1
+  </select>
+	
+	<!-- DM 방 생성 -->
+	<insert id="insertChatroom"
+			parameterType="com.example.broadcastgroupware.domain.Chatroom"
+			useGeneratedKeys="true" keyProperty="chatroomId">
+		INSERT INTO chatroom
+			(room_type, dm_key, chatroom_name, chatroom_status, last_message_at, create_date)
+		VALUES
+			(#{roomType}, #{dmKey}, #{chatroomName}, #{chatroomStatus}, #{lastMessageAt}, NOW())		
+	</insert>
+	
+	<!-- 방 유저 매핑 -->
+	<insert id="insertChatroomUser">
+		INSERT INTO chatroom_user
+			(chatroom_id, user_id, create_date)
+		VALUES
+			(#{chatroomId}, #{userId}, NOW())
+	</insert>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -27,6 +27,7 @@ public class ChatService {
 		// 2) 도메인으로 INSERT
 		ChatMessage m = new ChatMessage();
 		m.setChatroomUserId(chatroomUserId);
+		m.setChatroomId(chatroomId);
 		m.setChatMessageContent(chatMessageContent);
 		m.setChatMessageStatus("Y");
 		chatMapper.insertChatMessage(m);	// chatMessageId 세팅

@@ -17,9 +17,9 @@
 			keyProperty="chatMessageId"
 			keyColumn="chat_message_id">
 		INSERT INTO chat_message
-			(chatroom_user_id, chat_message_content, chat_message_status, create_date)
+			(chatroom_user_id, chatroom_id, chat_message_content, chat_message_status, create_date)
 		VALUES
-			(#{chatroomUserId}, #{chatMessageContent}, #{chatMessageStatus}, NOW())		
+			(#{chatroomUserId}, #{chatroomId}, #{chatMessageContent}, #{chatMessageStatus}, NOW())		
 	</insert>
 	
 	<!-- 단건 뷰(방금 저장한 메시지) 조회 -> Dto로 반환 -->
@@ -73,30 +73,45 @@
 		SET last_read_at = NOW()
 		WHERE chatroom_id = #{chatroomId} AND user_id = #{userId}
 	</update>
-	
-	
-	<!--
-	<select id="selectChatUserList" resultType="com.example.broadcastgroupware.dto.ChatUserListDto">
-		SELECT full_name AS fullName
-			 , user_rank AS userRank
-			 , 
-		FROM user u
-		LEFT JOIN user_images ui
-			ON ui.user_id = u.user_id
-			AND ui.user_images_type = '프로필'
-			프로필이미지 중 최신것 1개만
-			AND ui.update_date = (
-								   SELECT MAX(x.update_date)
-								   FROM user_images x
-								   WHERE x.user_id = u.user_id
-								   	AND x.user_images_type = '프로필'
-								  )
-		<where>
-			(u.user_resign_date IS NULL OR u.user_resign_date > NOW())	재직자만
-			<if test="meId != null">
-				AND u.user_id
-			</if>
-		</where>
-	</select>
-		-->
 </mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

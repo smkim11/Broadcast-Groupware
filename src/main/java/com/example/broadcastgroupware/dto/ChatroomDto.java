@@ -4,10 +4,17 @@ import lombok.Data;
 
 @Data
 public class ChatroomDto {
+	/*
+	 * 채팅방 상세/목록 공통으로 내려 줄 때 사용할 응답 Dto
+	 * 도메인 Chatroom 과 필드 1:1 대응(문자열 시간 유지)
+	 */
 	private int chatroomId;			// chatroom_id(PK)
 	private int userId;				// user_id(FK)
-	private String chatroomName;	// chatroom_name
-	private String chatroomStatus;	// chatroom_status
-	private String createDate;		// create_date
+	private String dmKey;			// "작은id:큰id (3:5)
+	private String roomType;		// "DM" 또는 "GROUP"
+	private String chatroomName;	// 방 이름(DM이면 상대 이름 등)
+	private String chatroomStatus;	// 방 나가기 상태
+	private String lastMessageAt;	// 마지막 메시지 시각(캐시)
+	private String createDate;		// 생성 시각
 
 }

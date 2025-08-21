@@ -147,6 +147,7 @@
     $('#invite-selected').empty().append('<small class="text-muted">선택한 사용자가 여기에 표시됩니다.</small>');
   });
 
+  /*
   // ---- 초대 ----
   $('#invite-submit-btn').on('click', async function(){
     let ids = $('#invite-modal-body .invite-user:checked').map(function(){ return Number($(this).data('id')); }).get();
@@ -162,5 +163,76 @@
     const inst = window.bootstrap?.Modal.getInstance(el);
     if (inst) inst.hide();
   });
-
+*/
 })(window, jQuery);
+
+// ======================= 조직도(DM 생성) =======================
+
+// 전역 선택 상태(Map)는 이전 파일에서 만든 걸 재사용한다고 가정
+window.selectedUsers = window.selectedUsers || new Map();
+
+function getCsrfHeaders() {
+  try {
+    var tokenMeta  = document.querySelector('meta[name="_csrf"]');
+    var headerMeta = document.querySelector('meta[name="_csrf_header"]');
+    if (tokenMeta && headerMeta) {
+      var h = {};
+      h[headerMeta.getAttribute('content')] = tokenMeta.getAttribute('content');
+      return h;
+    }
+  } catch (e) {}
+  return {};
+}
+
+// “초대” 버튼: 1명만 선택 → DM 생성
+$(document).on('click', '#invite-submit-btn', async function(){
+  var ids = $('#invite-modal-body .invite-user:checked').map(function(){
+    return Number($(this).data('id'));
+  }).get();
+
+  if (ids.length === 0 && window.selectedUsers && window.selectedUsers.size > 0) {
+    ids = Array.from(window.selectedUsers.keys());
+  }
+
+  if (ids.length === 0) {
+    alert('선택된 사용자가 없습니다.');
+    return;
+  }
+  if (ids.length !== 1) {
+    alert('지금은 1대1 대화만 지원합니다. 한 명만 선택해 주세요.');
+    return;
+  }
+
+  var targetUserId = ids[0];
+  var headers = Object.assign({ 'Content-Type': 'application/json' }, getCsrfHeaders());
+
+  try {
+    var res = await fetch('/api/rooms/dm', {   // 초대→DM 생성
+      method: 'POST',
+      headers: headers,
+      credentials: 'same-origin',
+      body: JSON.stringify({ targetUserId: targetUserId })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    var room = await res.json(); // ChatroomDto (chatroomId 등)
+
+    // 모달 닫기
+    var modalEl = document.getElementById('inviteModal');
+    var inst = (window.bootstrap && bootstrap.Modal) ? bootstrap.Modal.getInstance(modalEl) : null;
+    if (inst) inst.hide();
+
+    // 사이드바 DM 목록 새로고침
+    if (typeof window.loadDmList === 'function') {
+      await window.loadDmList();
+    }
+
+    // 방으로 이동
+    if (room && room.chatroomId) {
+      window.location.href = '/chat/rooms/' + room.chatroomId;
+    }
+  } catch (err) {
+    console.error('DM 생성 실패:', err);
+    alert('DM 생성에 실패했습니다.');
+  }
+});

@@ -9,7 +9,7 @@
   const $list    = document.getElementById('chat-messages');
 
   const meta        = document.getElementById('chat-meta')?.dataset || {};
-  const chatroomId  = Number(meta.roomId || 1);
+  let chatroomId    = Number(meta.roomId || 1);   // 🔴 const → let 변경
   const myUserId    = Number(meta.userId || 0);
 
   // ---- 상태 ----
@@ -167,6 +167,7 @@
     if (!stompClient || !stompClient.connected) return;
     const content = ($input?.value || '').trim();
     if (!content) return;
+	console.log("📤 메시지 전송:", content, "→ 방 ID:", chatroomId); // 디버깅
     stompClient.send(appSend(chatroomId), {}, JSON.stringify({ chatMessageContent: content }));
     $input.value = ''; $input.focus();
   }
@@ -184,4 +185,96 @@
     connect();
   });
 
+  // 🔴 방 전환 함수 (추가)
+  window.openChatRoom = function(roomId){
+    $('#chat-messages').empty();
+    chatroomId = roomId;              // 방 ID 갱신
+    loadMessages(roomId);             // 메시지 다시 로딩
+    if (stompClient && stompClient.connected) {
+      try { stompClient.disconnect(); } catch(e) {}
+    }
+    connect();                        // 새 방으로 연결
+    $('.page-title-box h4').text('Chat Room #' + roomId);
+  };
+
 })(window, jQuery);
+
+
+// ======================= Chat (DM 목록/클릭) =======================
+
+function getContactsListEl() {
+  return $('.chat-leftsidebar .chat-list').last();
+}
+
+function formatWhen(s) {
+  if (!s) return '';
+  var hhmm = (s.match(/\d{2}:\d{2}/) || [])[0];
+  if (!hhmm) return s;
+  var day = s.slice(0,10);
+  var today = new Date().toISOString().slice(0,10);
+  return (day === today) ? hhmm : day;
+}
+
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"]/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]); });
+}
+
+function renderDmList(list) {
+  var $ul = getContactsListEl();
+  $ul.empty();
+
+  if (!list || list.length === 0) {
+    $ul.append('<li class="text-muted px-3">대화 상대가 없습니다.</li>');
+    return;
+  }
+
+  list.forEach(function(item){
+    var name = item.chatroomName || '(이름 없음)';
+    var initial = name.trim().charAt(0) || 'U';
+    var unread = (item.unreadCount != null ? Number(item.unreadCount) : 0);
+    var when = formatWhen(item.lastMessageAt);
+    var lastMsg = item.lastMessage ? String(item.lastMessage) : '';
+
+    var badgeHtml = unread > 0
+      ? '<span class="badge bg-danger-subtle text-danger ms-2">'+ unread +'</span>'
+      : '';
+
+    var html =
+      '<li>' +
+        '<a href="#" class="d-flex align-items-center dm-item" data-room-id="' + item.chatroomId + '">' +
+          '<div class="flex-shrink-0 me-3">' +
+            '<div class="avatar-xs">' +
+              '<span class="avatar-title rounded-circle bg-primary-subtle text-primary">' + escapeHtml(initial) + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="flex-grow-1">' +
+            '<h5 class="font-size-14 mb-0">' + escapeHtml(name) + badgeHtml + '</h5>' +
+            '<small class="text-muted">' + escapeHtml(when) + (lastMsg ? ' · ' + escapeHtml(lastMsg) : '') + '</small>' +
+          '</div>' +
+        '</a>' +
+      '</li>';
+
+    $ul.append(html);
+  });
+}
+
+function loadDmList() {
+  return fetch('/api/rooms/dm', { credentials: 'same-origin' })
+    .then(res => { if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); })
+    .then(list => { renderDmList(list); return list; })
+    .catch(err => {
+      console.error('DM 목록 로딩 실패:', err);
+      var $ul = getContactsListEl();
+      $ul.empty().append('<li class="text-danger px-3">DM 목록 로딩 실패</li>');
+      return [];
+    });
+}
+
+// Contacts 항목 클릭 → 방 이동
+$(document).on('click', '.dm-item', function(e){
+  e.preventDefault();
+  var roomId = $(this).data('room-id');
+  if (roomId) window.openChatRoom(roomId);
+});
+
+$(function(){ loadDmList(); });
