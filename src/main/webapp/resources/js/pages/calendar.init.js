@@ -208,6 +208,59 @@ document.addEventListener("DOMContentLoaded", function(){
     });
 
     g.render();
+	
+	// 체크박스로 타입별 일정 조회
+	const userId = document.getElementById("event-login-user").value;
+	const checkboxes = document.querySelectorAll("#personal, #team, #total");
+
+	// 초기에는 모두 체크된상태
+	document.getElementById("personal").checked = true;
+	document.getElementById("team").checked = true;
+	document.getElementById("total").checked = true;
+
+	// 체크박스 상태에 따라 함수실행
+	function calendarLoad(checkbox) {
+	    let url = "";
+	    if (checkbox.id === "personal") url = "/selectPersonalCalendar?userId=" + userId;
+	    if (checkbox.id === "team") url = "/selectTeamCalendar?userId=" + userId;
+	    if (checkbox.id === "total") url = "/selectTotalCalendar?userId=" + userId;
+
+		// 체크박스가 체크되면 해당하는 정보가 나오고 체크해제되면 해당하는 정보가 지워진다
+	    if (checkbox.checked) {
+	        fetch(url)
+	            .then(res => res.json())
+	            .then(data => {
+	                const events = data.map(event => ({
+	                    id: event.calendarId,
+	                    userId: event.userId,
+	                    title: event.calendarTitle,
+	                    location: event.calendarLocation,
+	                    start: event.calendarStartTime,
+	                    end: event.calendarEndTime,
+	                    type: event.calendarType,
+	                    className:
+	                        event.calendarType === "개인" ? "bg-info" :
+	                        event.calendarType === "팀" ? "bg-success" :
+	                        event.calendarType === "전체" ? "bg-warning" :
+	                        "bg-danger",
+	                    memo: event.calendarMemo
+	                }));
+	                g.addEventSource({ id: checkbox.id, events });
+	            });
+	    } else {
+	        g.getEventSources().forEach(event => {
+	            if (event.id === checkbox.id) event.remove();
+	        });
+	    }
+	}
+
+	// 체크박스 변경 시 calendarLoad실행
+	checkboxes.forEach(cb => cb.addEventListener("change", () => calendarLoad(cb)));
+
+	// 페이지 접속시 체크된 모든 체크박스에대한 일정들을 보여준다
+	checkboxes.forEach(cb => {
+	    if (cb.checked) calendarLoad(cb);
+	});
 
     // 이벤트 저장
     n.addEventListener("submit", function(e){
@@ -231,7 +284,23 @@ document.addEventListener("DOMContentLoaded", function(){
 				})
 		    }).then((res) => {
 				if(res.ok){
-		            g.render();
+					Swal.fire({
+					        title: "Good job!",
+					        text: "You clicked the button!",
+					        icon: "success",
+					        showCancelButton: true,
+					        confirmButtonColor: "#5b73e8",
+					        cancelButtonColor: "#f46a6a"
+					    });
+					// 캘린더 수정후 화면에도 바로 수정
+					let eventObj = g.getEventById(t);
+			        if(eventObj){
+			            eventObj.setProp('title', a);
+			            eventObj.setStart(sd);
+			            eventObj.setEnd(ed);
+			            eventObj.setExtendedProp('location', lc);
+			            eventObj.setExtendedProp('memo', m);
+			        }
 				}else{
 					alert('수정실패');
 				}
@@ -245,7 +314,12 @@ document.addEventListener("DOMContentLoaded", function(){
 				start: sd,
 				end: ed,
                 type: tp,
-				memo: m
+				memo: m,
+				className:
+					tp === "개인" ? "bg-info" :
+					tp === "팀" ? "bg-success" :
+					tp === "전체" ? "bg-warning" :
+					"bg-danger"
             },
 			fetch("/insertCalendar", {
 			        method: "POST",
@@ -255,6 +329,14 @@ document.addEventListener("DOMContentLoaded", function(){
 					})
 		    }).then((res) => {
 				if(res.ok){
+					Swal.fire({
+					        title: "Good job!",
+					        text: "You clicked the button!",
+					        icon: "success",
+					        showCancelButton: true,
+					        confirmButtonColor: "#5b73e8",
+					        cancelButtonColor: "#f46a6a"
+					    });
 					g.addEvent(d),
 		            s.push(d);
 				}else{
@@ -272,19 +354,24 @@ document.addEventListener("DOMContentLoaded", function(){
 		var t = Number(document.getElementById("eventid").value);
 		console.log("deleteCalendarId:",t);
         if(o){
-			fetch("/deleteCalendar", {method:"DELETE",
-              headers:{"Content-Type":"application/json"},
-              body: JSON.stringify({calendarId:t})})
-            .then((res)=>{
-                if(res.ok){
-					for(var t = 0; t < s.length; t++)
-		                s[t].id == o.id && (s.splice(t, 1), t--);
-		            o.remove(),
-		            o = null;
-                }else{
-                    alert('삭제실패');
-                }
-            })
+			if(window.confirm("삭제하시겠습니까?")){
+				fetch("/deleteCalendar", {method:"DELETE",
+	              headers:{"Content-Type":"application/json"},
+	              body: JSON.stringify({calendarId:t})})
+	            .then((res)=>{
+	                if(res.ok){
+						for(var t = 0; t < s.length; t++)
+			                s[t].id == o.id && (s.splice(t, 1), t--);
+			            o.remove(),
+			            o = null;
+	                }else{
+	                    alert('삭제실패');
+	                }
+	            })
+			}else{
+				alert('삭제취소');
+			}
+			
             
             i.hide();
         }

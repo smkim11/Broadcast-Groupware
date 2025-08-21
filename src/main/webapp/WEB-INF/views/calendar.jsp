@@ -173,46 +173,15 @@
     <jsp:include page ="../views/nav/javascript.jsp"></jsp:include>
 </div>
 </body>
-<script>
-window.calendarEvents = [
-    <c:forEach var="event" items="${events}" varStatus="loop">
-        {
-            id: "${event.calendarId}",
-            userId: "${event.userId}",
-            title: "${fn:escapeXml(event.calendarTitle)}",
-            location: "${event.calendarLocation}",
-            start: "${event.calendarStartTime}",
-            end: "${event.calendarEndTime}",
-            type: "${event.calendarType}",
-            <c:choose>
-	            <c:when test="${event.calendarType eq '개인'}">
-	            	className: "bg-info"
-	            </c:when>
-	            <c:when test="${event.calendarType eq '팀'}">
-	            	className: "bg-success"
-	            </c:when>
-	            <c:when test="${event.calendarType eq '전체'}">
-	            	className: "bg-warning"
-	            </c:when>
-	            <c:otherwise>
-	            	className: "bg-danger"
-	            </c:otherwise>
-            </c:choose>,
-            memo: "${event.calendarMemo}"
-        }<c:if test="${!loop.last}">,</c:if>
-    </c:forEach>
-];
-</script>
-
 <!-- plugin js -->
 <script src="${pageContext.request.contextPath}/resources/libs/moment/min/moment.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/jquery-ui-dist/jquery-ui.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/fullcalendar/index.global.min.js"></script>
 
 
-<!-- Sweet Alerts js -->
-<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
+
 <!-- Calendar init -->
 <script src="${pageContext.request.contextPath}/resources/js/pages/calendar.init.js"></script>
-
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </html>
