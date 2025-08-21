@@ -11,6 +11,12 @@ import com.example.broadcastgroupware.domain.Calendar;
 public interface CalendarMapper {
 	// ID에 맞는 일정
 	List<HashMap<String,Object>> selectUserCalendar(int userId);
+	// Id에 맞는 개인일정
+	List<HashMap<String,Object>> selectPersonalCalendar(int userId);
+	// Id에 맞는 팀 일정
+	List<HashMap<String,Object>> selectTeamCalendar(int userId);
+	// 전체 일정
+	List<HashMap<String,Object>> selectTotalCalendar(int userId);
 	// 일정 생성
 	void insertCalendar(Calendar calendar);
 	// 일정 수정

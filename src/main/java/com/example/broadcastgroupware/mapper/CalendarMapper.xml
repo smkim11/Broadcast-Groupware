@@ -12,6 +12,33 @@
 			(c.calendar_type='팀' AND dh.team_id=(SELECT team_id FROM deployment_history WHERE user_id=#{userId}))
 	</select>
 	
+	<!--Id에 맞는 개인일정-->
+	<select id="selectPersonalCalendar" resultType="map">
+		SELECT c.calendar_id calendarId, c.user_id userId, c.calendar_title calendarTitle, c.calendar_location calendarLocation, c.calendar_type calendarType,
+			c.calendar_memo calendarMemo, c.calendar_start_time calendarStartTime, c.calendar_end_time calendarEndTime 
+		FROM calendar c 
+		WHERE c.calendar_type='개인' and c.user_id=#{userId}
+	</select>
+	
+	<!--Id에 맞는 팀 일정-->
+	<select id="selectTeamCalendar" resultType="map">
+		SELECT c.calendar_id calendarId, c.user_id userId, c.calendar_title calendarTitle, c.calendar_location calendarLocation, c.calendar_type calendarType,
+			c.calendar_memo calendarMemo, c.calendar_start_time calendarStartTime, c.calendar_end_time calendarEndTime 
+		FROM calendar c INNER JOIN user u ON c.user_id= u.user_id
+		INNER JOIN deployment_history dh ON dh.user_id = u.user_id
+		INNER JOIN team t ON t.team_id = dh.team_id
+		WHERE c.calendar_type='팀' AND dh.team_id=
+			(SELECT team_id FROM deployment_history WHERE user_id=#{userId} ORDER BY create_date desc LIMIT 0,1)
+	</select>
+	
+	<!--전체 일정-->
+	<select id="selectTotalCalendar" resultType="map">
+		SELECT c.calendar_id calendarId, c.user_id userId, c.calendar_title calendarTitle, c.calendar_location calendarLocation, c.calendar_type calendarType,
+			c.calendar_memo calendarMemo, c.calendar_start_time calendarStartTime, c.calendar_end_time calendarEndTime 
+		FROM calendar c 
+		WHERE c.calendar_type='전체'
+	</select>
+	
 	<!--일정생성-->
 	<insert id="insertCalendar" parameterType="com.example.broadcastgroupware.domain.Calendar">
 		INSERT INTO calendar(user_id,calendar_title,calendar_location,calendar_type,
