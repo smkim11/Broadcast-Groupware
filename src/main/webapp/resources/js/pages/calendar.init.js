@@ -285,13 +285,11 @@ document.addEventListener("DOMContentLoaded", function(){
 		    }).then((res) => {
 				if(res.ok){
 					Swal.fire({
-					        title: "Good job!",
-					        text: "You clicked the button!",
-					        icon: "success",
-					        showCancelButton: true,
-					        confirmButtonColor: "#5b73e8",
-					        cancelButtonColor: "#f46a6a"
-					    });
+				        title: "수정되었습니다",
+				        icon: "success",
+						confirmButtonText: "확인",
+				        confirmButtonColor: "#34c38f"
+				    });
 					// 캘린더 수정후 화면에도 바로 수정
 					let eventObj = g.getEventById(t);
 			        if(eventObj){
@@ -330,13 +328,11 @@ document.addEventListener("DOMContentLoaded", function(){
 		    }).then((res) => {
 				if(res.ok){
 					Swal.fire({
-					        title: "Good job!",
-					        text: "You clicked the button!",
-					        icon: "success",
-					        showCancelButton: true,
-					        confirmButtonColor: "#5b73e8",
-					        cancelButtonColor: "#f46a6a"
-					    });
+				        title: "생성되었습니다.",
+				        icon: "success",
+						confirmButtonText: "확인",
+				        confirmButtonColor: "#34c38f"
+				    });
 					g.addEvent(d),
 		            s.push(d);
 				}else{
@@ -346,6 +342,7 @@ document.addEventListener("DOMContentLoaded", function(){
             
         }
         i.hide();
+		g.render();
     });
 
     // 이벤트 삭제
@@ -354,25 +351,50 @@ document.addEventListener("DOMContentLoaded", function(){
 		var t = Number(document.getElementById("eventid").value);
 		console.log("deleteCalendarId:",t);
         if(o){
-			if(window.confirm("삭제하시겠습니까?")){
-				fetch("/deleteCalendar", {method:"DELETE",
-	              headers:{"Content-Type":"application/json"},
-	              body: JSON.stringify({calendarId:t})})
-	            .then((res)=>{
-	                if(res.ok){
-						for(var t = 0; t < s.length; t++)
-			                s[t].id == o.id && (s.splice(t, 1), t--);
-			            o.remove(),
-			            o = null;
-	                }else{
-	                    alert('삭제실패');
-	                }
-	            })
-			}else{
-				alert('삭제취소');
-			}
+			Swal.fire({
+	            title: "삭제하시겠습니까?",
+	            icon: "warning",
+	            showCancelButton: !0,
+	            confirmButtonColor: "#34c38f",
+	            cancelButtonColor: "#f46a6a",
+	            confirmButtonText: "예",
+				cancelButtonText: "아니요"
+	        }).then(function(result){
+				if(result.value){
+					fetch("/deleteCalendar", {method:"DELETE",
+		              headers:{"Content-Type":"application/json"},
+		              body: JSON.stringify({calendarId:t})})
+		            .then((res)=>{
+		                if(res.ok){
+							for(var t = 0; t < s.length; t++)
+				                s[t].id == o.id && (s.splice(t, 1), t--);
+				            o.remove(),
+				            o = null;
+		                }else{
+							Swal.fire({
+			                    title: "삭제를 실패했습니다.",
+			                    icon: "error",
+								confirmButtonText: "확인",
+								confirmButtonColor: "#34c38f"
+			                })
+		                }
+		            })
+	                Swal.fire({
+	                    title: "삭제되었습니다.",
+	                    icon: "success",
+						confirmButtonText: "확인",
+			        	confirmButtonColor: "#34c38f"
+	                })
+	            } else if(result.dismiss === Swal.DismissReason.cancel){
+	                Swal.fire({
+	                    title: "취소되었습니다.",
+	                    icon: "error",
+						confirmButtonText: "확인",
+						confirmButtonColor: "#34c38f"
+	                })
+	            }
+	        })
 			
-            
             i.hide();
         }
     });
