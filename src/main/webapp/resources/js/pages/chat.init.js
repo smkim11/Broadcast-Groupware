@@ -12,10 +12,45 @@
   let chatroomId    = Number(meta.roomId || 1);   // 🔴 const → let 변경
   const myUserId    = Number(meta.userId || 0);
 
+  // ---- (추가) SimpleBar/스크롤 타깃 유틸 ----
+  // - messageScroll 컨테이너가 있으면 SimpleBar 인스턴스로 찾고
+  // - 없으면 UL(#chat-messages) 기준으로 .simplebar-content-wrapper 조상 탐색
+  // - 그래도 못 찾으면 기존 parentElement로 폴백
+  function resolveScroller() {
+    // 1) messageScroll 컨테이너가 있는 경우
+    const container = document.getElementById('messageScroll');
+    if (window.SimpleBar) {
+      // try: container 기반
+      if (container) {
+        try {
+          let sb = (SimpleBar.instances && SimpleBar.instances.get)
+            ? SimpleBar.instances.get(container)
+            : null;
+          if (!sb) sb = new SimpleBar(container);
+          if (sb && sb.getScrollElement) return sb.getScrollElement();
+        } catch (e) { /* ignore */ }
+      }
+      // 2) UL 기준으로 조상 래퍼 탐색
+      if ($list) {
+        const content = $list.closest('.simplebar-content');
+        if (content && content.parentElement && content.parentElement.classList.contains('simplebar-content-wrapper')) {
+          return content.parentElement;
+        }
+      }
+    }
+    // 3) 폴백: 기존 parentElement
+    return $list ? $list.parentElement : null;
+  }
+  function scrollToBottom() {
+    const el = resolveScroller();
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
   // ---- 상태 ----
   let stompClient = null;
   let lastMessageId = 0;
   let retry = 0;
+  let inboxSub = null;
 
   // ---- 유틸 ----
   function topicRoom(id){ return '/topic/rooms/' + id; }
@@ -114,7 +149,14 @@
     conv.appendChild(wrap);
     li.appendChild(conv);
     $list.appendChild(li);
-    $list.parentElement.scrollTop = $list.parentElement.scrollHeight;
+	
+	// (추가) DM 목록 프리뷰 즉시 갱신
+	   if (window.updateDmPreview) {
+	     window.updateDmPreview(chatroomId, msg.content, msg.createdAt);
+	   }
+
+    // 🔵 변경: SimpleBar 실제 스크롤 엘리먼트로 내리기
+    scrollToBottom();
   }
 
   // ---- API ----
@@ -122,6 +164,8 @@
     $.getJSON('/api/rooms/' + roomId + '/messages?limit=50', function(messages) {
       $('#chat-messages').empty();
       messages.forEach(m => appendMessage(m));
+      // (옵션) 마지막에 한 번 더 보정
+      scrollToBottom();
     });
   }
 
@@ -159,6 +203,16 @@
       const delay = Math.min(1000 * Math.pow(2, retry), 10000);
       setTimeout(connect, delay);
     });
+	
+	if (inboxSub) { try { inboxSub.unsubscribe(); } catch(e) {} inboxSub = null; }
+	inboxSub = stompClient.subscribe('/user/queue/inbox', function(frame){
+	  const evt = JSON.parse(frame.body); // { chatroomId, content, createdAt }
+	  if (evt.chatroomId !== chatroomId) {
+	    if (window.updateDmPreview) window.updateDmPreview(evt.chatroomId, evt.content, evt.createdAt);
+	    incrementUnread(evt.chatroomId);
+	    showNewBadge(); // 선택
+	  }
+	});
 
     socket.onclose = function() { setConnected(false); };
   }
@@ -167,9 +221,17 @@
     if (!stompClient || !stompClient.connected) return;
     const content = ($input?.value || '').trim();
     if (!content) return;
-	console.log("📤 메시지 전송:", content, "→ 방 ID:", chatroomId); // 디버깅
+    console.log("📤 메시지 전송:", content, "→ 방 ID:", chatroomId); // 디버깅
     stompClient.send(appSend(chatroomId), {}, JSON.stringify({ chatMessageContent: content }));
     $input.value = ''; $input.focus();
+	
+	 // (추가) 서버 에코를 기다리지 않고 목록 프리뷰를 즉시 갱신
+	  if (window.updateDmPreview) {
+	   window.updateDmPreview(chatroomId, content, new Date().toISOString());
+	  }
+	
+    // (선택) 내 즉시 전송 후에도 바닥 유지 보정
+    scrollToBottom();
   }
 
   // ---- 이벤트 ----
@@ -232,7 +294,13 @@ function renderDmList(list) {
     var name = item.chatroomName || '(이름 없음)';
     var initial = name.trim().charAt(0) || 'U';
     var unread = (item.unreadCount != null ? Number(item.unreadCount) : 0);
-    var when = formatWhen(item.lastMessageAt);
+	// 서버가 lastMessageAt을 못 줄 때를 대비해 안전 폴백
+	var when    = formatWhen(
+	 item.lastMessageAt
+	|| item.lastActivityAt   // (서버에서 주면 사용)
+	|| item.updatedAt        // (방 테이블 updated_at)
+	|| item.createdAt        // (방 생성일)
+	 );
     var lastMsg = item.lastMessage ? String(item.lastMessage) : '';
 
     var badgeHtml = unread > 0
@@ -240,19 +308,25 @@ function renderDmList(list) {
       : '';
 
     var html =
-      '<li>' +
-        '<a href="#" class="d-flex align-items-center dm-item" data-room-id="' + item.chatroomId + '">' +
-          '<div class="flex-shrink-0 me-3">' +
-            '<div class="avatar-xs">' +
-              '<span class="avatar-title rounded-circle bg-primary-subtle text-primary">' + escapeHtml(initial) + '</span>' +
-            '</div>' +
-          '</div>' +
-          '<div class="flex-grow-1">' +
-            '<h5 class="font-size-14 mb-0">' + escapeHtml(name) + badgeHtml + '</h5>' +
-            '<small class="text-muted">' + escapeHtml(when) + (lastMsg ? ' · ' + escapeHtml(lastMsg) : '') + '</small>' +
-          '</div>' +
-        '</a>' +
-      '</li>';
+	'<li>' +
+	  '<a href="#" class="d-flex align-items-center dm-item" data-room-id="' + item.chatroomId + '">' +
+	    '<div class="flex-shrink-0 me-3">' +
+	      '<div class="avatar-xs">' +
+	        '<span class="avatar-title rounded-circle bg-primary-subtle text-primary">' + escapeHtml(initial) + '</span>' +
+	      '</div>' +
+	    '</div>' +
+	    '<div class="flex-grow-1 w-100">' +
+	      '<div class="d-flex align-items-center">' +
+	        '<h5 class="font-size-14 mb-0 flex-grow-1 text-truncate">' + escapeHtml(name) + '</h5>' +
+	        (unread > 0 ? '<span class="badge bg-danger-subtle text-danger ms-2">' + unread + '</span>' : '') +
+	      '</div>' +
+	      '<div class="d-flex align-items-center mt-1">' +
+	        '<small class="text-muted dm-last text-truncate flex-grow-1">' + escapeHtml(lastMsg) + '</small>' +
+	        '<small class="text-muted dm-when ms-2">' + escapeHtml(when) + '</small>' +
+	      '</div>' +
+	    '</div>' +
+	  '</a>' +
+	'</li>';
 
     $ul.append(html);
   });
@@ -268,6 +342,21 @@ function loadDmList() {
       $ul.empty().append('<li class="text-danger px-3">DM 목록 로딩 실패</li>');
       return [];
     });
+}
+
+// (추가) 현재 방의 DM 항목 마지막 메시지/시간 갱신
+function updateDmPreview(roomId, lastMsg, lastAt) {
+  var $ul   = getContactsListEl();
+  var $item = $ul.find('.dm-item[data-room-id="' + roomId + '"]').closest('li');
+  if ($item.length === 0) return;
+
+  var when  = formatWhen(lastAt || '');
+  // 왼쪽에는 "메시지", 오른쪽에는 "시간"을 각각 대입
+  $item.find('.dm-last').text(String(lastMsg || '')); // 왼쪽
+  $item.find('.dm-when').text(when);                  // 오른쪽
+
+  // 최근 대화가 위로 오도록 최상단으로 이동
+  $ul.prepend($item);
 }
 
 // Contacts 항목 클릭 → 방 이동

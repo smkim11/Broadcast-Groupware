@@ -26,4 +26,6 @@ public interface ChatroomMapper {
 	// 채팅방 - 사용자 추가
 	int insertChatroomUserIgnore(@Param("chatroomId") int chatroomId,
 						   		 @Param("userId") int userId);
+
+	int updateChatroomLastActivity(@Param("chatroomId") int chatroomId);
 }

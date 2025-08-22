@@ -58,15 +58,15 @@ public class ChatController {
     	UserSessionDto login = (UserSessionDto) accessor.getSessionAttributes().get("loginUser");
     	// int userId = (login != null ? login.getUserId() : 0); 로 해도 되지만 아직 익숙치 않아서 if문으로
     	
-    	System.out.println("[WS] session loginUser = " + login);
+    	// System.out.println("[WS] session loginUser = " + login);
     	if (login == null)  {
-    		 System.out.println("[WS] loginUser null, skip");
+    		//  System.out.println("[WS] loginUser null, skip");
     		return;  // 세션 만료 등
     	}
     
     	
-    		   System.out.println("[WS] send room=" + chatroomId + " user=" + login.getUserId()
-               + " content=" + message.getChatMessageContent());
+    		 //  System.out.println("[WS] send room=" + chatroomId + " user=" + login.getUserId()
+             //  + " content=" + message.getChatMessageContent());
         // DB 저장(도메인으로 insert -> Dto로 다시 조회
     	ChatMessageDto saved = chatService.saveMessage(
     			chatroomId, 

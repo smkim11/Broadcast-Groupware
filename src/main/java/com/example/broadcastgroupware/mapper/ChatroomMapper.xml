@@ -21,35 +21,75 @@
 	
 	<!-- 내가 속한 DM 목록(상대 정보 포함) -->
 	<select id="selectDmListByUser" parameterType="int" resultMap="ChatroomListMap">
-		SELECT
-			  c.chatroom_id,
-			  c.room_type,
-			  c.dm_key,
-			  c.last_message_at,
-				  (SELECT m.chat_message_content
-				  	 FROM chat_message m
-				   WHERE m.chatroom_id = c.chatroom_id
-				   ORDER BY m.chat_message_id DESC
-				   LIMIT 1
-				   ) AS last_message,
-			   <!-- 미확인 수는 추후 계산 로직으로 대체 가능 -->
-			   0 AS unread_count,
-			   <!-- 리스트에 기본으로 보여줄 이름(편의상 동명컬럼) -->
-			   peer.full_name AS chatroom_name
-		FROM chatroom c
-			INNER JOIN chatroom_user cu
-				ON cu.chatroom_id = c.chatroom_id
-				AND cu.user_id = #{userId}
-			INNER JOIN `user` peer
-				ON peer.user_id = (
-								   SELECT chu.user_id
-								   FROM chatroom_user chu
-								   WHERE chu.chatroom_id = c.chatroom_id
-								    AND chu.user_id  &lt;&gt; cu.user_id	 <!--  나 자신을 제외 -->
-								   LIMIT 1 
-								   )
-		WHERE c.room_type = 'DM'
-		ORDER BY c.last_message_at DESC, c.create_date DESC
+	  SELECT
+	      c.chatroom_id,
+	      c.room_type,
+	      c.dm_key,
+	
+	      /* 시간: 최신메시지/캐시/생성일 순으로 폴백 */
+	      COALESCE(lm.created_at, c.last_message_at, c.create_date) AS last_message_at,
+	
+	      /* 마지막 메시지 내용 */
+	      lm.content AS last_message,
+	
+	      /* (옵션) 안읽음 수: last_read_at이 있으면 유효, 없으면 0 */
+	      COALESCE(unread.cnt, 0) AS unread_count,
+	
+	      /* 상대방 이름 */
+	      u_peer.full_name AS chatroom_name,
+	
+	      /* 서비스용 원재료(선택): 상대 유저 ID */
+	      pid.peer_user_id AS peer_user_id
+	  FROM chatroom c
+	
+	  /* 내가 속한 방 */
+	  JOIN chatroom_user cu_self
+	    ON cu_self.chatroom_id = c.chatroom_id
+	   AND cu_self.user_id     = #{userId}
+	
+	  /* dm_key='min:max'에서 상대 user_id 계산 */
+	  JOIN (
+	    SELECT
+	      c2.chatroom_id,
+	      CASE
+	        WHEN CAST(SUBSTRING_INDEX(c2.dm_key, ':', 1) AS UNSIGNED) = #{userId}
+	          THEN CAST(SUBSTRING_INDEX(c2.dm_key, ':', -1) AS UNSIGNED)
+	        ELSE CAST(SUBSTRING_INDEX(c2.dm_key, ':', 1)  AS UNSIGNED)
+	      END AS peer_user_id
+	    FROM chatroom c2
+	  ) pid ON pid.chatroom_id = c.chatroom_id
+	
+	  /* 상대 유저 프로필 */
+	  LEFT JOIN `user` u_peer
+	    ON u_peer.user_id = pid.peer_user_id
+	
+	  /* 각 방의 최신 메시지 1건 */
+	  LEFT JOIN (
+	    SELECT m1.chatroom_id,
+	           m1.chat_message_content AS content,
+	           m1.create_date          AS created_at
+	    FROM chat_message m1
+	    JOIN (
+	      SELECT chatroom_id, MAX(chat_message_id) AS max_id
+	      FROM chat_message
+	      GROUP BY chatroom_id
+	    ) x ON x.chatroom_id = m1.chatroom_id
+	       AND x.max_id      = m1.chat_message_id
+	  ) lm ON lm.chatroom_id = c.chatroom_id
+	
+	  /* 안읽음 수 (선택) */
+	  LEFT JOIN (
+	    SELECT m.chatroom_id, COUNT(*) AS cnt
+	    FROM chat_message m
+	    JOIN chatroom_user me
+	      ON me.chatroom_id = m.chatroom_id
+	     AND me.user_id     = #{userId}
+	    WHERE me.last_read_at IS NULL OR m.create_date > me.last_read_at
+	    GROUP BY m.chatroom_id
+	  ) unread ON unread.chatroom_id = c.chatroom_id
+	
+	  WHERE c.room_type = 'DM'
+	  ORDER BY COALESCE(lm.created_at, c.last_message_at, c.create_date) DESC
 	</select>
 	
 	  <!-- dm_key로 방 1개 조회 -->
@@ -90,6 +130,13 @@
 	  INSERT IGNORE INTO chatroom_user (chatroom_id, user_id, create_date)
 	  VALUES (#{chatroomId}, #{userId}, NOW())
 	</insert>
+	
+	<!-- 메시지 저장 후 호출 (선택) -->
+	<update id="updateChatroomLastActivity" parameterType="int">
+	  UPDATE chatroom
+	  SET last_message_at = NOW()
+	  WHERE chatroom_id = #{chatroomId}
+	</update>
 	
 </mapper>
 

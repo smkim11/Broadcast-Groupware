@@ -131,10 +131,13 @@
               </div>
             </div>
 
-            <!-- 채팅 메시지 영역 -->
-            <div class="chat-conversation py-3" data-simplebar style="height: 65vh;">
-              <ul class="list-unstyled chat-conversation-list mb-0 px-3" id="chat-messages"></ul>
-            </div>
+          <!-- 채팅 메시지 영역 (SimpleBar 사용) -->
+			<div class="chat-conversation py-3" id="messageScroll" data-simplebar style="height:65vh;">
+			  <ul class="list-unstyled chat-conversation-list mb-0 px-3"
+			      id="chat-messages"
+			      role="log" aria-live="polite" aria-relevant="additions"></ul>
+			  <div id="bottomAnchor"></div>
+			</div>
 
             <!-- 입력창 -->
             <div class="p-3 chat-input-section">

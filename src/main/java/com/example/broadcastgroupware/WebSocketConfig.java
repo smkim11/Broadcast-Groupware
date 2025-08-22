@@ -39,26 +39,5 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // 1:1 대화 사용자 경로(prefix)
         registry.setUserDestinationPrefix("/user");
     }
-    /*
-    @Override
-    public void configureClientInboundChannel(org.springframework.messaging.simp.config.ChannelRegistration registration) {
-        registration.interceptors(new org.springframework.messaging.support.ChannelInterceptor() {
-            @Override
-            public org.springframework.messaging.Message<?> preSend(org.springframework.messaging.Message<?> message,
-                                                                    org.springframework.messaging.MessageChannel channel) {
-                org.springframework.messaging.simp.stomp.StompHeaderAccessor accessor =
-                        org.springframework.messaging.simp.stomp.StompHeaderAccessor.wrap(message);
-
-                if (org.springframework.messaging.simp.stomp.StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    // HTTP 세션 복사
-                    Object httpSessionLogin = accessor.getSessionAttributes().get("loginUser");
-                    if (httpSessionLogin != null) {
-                        accessor.getSessionAttributes().put("loginUser", httpSessionLogin);
-                    }
-                }
-                return message;
-            }
-        });
-    }
-    */
+    
 }
