@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Param;
 import com.example.broadcastgroupware.domain.ApprovalDocument;
 import com.example.broadcastgroupware.domain.ApprovalLine;
 import com.example.broadcastgroupware.domain.BroadcastForm;
-import com.example.broadcastgroupware.domain.File;
+import com.example.broadcastgroupware.domain.BroadcastWeekday;
 import com.example.broadcastgroupware.domain.ReferenceLine;
 import com.example.broadcastgroupware.domain.VacationForm;
 
@@ -17,7 +17,8 @@ public interface ApprovalMapper {
 	int insertApprovalDocument(ApprovalDocument doc);
     int insertVacationForm(VacationForm form);
     int insertBroadcastForm(BroadcastForm form);
-    int insertDocumentFile(File file);
+    int insertBroadcastWeekday(BroadcastWeekday weekday);
+    // int insertDocumentFile(File file);
     
     // 결재선
     int insertApprovalLines(@Param("lines") List<ApprovalLine> lines);
