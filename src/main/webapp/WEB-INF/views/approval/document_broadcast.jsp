@@ -170,6 +170,55 @@
 		                </table>
 		            </div>
 		        </div>
+		        
+		        <!-- 결재선 / 참조선 상세 (기본 접힘) -->
+				<div class="accordion mt-3" id="lineAccordion">
+				    <div class="accordion-item">
+				        <h2 class="accordion-header" id="headingLines">
+				            <button class="accordion-button collapsed fw-semibold text-dark" type="button" data-bs-toggle="collapse"
+				                    data-bs-target="#collapseLines" aria-expanded="false" aria-controls="collapseLines">
+				                결재선 / 참조선 상세
+				            </button>
+				        </h2>
+				        <div id="collapseLines" class="accordion-collapse collapse" aria-labelledby="headingLines" data-bs-parent="#lineAccordion">
+				            <div class="accordion-body">
+				                <div class="row g-3">
+				                    <!-- 왼쪽: 결재선 -->
+				                    <div class="col-6">
+				                        <div class="card h-100">
+				                            <div class="card-header bg-light py-2">
+				                                <strong class="mb-0">결재선</strong>
+				                            </div>
+				                            <div class="card-body p-2" style="max-height:260px; overflow:auto;">
+				                                <table class="table table-sm table-bordered mb-0">
+				                                    <thead class="table-light">
+				                                        <tr>
+				                                            <th style="width:60px;" class="text-center">순서</th>
+				                                            <th style="width:120px;" class="text-center">결재자</th>
+				                                        </tr>
+				                                    </thead>
+				                                    <tbody id="applinePreviewBody"><!-- JS-RENDER: 결재선 목록 동적 삽입 --></tbody>
+				                                </table>
+				                            </div>
+				                        </div>
+				                    </div>
+				
+				                    <!-- 오른쪽: 참조선 -->
+				                    <div class="col-6">
+				                        <div class="card h-100">
+				                            <div class="card-header bg-light py-2 d-flex align-items-center">
+				                                <strong class="mb-0">참조선</strong>
+				                            </div>
+				                            <div class="card-body p-2" style="max-height:260px; overflow:auto;">
+				                                <div id="reflinesPreview" class="d-flex flex-wrap gap-2"><!-- JS-RENDER: 참조선 배지 동적 삽입 --></div>
+				                            </div>
+				                        </div>
+				                    </div>
+				                </div>
+				            </div>
+				        </div>
+				    </div>
+				</div>
 		
 		        <!-- 파일 첨부 영역 -->
 		        <div class="card mt-3">
@@ -197,7 +246,48 @@
         const btnDraft = document.getElementById('btnDraft');
         const btnCancel = document.getElementById('btnCancel');
         const base = '${pageContext.request.contextPath}';  // JSP EL로 컨텍스트 경로 주입
+        
+     	// 결재선/참조선 상세 영역 / 폼 히든 필드
+        const apvTbody = document.getElementById('applinePreviewBody');   // 결재선 표 tbody (JS로 채움)
+        const refWrap = document.getElementById('reflinesPreview');		  // 참조선 배지 영역 (JS로 채움)
+        const hiddenLines = document.getElementById('approvalLineJson');  // 서버 전송 대비 히든 JSON(결재선)
+        const hiddenRefs = document.getElementById('referenceLineJson');  // 서버 전송 대비 히든 JSON(참조선)
 
+        
+		/* ==== 접힘 상세(본문) 렌더 ==== */
+        
+        // 안전한 JSON 파서 (정상 JSON이면 객체/배열로 파싱)
+        function safeParse(json, fallback) {
+	        try { return JSON.parse(json); } catch (e) { return fallback; }
+	    }
+        
+     	// 결재선(JSON 문자열) 배열로 변환
+	    function getApprovalLines() {
+	        const raw = hiddenLines ? hiddenLines.value : '[]';
+	        return safeParse(raw, []);
+	    }
+     	
+	 	// 참조선(JSON 문자열)을 배열로 변환
+	    function getReferenceLines() {
+	        const raw = hiddenRefs ? hiddenRefs.value : '[]';
+	        return safeParse(raw, []);
+	    }
+	 	
+	 	// 사람 이름 표시 유틸	    
+	 	
+	    
+		// === 결재선 상세 렌더링 ===
+		function renderApvDetail()
+	    
+	    
+	 	// === 참조선 상세 렌더링 ===
+	 	function renderRefDetail()
+	    
+	    // 초기 렌더
+	    renderApvDetail();
+	    renderRefDetail();
+        
+	    
     	// 상신/임시저장 공통 처리 (isDraft=true -> 임시저장, false -> 상신)
         function submitDocument(isDraft) {
             if (!form) return;
@@ -210,6 +300,9 @@
             const title = (titleEl ? titleEl.value : '').trim();
             const content = (contentEl ? contentEl.value : '').trim();
             const userId = parseInt(userIdEl ? userIdEl.value : '0', 10) || 0;
+            
+            const apvLines = getApprovalLines();
+            const refLines = getReferenceLines();
 
             // 방송 폼 필드
             const programName = (form.querySelector('[name="programName"]') || {}).value || '';
@@ -223,13 +316,22 @@
             const dayNodes = form.querySelectorAll('input[name="broadcastDays"]:checked');
             const days = Array.prototype.map.call(dayNodes, function (n) { return n.value; });
             
-            // 전송 DTO (결재선/참조선은 추후 연결)
+            // 전송 DTO
             const dto = {
                 userId: userId,
                 approvalDocumentTitle: title,
                 approvalDocumentContent: content,
-                approvalLines: [],
-                referenceLines: [],
+                approvalLines: apvLines.map(function (it, idx) {
+                    return {
+                        userId: it.userId,
+                        approvalLineSequence: (it.approvalLineSequence || it.sequence || (idx + 1)),
+                        approvalLineStatus: '대기'
+                    };
+                }),
+                referenceLines: refLines.map(function (it) {
+                    if (it.type == 'TEAM') return { teamId: it.teamId, type: 'TEAM' };
+                    return { userId: it.userId, type: 'USER' };
+                }),
                 broadcastForm: {
                     broadcastFormName: programName,
                     broadcastFormCapacity: staffCount ? parseInt(staffCount, 10) || 0 : 0,

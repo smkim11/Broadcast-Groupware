@@ -22,7 +22,7 @@ public class ApprovalController {
         this.userMapper = userMapper;
     }
     
-    // 결재 문서에 부서명 및 팀명 출력
+    // 결재 화면 부서명 / 팀명 조회
     // 세션/인증정보에서 userId를 확보 -> 부서/팀 포함 DTO 조회 -> 세션/모델("loginUser")에 주입
     @ModelAttribute("loginUser")
     public UserSessionDto loadLoginUserDeptTeamInfo(HttpSession session, Authentication auth) {
@@ -81,5 +81,17 @@ public class ApprovalController {
     public String vacationNew(Model model) {
         return "approval/document_vacation";       
     } 
+    
+    // 결재선 선택
+    @GetMapping("/line/input")
+    public String approvalLineInput() {
+        return "approval/line_input";
+    }
+
+    // 참조선 선택
+    @GetMapping("/reference/input")
+    public String referenceLineInput() {
+        return "approval/reference_input";
+    }
 
 }
