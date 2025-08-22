@@ -16,4 +16,32 @@
         WHERE username = #{username}
     </select>
 
+	<!-- 결재 화면 부서명 / 팀명 조회  -->
+	<select id="selectUserDeptTeamByUserId" parameterType="int"
+        	resultType="com.example.broadcastgroupware.dto.UserSessionDto">
+	    SELECT 
+	        u.user_id           AS userId,
+	        u.full_name         AS fullName,
+	        u.user_rank         AS userRank,
+	        d.department_id     AS departmentId,
+	        d.department_name   AS departmentName,
+	        t.team_id           AS teamId,
+	        t.team_name         AS teamName
+	    FROM `user` u
+	    
+	   <!-- 최신 배치 이력 1건만 조인: 사용자별 MAX(create_date)와 일치하는 행만 매칭 -->
+	    LEFT JOIN deployment_history dh 
+	        ON dh.user_id = u.user_id
+	       AND dh.create_date = (
+	            SELECT MAX(dh2.create_date)
+	            FROM deployment_history dh2
+	            WHERE dh2.user_id = u.user_id
+	       )
+	    LEFT JOIN team t 
+	        ON t.team_id = dh.team_id
+	    LEFT JOIN department d 
+	        ON d.department_id = t.department_id
+	    WHERE u.user_id = #{userId}
+	</select>
+	
 </mapper>

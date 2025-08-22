@@ -18,4 +18,10 @@ public class UserSessionDto {
     private String userimagesName;  // 추가 추후 수정
 
     // password 필드는 제외
+    
+    // 결재 화면용 추가 필드
+    private Integer departmentId;
+    private String departmentName;
+    private Integer teamId;
+    private String teamName;
 }

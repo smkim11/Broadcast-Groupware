@@ -50,6 +50,24 @@
             NOW(), NOW()
         )
     </insert>
+    
+    <!-- 방송 요일 INSERT -->
+    <insert id="insertBroadcastWeekday"
+	        parameterType="com.example.broadcastgroupware.domain.BroadcastWeekday"
+	        useGeneratedKeys="true" keyProperty="broadcastWeekdayId">
+	    INSERT INTO broadcast_weekday (
+	        broadcast_form_id,
+	        broadcast_sunday, broadcast_monday, broadcast_tuesday,
+	        broadcast_wednesday, broadcast_thursday, broadcast_friday, broadcast_saturday,
+	        create_date
+	    )
+	    VALUES (
+	        #{broadcastFormId},
+	        #{broadcastSunday}, #{broadcastMonday}, #{broadcastTuesday},
+	        #{broadcastWednesday}, #{broadcastThursday}, #{broadcastFriday}, #{broadcastSaturday},
+	        NOW()
+	    )
+	</insert>
 
 
 	<!-- 결재선 INSERT -->

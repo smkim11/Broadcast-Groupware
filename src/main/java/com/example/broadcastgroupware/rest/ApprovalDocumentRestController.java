@@ -11,7 +11,7 @@ import com.example.broadcastgroupware.dto.ApprovalDocumentDto;
 import com.example.broadcastgroupware.service.ApprovalDocumentService;
 
 @RestController
-@RequestMapping("/approvals")
+@RequestMapping("/approval")
 public class ApprovalDocumentRestController {
 	private final ApprovalDocumentService approvalDocumentService;
 
@@ -29,15 +29,17 @@ public class ApprovalDocumentRestController {
 
     // 휴가 문서 작성
     @PostMapping("/vacation")
-    public ResponseEntity<Integer> createVacation(@RequestBody ApprovalDocumentDto dto) {
-        int docId = approvalDocumentService.createVacationDocument(dto);
+    public ResponseEntity<Integer> createVacation(@RequestBody ApprovalDocumentDto dto,
+    											@RequestParam(defaultValue = "false") boolean draft) {
+        int docId = approvalDocumentService.createVacationDocument(dto, draft);
         return ResponseEntity.ok(docId);
     }
 
     // 방송 문서 작성
     @PostMapping("/broadcast")
-    public ResponseEntity<Integer> createBroadcast(@RequestBody ApprovalDocumentDto dto) {
-        int docId = approvalDocumentService.createBroadcastDocument(dto);
+    public ResponseEntity<Integer> createBroadcast(@RequestBody ApprovalDocumentDto dto,
+    											@RequestParam(defaultValue = "false") boolean draft) {
+        int docId = approvalDocumentService.createBroadcastDocument(dto, draft);
         return ResponseEntity.ok(docId);
     }
 }
