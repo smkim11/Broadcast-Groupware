@@ -7,6 +7,15 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <meta charset="UTF-8">
+<style>
+/* 템플릿에서 제공하는 에러메세지만 사용  */
+.was-validated .form-control:valid,
+.form-control.is-valid {
+  border-color: #dee2e6 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+</style>
 <title>방송국</title>
 </head>
 <body>
@@ -88,7 +97,7 @@
                                                             <div class="mb-3">
                                                                 <label class="form-label">제목</label>
                                                                 <input class="form-control" placeholder="제목을 입력하세요."
-                                                                    type="text" name="calendarTitle" id="event-title" required value="" />
+                                                                    type="text" name="calendarTitle" id="event-title" required/>
                                                                 <div class="invalid-feedback">제목을 입력하세요.</div>
                                                             </div>
                                                         </div>
@@ -96,21 +105,21 @@
                                                             <div class="mb-3">
                                                                 <label class="form-label">장소</label>
                                                                 <input class="form-control" placeholder="장소를 입력하세요."
-                                                                    type="text" name="calendarLocation" id="event-location"/>
+                                                                    type="text" name="calendarLocation" id="event-location" required/>
                                                                 <div class="invalid-feedback">장소를 입력하세요.</div>
                                                             </div>
                                                         </div>
                                                         <div class="col-12">
                                                             <div class="mb-3">
                                                                 <label class="form-label">시작일</label>
-                                                                <input class="form-control" type="datetime-local" name="calendarStartTime" id="event-start-time"/>
+                                                                <input class="form-control" type="datetime-local" name="calendarStartTime" id="event-start-time" required/>
                                                                 <div class="invalid-feedback">시작일을 입력하세요.</div>
                                                             </div>
                                                         </div>
                                                         <div class="col-12">
                                                             <div class="mb-3">
                                                                 <label class="form-label">종료일</label>
-                                                                <input class="form-control" type="datetime-local" name="calendarEndTime" id="event-end-time"/>
+                                                                <input class="form-control" type="datetime-local" name="calendarEndTime" id="event-end-time" required/>
                                                                 <div class="invalid-feedback">종료일을 입력하세요.</div>
                                                             </div>
                                                         </div>
@@ -179,10 +188,12 @@
 <script src="${pageContext.request.contextPath}/resources/libs/jquery-ui-dist/jquery-ui.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/fullcalendar/index.global.min.js"></script>
 
-
-
 <!-- Calendar init -->
 <script src="${pageContext.request.contextPath}/resources/js/pages/calendar.init.js"></script>
 <!-- Sweet Alerts js -->
 <script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
+<!-- parsleyjs -->
+<script src="${pageContext.request.contextPath}/resources/libs/parsleyjs/parsley.min.js"></script>
+
+<script src="${pageContext.request.contextPath}/resources/js/pages/form-validation.init.js"></script>
 </html>
