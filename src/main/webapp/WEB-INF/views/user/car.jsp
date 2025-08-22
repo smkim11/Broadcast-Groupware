@@ -23,16 +23,92 @@
 
 <style>
 
-#reservationForm {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+.list {
+	width: 100%;
+	min-height: 100vh;
+	padding: 20px;
+	box-sizing: border-box;
+}
+
+table.table-bordered {
+    width: 100%;
+    border-collapse: collapse; /* 테두리 겹침 방지 */
+}
+
+table.table-bordered th,
+table.table-bordered td {
+    border: 1px solid #ddd; /* 테두리 색상 */
+    padding: 5px 10px;       /* 상하/좌우 패딩 */
+    text-align: center;
+}
+
+table.table-bordered th {
+    background-color: #f1f1f1;
+}
+
+table.table-bordered tr:nth-child(even) {
     background-color: #fafafa;
+}
+
+/* table.table-bordered 안의 버튼 전용 */
+table.table-bordered button {
+    padding: 4px 12px;        /* 상하 4px, 좌우 12px */
+    min-width: 80px;          /* 최소 가로폭 */
+    border: 1px solid blue;   /* 테두리 */
+    background-color: blue;    /* 배경색 */
+    color: white;              /* 글자색 */
+    border-radius: 4px;        /* 모서리 둥글게 */
+    cursor: pointer;
+    font-size: 13px;           /* 글자 크기 */
+    transition: 0.3s;
+}
+
+table.table-bordered button:hover {
+    background-color: #0056b3;
+    border-color: #003d80;
+}
+
+table.table-bordered th,
+table.table-bordered td {
+    border: 1px solid #ddd;    /* 테두리 */
+    padding: 4px 10px;          /* 상하 4px, 좌우 6px */
+    text-align: center;
+    font-size: 13px;
+}
+
+/* td 안 div: vehicleNo, vehicleName, vehicleType 공통 스타일 */
+table.table-bordered td > div.vehicleNo,
+table.table-bordered td > div.vehicleName,
+table.table-bordered td > div.vehicleType {
+    width: 100%;                /* td 전체 폭 사용 */
+    padding: 4px 6px;           /* 상하 4px, 좌우 6px */
+    height: 30px;               /* 높이 지정 */
+    display: flex;              
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;         
+    background-color: #f0f0f0;  
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-sizing: border-box;
+}
+
+table.table-bordered td > div.vehicleNo:hover,
+table.table-bordered td > div.vehicleName:hover,
+table.table-bordered td > div.vehicleType:hover {
+    background-color: #d0d7ff;  /* hover 시 색상 변화 */
+}
+
+
+#reservationForm button {
+	padding: 5px;
+    border: 1px solid blue;
+    background-color: blue;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
 #reservationForm select,
@@ -42,7 +118,9 @@
     border-radius: 4px;
 }
 
-#reservationForm button {
+#reservationBtn {
+    width: 200px;       /* 원하는 가로폭으로 설정 */
+    padding: 3px 12px;  /* 높이 조절 */
     border: 1px solid blue;
     background-color: blue;
     color: white;
@@ -73,7 +151,7 @@
 
 .red-box { background-color: red; } 
 .blue-box { background-color: blue; } 
-.gray-box { background-color: #e8e6e6; } 
+/*.gray-box { background-color: #e8e6e6; } */
 
 .myReservation, .addCar {
     padding: 6px 12px;
@@ -102,7 +180,7 @@ table {
 }
 
 table th, table td {
-    padding: 10px;
+    padding: 5px;
     text-align: center;
     border: 1px solid #ddd;
 }
@@ -115,14 +193,6 @@ table tr:nth-child(even) {
     background-color: #fafafa;
 }
 
-.chart-container {
-    position: relative;
-    width: 100%;
-    height: 60px;
-    border-radius: 4px;
-    overflow: hidden;
-    background-color: #f0f0f0;
-}
 
 .modal {
     display: none; 
@@ -213,12 +283,52 @@ table tr:nth-child(even) {
     font-weight: bold;
     cursor: pointer;
     color: #333;
-  	color: white;
+     color: white;
 }
 
-.chart-container canvas {
-    display: block;
+/* chart-container 스타일 */
+.chart-container {
+position: relative;
+width: 100%;
+max-width: 1400px;
+height: 80px;
+box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+padding: 5px 10px;
+box-sizing: border-box;
 }
+
+/* canvas 기본 스타일 */
+.chart-container canvas {
+	width: 100% !important;
+	height: 80px !important;
+	display: block;
+	background-color: transparent; /* 투명 배경 (JS에서 색상 채움) */
+	cursor: pointer;				  /* 마우스 포인터 변경 */
+}
+
+/* 예약 상태 구분용 (캔버스에 그리거나 div로 겹쳐도 가능) */
+.chart-block {
+	position: absolute;
+	top: 0;
+	height: 100%;
+	border-radius: 4px;
+}
+
+/* 예약 불가 시간 (빨강) */
+.chart-block.reserved {
+	background-color: rgba(255, 0, 0, 0.7);
+}
+
+/* 예약 가능 시간 (회색) */
+.chart-block.available {
+	background-color: #e5e7eb;
+}
+
+/* 내가 선택한 시간 (파랑) */
+.chart-block.selected {
+	background-color: rgba(37, 99, 235, 0.8);
+}
+
 
 /* 토글 스위치 전체 */
 .toggle-container {
@@ -379,6 +489,7 @@ table tr:nth-child(even) {
                 </div>
             </div>
 	
+	<div class="list">
 		<form id="reservationForm" action="/api/car" method="post">
 		    <label>차량선택</label>
 		    <select>
@@ -400,7 +511,7 @@ table tr:nth-child(even) {
 			<div class="legend-container">
 				<div class="legend">
 					<span class="red-box"></span> 예약 불가
-					<span class="gray-box"></span> 예약 가능시간
+					<!-- <span class="gray-box"></span> 예약 가능시간 -->
 					<span class="blue-box"></span> 선택시간
 				</div>
 
@@ -412,13 +523,25 @@ table tr:nth-child(even) {
 			</div>
 		
 		
-	<table border="1" id="carTable">
-	    <tr>
-	        <th>차량정보</th>
-	        <th>예약 현황</th>
-	        <th>예약하기</th>
-	    </tr>
-	</table>
+	<table id="carTable" class="table table-bordered">
+    <thead>
+        <tr>
+            <th>차량 정보</th>
+            <th>예약 현황</th>
+            <th>예약 버튼</th>
+        </tr>
+    </thead>
+    <tbody id="carList">
+    
+    </tbody>
+</table>
+
+</div>
+
+<nav aria-label="Page navigation">
+    <ul class="pagination" id="pagination"></ul>
+</nav>
+
 
 	
 	<!-- 차량등록 모달 -->
@@ -514,18 +637,18 @@ table tr:nth-child(even) {
      				<th>차량번호</th>
      				<th>대여 시간</th>
      				<th>반납 시간</th>
-     				<th id="modifyMyReservation">시간 변경</th>
-     				<th id="cancelReservation">예약 취소</th>
+     				<th>예약 취소</th>
      			</tr>
      		</table>
      		<div style="text-align: left;">
      			<p>* 2일전까지의 내역입니다.</p>
-     			<p>* 예약 변경 및 취소는 24시간 전까지 가능합니다.</p>
+     			<p>* 예약 취소는 24시간 전까지 가능합니다.</p>
      		</div>
      		<button class="close1" type="button">닫기</button>
      	</div>
      </div>
-     
+
+
      
      </div>
    </div>
@@ -534,16 +657,23 @@ table tr:nth-child(even) {
 <script>
 	// 예약 리스트
 	document.addEventListener("DOMContentLoaded", function() {
-		var carTable = document.getElementById("carTable");
+	var carTable = document.getElementById("carTable");
+	var pagination = document.getElementById("pagination");
+	var page = 1;
+	var size = 10;
+	var pageGroupSize = 5;
 
-		fetch("/api/user/car?page=1&size=10")
+	function loadCarList(currentPage) {
+		page = currentPage;
+		carTable.innerHTML = "";
+
+		fetch("/api/user/car?page=" + page + "&size=" + size)
 			.then(function(res) {
 				return res.json();
-			
 			})
 			.then(function(data) {
 				var carReservationList = data.carReservationList;
-				
+
 				if (data.role === 'admin') {
 		            document.getElementById('addCar').style.display = 'inline-block';
 		        }
@@ -561,7 +691,7 @@ table tr:nth-child(even) {
 
 					// 예약 현황 td
 					var tdChart = document.createElement("td");
-					tdChart.innerHTML = '<div class="chart-container" data-reservations=\'' + JSON.stringify(c.reservationPeriods) + '\'></div>';
+					tdChart.innerHTML = '<div class="chart-container" data-reservations="' + encodeURIComponent(JSON.stringify(c.reservationPeriods)) + '"></div>';
 					tr.appendChild(tdChart);
 
 					// 예약 버튼 td
@@ -583,11 +713,73 @@ table tr:nth-child(even) {
 				}
 
 				drawCharts();
+
+				// ===== 페이징 추가 =====
+				renderPagination(data.pageDto.totalPage);
 			})
 			.catch(function(err) {
 				console.error("차량 데이터 로드 실패:", err);
 			});
-	});
+	}
+
+	function renderPagination(totalPage) {
+		pagination.innerHTML = ""; // 기존 페이지 번호 초기화
+
+		var currentGroup = Math.floor((page - 1) / pageGroupSize);
+		var startPage = currentGroup * pageGroupSize + 1;
+		var endPage = Math.min(startPage + pageGroupSize - 1, totalPage);
+
+		// 이전 그룹 이동
+		var prevLi = document.createElement("li");
+		prevLi.className = "page-item" + (startPage > 1 ? "" : " disabled");
+		var prevA = document.createElement("a");
+		prevA.className = "page-link";
+		prevA.href = "#";
+		prevA.innerText = "<";
+		prevA.onclick = function(e) {
+			e.preventDefault();
+			if (startPage > 1) loadCarList(startPage - 1);
+		};
+		prevLi.appendChild(prevA);
+		pagination.appendChild(prevLi);
+
+		// 페이지 번호 반복
+		for (var i = startPage; i <= endPage; i++) {
+			var li = document.createElement("li");
+			li.className = "page-item" + (i === page ? " active" : "");
+			var a = document.createElement("a");
+			a.className = "page-link";
+			a.href = "#";
+			a.innerText = i;
+			a.onclick = (function(pageNum) {
+				return function(e) {
+					e.preventDefault();
+					loadCarList(pageNum);
+				};
+			})(i);
+			li.appendChild(a);
+			pagination.appendChild(li);
+		}
+
+		// 다음 그룹 이동
+		var nextLi = document.createElement("li");
+		nextLi.className = "page-item" + (endPage < totalPage ? "" : " disabled");
+		var nextA = document.createElement("a");
+		nextA.className = "page-link";
+		nextA.href = "#";
+		nextA.innerText = ">";
+		nextA.onclick = function(e) {
+			e.preventDefault();
+			if (endPage < totalPage) loadCarList(endPage + 1);
+		};
+		nextLi.appendChild(nextA);
+		pagination.appendChild(nextLi);
+	}
+
+	// 초기 데이터 로드
+	loadCarList(page);
+});
+
 
 	// 로그인 사용자 ID
 	const userId = "<c:out value='${loginUser.userId}'/>";
@@ -622,119 +814,119 @@ table tr:nth-child(even) {
 
 	// 차트 그리기 함수
 	function drawCharts() {
-	const charts = document.querySelectorAll(".chart-container");
+		const charts = document.querySelectorAll(".chart-container");
 
-	charts.forEach(chart => {
+		charts.forEach(chart => {
 
-		chart.innerHTML = "";
+			chart.innerHTML = "";
 
-		const localDrawnTimes = new Set();
+			const localDrawnTimes = new Set();
 
-		let periods = JSON.parse(chart.dataset.reservations || "[]");
+			let periods = JSON.parse(decodeURIComponent(chart.dataset.reservations || "[]"));
 
-		let canvasStart = new Date(selectedStartDate);
-		let canvasEnd = new Date(selectedEndDate);
+			let canvasStart = new Date(selectedStartDate);
+			let canvasEnd = new Date(selectedEndDate);
 
-		const canvas = document.createElement("canvas");
-		chart.appendChild(canvas);
+			const canvas = document.createElement("canvas");
+			chart.appendChild(canvas);
 
-		canvas.width = chart.clientWidth;
-		canvas.height = chart.clientHeight;
+			canvas.width = chart.clientWidth;
+			canvas.height = chart.clientHeight;
 
-		const ctx = canvas.getContext("2d");
+			const ctx = canvas.getContext("2d");
 
-		const totalHours = (canvasEnd - canvasStart) / (1000 * 60 * 60);
-		const unitWidth = canvas.width / totalHours;
+			const totalHours = (canvasEnd - canvasStart) / (1000 * 60 * 60);
+			const unitWidth = canvas.width / totalHours;
 
-		const drawTimeLabelLocal = (x, date) => {
-			const hourStr = date.getHours().toString().padStart(2, '0') + ":00";
-			if (hourStr === "00:00") return;
-			const key = x + "-" + hourStr;
-			if (localDrawnTimes.has(key)) return;
+			const drawTimeLabelLocal = (x, date) => {
+				const hourStr = date.getHours().toString().padStart(2, '0') + ":00";
+				if (hourStr === "00:00") return;
+				const key = x + "-" + hourStr;
+				if (localDrawnTimes.has(key)) return;
+				ctx.fillStyle = "black";
+				ctx.font = "10px Arial";
+				ctx.fillText(hourStr, x, 45);
+				localDrawnTimes.add(key);
+			};
+
+			// 1) 전체 바
+			ctx.fillStyle = "#e8e6e6";
+			ctx.fillRect(0, 15, canvas.width, 20);
+			drawTimeLabelLocal(0, canvasStart);
+
+			// 2) 예약 구간
+			periods.forEach((p, index) => {
+
+				const startStr = p.reservationStart || p.start;
+				const endStr = p.reservationEnd || p.end;
+
+				if (!startStr || !endStr) return;
+
+				const resStart = new Date(startStr.replace(" ", "T"));
+				const resEnd = new Date(endStr.replace(" ", "T"));
+
+				if (isNaN(resStart.getTime()) || isNaN(resEnd.getTime())) {
+					console.log("예약 데이터 변환 실패:", p);
+					return;
+				}
+
+				const displayStart = resStart < canvasStart ? canvasStart : resStart;
+				const displayEnd = resEnd > canvasEnd ? canvasEnd : resEnd;
+
+				if (displayEnd <= displayStart) return;
+
+				const xStart = ((displayStart - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+				const xEnd = ((displayEnd - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+
+
+				// console.log("예약", index + 1, "=> xStart:", xStart, "xEnd:", xEnd, "width:", xEnd - xStart);
+
+				ctx.fillStyle = "red";
+				ctx.fillRect(xStart, 15, xEnd - xStart, 20);
+
+				drawTimeLabelLocal(xStart, displayStart);
+				drawTimeLabelLocal(xEnd, displayEnd);
+			});
+
+			// 3) 선택 구간
+			const startTimeValue = document.getElementById("startTime").value;
+			const endTimeValue = document.getElementById("endTime").value;
+
+			if (startTimeValue && endTimeValue) {
+
+				const [sh, sm] = startTimeValue.split(":").map(Number);
+				const [eh, em] = endTimeValue.split(":").map(Number);
+
+				const selStart = new Date(selectedStartDate); selStart.setHours(sh, sm, 0);
+				const selEnd = new Date(selectedEndDate); selEnd.setHours(eh, em, 0);
+
+				const cs = new Date(Math.max(selStart, canvasStart));
+				const ce = new Date(Math.min(selEnd, canvasEnd));
+
+				if (ce > cs) {
+
+					const x1 = ((cs - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+					const x2 = ((ce - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+
+					ctx.fillStyle = "blue";
+					ctx.fillRect(x1, 15, x2 - x1, 20);
+
+					drawTimeLabelLocal(x1, cs);
+					drawTimeLabelLocal(x2, ce);
+				}
+			}
+
+			// 4) 날짜 표시 (MM-DD)
+			const oneDay = 1000 * 60 * 60 * 24;
 			ctx.fillStyle = "black";
-			ctx.font = "10px Arial";
-			ctx.fillText(hourStr, x, 45);
-			localDrawnTimes.add(key);
-		};
+			ctx.font = "bold 10px Arial";
 
-		// 1) 전체 바
-		ctx.fillStyle = "#e8e6e6";
-		ctx.fillRect(0, 15, canvas.width, 20);
-		drawTimeLabelLocal(0, canvasStart);
-
-		// 2) 예약 구간
-		periods.forEach((p, index) => {
-
-			const startStr = p.reservationStart || p.start;
-			const endStr = p.reservationEnd || p.end;
-
-			if (!startStr || !endStr) return;
-
-			const resStart = new Date(startStr.replace(" ", "T"));
-			const resEnd = new Date(endStr.replace(" ", "T"));
-
-			if (isNaN(resStart.getTime()) || isNaN(resEnd.getTime())) {
-				console.log("예약 데이터 변환 실패:", p);
-				return;
+			for (let d = new Date(canvasStart); d <= canvasEnd; d = new Date(d.getTime() + oneDay)) {
+				const offsetX = ((d - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+				const month = (d.getMonth() + 1).toString().padStart(2, '0');
+				const day = d.getDate().toString().padStart(2, '0');
+				ctx.fillText(month + "-" + day, offsetX, 10);
 			}
-
-			const displayStart = resStart < canvasStart ? canvasStart : resStart;
-			const displayEnd = resEnd > canvasEnd ? canvasEnd : resEnd;
-
-			if (displayEnd <= displayStart) return;
-
-			const xStart = ((displayStart - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-			const xEnd = ((displayEnd - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-			
-
-			// console.log("예약", index + 1, "=> xStart:", xStart, "xEnd:", xEnd, "width:", xEnd - xStart);
-
-			ctx.fillStyle = "red";
-			ctx.fillRect(xStart, 15, xEnd - xStart, 20);
-
-			drawTimeLabelLocal(xStart, displayStart);
-			drawTimeLabelLocal(xEnd, displayEnd);
-		});
-
-		// 3) 선택 구간
-		const startTimeValue = document.getElementById("startTime").value;
-		const endTimeValue = document.getElementById("endTime").value;
-
-		if (startTimeValue && endTimeValue) {
-
-			const [sh, sm] = startTimeValue.split(":").map(Number);
-			const [eh, em] = endTimeValue.split(":").map(Number);
-
-			const selStart = new Date(selectedStartDate); selStart.setHours(sh, sm, 0);
-			const selEnd = new Date(selectedEndDate); selEnd.setHours(eh, em, 0);
-
-			const cs = new Date(Math.max(selStart, canvasStart));
-			const ce = new Date(Math.min(selEnd, canvasEnd));
-
-			if (ce > cs) {
-
-				const x1 = ((cs - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-				const x2 = ((ce - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-
-				ctx.fillStyle = "blue";
-				ctx.fillRect(x1, 15, x2 - x1, 20);
-
-				drawTimeLabelLocal(x1, cs);
-				drawTimeLabelLocal(x2, ce);
-			}
-		}
-
-		// 4) 날짜 표시 (MM-DD)
-		const oneDay = 1000 * 60 * 60 * 24;
-		ctx.fillStyle = "black";
-		ctx.font = "bold 10px Arial";
-
-		for (let d = new Date(canvasStart); d <= canvasEnd; d = new Date(d.getTime() + oneDay)) {
-			const offsetX = ((d - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-			const month = (d.getMonth() + 1).toString().padStart(2, '0');
-			const day = d.getDate().toString().padStart(2, '0');
-			ctx.fillText(month + "-" + day, offsetX, 10);
-		}
 
 			// 5) 오늘 이전 회색 처리
 			const now = new Date();
@@ -1144,21 +1336,7 @@ table tr:nth-child(even) {
 						// 24시간 전까지만 변경/취소 가능
 						const isChangeable = now < twentyFourHoursBefore && rentDateObj > now;
 		
-						// 시간 변경 버튼
-						const tdChange = document.createElement("td");
-						const changeBtn = document.createElement("button");
-						changeBtn.textContent = "시간변경";
-						changeBtn.disabled = !isChangeable; 
-						
-						changeBtn.addEventListener("click", async function() {
-							// 여기에 변경할 다이어리 + 시간선택창
-							// 변경된 날짜 및 시간 저장 yyyy-mm-dd HH:mm:ss형식
-							// 변경하기 / 닫기 버튼생성
-						});
-						
-						tdChange.appendChild(changeBtn);
-						tr.appendChild(tdChange);
-		
+					
 						// 예약 취소 버튼
 						const tdCancel = document.createElement("td");
 						const cancelBtn = document.createElement("button");
@@ -1220,10 +1398,7 @@ table tr:nth-child(even) {
 			    }
 			});
 		});
-
-
-
-		
+	
 		// 날짜 포맷 YYYY-MM-DD
 		function formatDate(date) {
 		    let y = date.getFullYear();
@@ -1303,9 +1478,7 @@ table tr:nth-child(even) {
 		        });
 		    }
 		});
-
 		
-
 </script>
 
 <footer>

@@ -40,6 +40,7 @@ public class ReservationRestController {
 
 	// 차량 예약 리스트 조회 (페이징)
 	@GetMapping("/user/car")
+	@ResponseBody
 	public Map<String, Object> carList(HttpSession session,
 	                                   @RequestParam(value = "page", defaultValue = "1") int page,
 	                                   @RequestParam(value = "size", defaultValue = "10") int size) {
@@ -58,7 +59,9 @@ public class ReservationRestController {
 
 	    // 전체 예약 수
 	    int totalCount = reservationService.getTotalCountByDate(todayStart);
-	    PageDto pageDto = new PageDto(page, size, totalCount);
+	    int totalPage = (int) Math.ceil((double) totalCount / size);
+	    PageDto pageDto = new PageDto(page, size, totalPage);
+	    
 
 	    // 차량별 예약 리스트 조회
 	    List<CarReservationDto> rawList = reservationService.getCarReservationListByDate(todayStart, pageDto);
