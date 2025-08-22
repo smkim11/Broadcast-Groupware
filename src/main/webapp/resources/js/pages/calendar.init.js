@@ -265,13 +265,19 @@ document.addEventListener("DOMContentLoaded", function(){
     // 이벤트 저장
     n.addEventListener("submit", function(e){
         e.preventDefault();
-        var t, n, d,
+		if (!n.checkValidity()) {
+		        e.stopPropagation();
+		        n.classList.add("was-validated"); // Bootstrap 시각적 효과
+		        return; // 저장 로직 중단
+		    }
+        var t, d,
             a = document.getElementById("event-title").value,
             tp = document.getElementById("event-type").value;
 			sd = document.getElementById("event-start-time").value;
 			ed = document.getElementById("event-end-time").value;
 			lc = document.getElementById("event-location").value;
 			m = document.getElementById("event-memo").value;
+			lu = document.getElementById("event-login-user").value;
         if(o){
             // 기존 이벤트 수정
 			t = document.getElementById("eventid").value;
@@ -300,13 +306,19 @@ document.addEventListener("DOMContentLoaded", function(){
 			            eventObj.setExtendedProp('memo', m);
 			        }
 				}else{
-					alert('수정실패');
+					Swal.fire({
+	                    title: "수정을 실패했습니다.",
+	                    icon: "error",
+						confirmButtonText: "확인",
+						confirmButtonColor: "#34c38f"
+	                });
 				}
 			});
             
         } else {
             // 새 이벤트 추가
             d = {
+				userId: lu,
                 title: a,
                 location: lc,
 				start: sd,
@@ -322,7 +334,7 @@ document.addEventListener("DOMContentLoaded", function(){
 			fetch("/insertCalendar", {
 			        method: "POST",
 			        headers: {"Content-Type":"application/json"},
-			        body: JSON.stringify({userId:53,calendarTitle:a,calendarLocation:lc,calendarType:tp,
+			        body: JSON.stringify({userId:lu,calendarTitle:a,calendarLocation:lc,calendarType:tp,
 						calendarMemo:m,calendarStartTime:sd,calendarEndTime:ed
 					})
 		    }).then((res) => {
@@ -336,7 +348,12 @@ document.addEventListener("DOMContentLoaded", function(){
 					g.addEvent(d),
 		            s.push(d);
 				}else{
-					alert('등록실패');
+					Swal.fire({
+	                    title: "생성을 실패했습니다.",
+	                    icon: "error",
+						confirmButtonText: "확인",
+						confirmButtonColor: "#34c38f"
+	                });
 				}
 			});
             
