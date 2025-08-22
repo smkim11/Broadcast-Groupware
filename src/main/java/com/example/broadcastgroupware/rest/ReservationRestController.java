@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -85,8 +84,6 @@ public class ReservationRestController {
 	        }
 	    }
 
-
-
 	    // 로그 출력 (확인용)
 	    /*
 	    mergedMap.values().forEach(c -> {
@@ -115,19 +112,19 @@ public class ReservationRestController {
 		
 		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 		int userId = loginUser.getUserId();
-		log.info("userId: {}", userId);
+		//log.info("userId: {}", userId);
 
 		Map<String, Object> response = new HashMap<>();
 		
 		List<MyReservationDto> myReservationList = reservationService.myReservationList(userId);
 		
 		if (myReservationList == null || myReservationList.isEmpty()) {
-	        log.warn("myReservationList is empty or null for userId: {}", userId);
+	        //log.warn("myReservationList is empty or null for userId: {}", userId);
 	    } else {
-	        log.info("myReservationList size: {}", myReservationList.size());
+	        //log.info("myReservationList size: {}", myReservationList.size());
 	        for (MyReservationDto r : myReservationList) {
-	        	log.info("Reservation: id={}, vehicleNo={}, rentDate={}, returnDate={}",
-	        	         r.getVehicleReservationId(), r.getVehicleNo(), r.getRentDate(), r.getReturnDate());
+	        	//log.info("Reservation: id={}, vehicleNo={}, rentDate={}, returnDate={}",
+	        	         //r.getVehicleReservationId(), r.getVehicleNo(), r.getRentDate(), r.getReturnDate());
 
 	        }
 	    }
@@ -136,6 +133,17 @@ public class ReservationRestController {
 		
 		return response;
 	}
+	
+	// 예약 시간 변경
+	@PostMapping("/user/modifyMyReservation")
+	public Map<String, Object> modifyMyReservation(@RequestParam VehicleReservation vehicleReservation) {
+		Map<String, Object> result = new HashMap<>();
+		
+		
+		
+		return result;
+	}
+	
 
 	// 예약 취소
 	@PostMapping("/user/cancelMyReservation")
@@ -144,7 +152,7 @@ public class ReservationRestController {
 		
         try {
 
-            log.info("vehicleReservationId: {}", vehicleReservation);
+            //log.info("vehicleReservationId: {}", vehicleReservation);
 
             boolean success = reservationService.cancelReservation(vehicleReservation);
             result.put("success", success);

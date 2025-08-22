@@ -520,7 +520,7 @@ table tr:nth-child(even) {
      		</table>
      		<div style="text-align: left;">
      			<p>* 2일전까지의 내역입니다.</p>
-     			<p>* 예약 변경 및 취소는 1일전까지 가능합니다.</p>
+     			<p>* 예약 변경 및 취소는 24시간 전까지 가능합니다.</p>
      		</div>
      		<button class="close1" type="button">닫기</button>
      	</div>
@@ -1102,10 +1102,6 @@ table tr:nth-child(even) {
 			const closeBtns = modal.querySelectorAll(".close1");         
 			const table = document.getElementById("myReservationList"); 
 		
-			// 현재 시각과 기준 시각(24시간 전)
-			const now = new Date();
-			const limitDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-		
 			// 예약 확인 버튼 클릭 시 모달 열기 + 데이터 채우기
 			btn.addEventListener("click", async function() {
 				// 테이블 기존 내용 초기화 (헤더 제외)
@@ -1118,7 +1114,7 @@ table tr:nth-child(even) {
 					const data = await res.json();
 					const myReservationList = data.myReservationList;
 					
-					console.log("예약 리스트 확인:", myReservationList);
+					//console.log("예약 리스트 확인:", myReservationList);
 
 		
 					// 예약 목록 테이블에 채우기
@@ -1140,17 +1136,26 @@ table tr:nth-child(even) {
 						tdReturnDate.textContent = c.returnDate;
 						tr.appendChild(tdReturnDate);
 						
-						// 날짜 비교 (이 부분을 forEach 안으로 옮겨야 함)
+						// rentDateObj 정의 후 24시간 전 계산
 						const rentDateObj = new Date(c.rentDate.replace(/-/g, "/"));
-						const isPast = rentDateObj >= limitDate;
+						const twentyFourHoursBefore = new Date(rentDateObj.getTime() - 24*60*60*1000);
+						const now = new Date();
+
+						// 24시간 전까지만 변경/취소 가능
+						const isChangeable = now < twentyFourHoursBefore && rentDateObj > now;
 		
 						// 시간 변경 버튼
 						const tdChange = document.createElement("td");
 						const changeBtn = document.createElement("button");
 						changeBtn.textContent = "시간변경";
-						if (!isPast) {
-							changeBtn.disabled = true;
-						}
+						changeBtn.disabled = !isChangeable; 
+						
+						changeBtn.addEventListener("click", async function() {
+							// 여기에 변경할 다이어리 + 시간선택창
+							// 변경된 날짜 및 시간 저장 yyyy-mm-dd HH:mm:ss형식
+							// 변경하기 / 닫기 버튼생성
+						});
+						
 						tdChange.appendChild(changeBtn);
 						tr.appendChild(tdChange);
 		
@@ -1158,13 +1163,11 @@ table tr:nth-child(even) {
 						const tdCancel = document.createElement("td");
 						const cancelBtn = document.createElement("button");
 						cancelBtn.textContent = "취소";
-						if (!isPast) {
-							cancelBtn.disabled = true;
-						}
+						cancelBtn.disabled = !isChangeable;
 						
 						// 예약 취소 이벤트
 						cancelBtn.addEventListener("click", async function(){
-							console.log("취소 차량 예약 ID 확인:", c.vehicleReservationId);
+							//console.log("취소 차량 예약 ID 확인:", c.vehicleReservationId);
 
 							if(!confirm("예약을 취소하시겠습니까?")) return;
 							
@@ -1178,7 +1181,7 @@ table tr:nth-child(even) {
 								alert("예약이 취소되었습니다.");
 								tr.remove(); // 예약내역 삭제
 							} catch (err) {
-								console.error(err);
+								//console.error(err);
 								alert("예약 취소중 오류가 발생했습니다.");
 							}
 						});
