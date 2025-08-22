@@ -514,10 +514,14 @@ table tr:nth-child(even) {
      				<th>차량번호</th>
      				<th>대여 시간</th>
      				<th>반납 시간</th>
-     				<th>시간 변경</th>
-     				<th>예약 취소</th>
+     				<th id="modifyMyReservation">시간 변경</th>
+     				<th id="cancelReservation">예약 취소</th>
      			</tr>
      		</table>
+     		<div style="text-align: left;">
+     			<p>* 2일전까지의 내역입니다.</p>
+     			<p>* 예약 변경 및 취소는 1일전까지 가능합니다.</p>
+     		</div>
      		<button class="close1" type="button">닫기</button>
      	</div>
      </div>
@@ -1092,90 +1096,128 @@ table tr:nth-child(even) {
 		
 		// 예약확인 모달
 		document.addEventListener("DOMContentLoaded", function() {
-		    const modal = document.getElementById("confirmReservation"); // 모달
-		    const btn = document.getElementById("myReservation");        // 모달 열기 버튼
-		    const closeBtn = modal.querySelector(".close");              // X 버튼
-		    const closeBtns = modal.querySelectorAll(".close1");         // 닫기 버튼들
-		    const table = document.getElementById("myReservationList");  // 테이블
+			const modal = document.getElementById("confirmReservation");
+			const btn = document.getElementById("myReservation");       
+			const closeBtn = modal.querySelector(".close");             
+			const closeBtns = modal.querySelectorAll(".close1");         
+			const table = document.getElementById("myReservationList"); 
 		
-		    // 예약 확인 버튼 클릭 시 모달 열기 + 데이터 채우기
-		    btn.addEventListener("click", async function() {
-		        // 테이블 기존 내용 초기화 (헤더 제외)
-		        table.querySelectorAll("tr:not(:first-child)").forEach(tr => tr.remove());
+			// 현재 시각과 기준 시각(24시간 전)
+			const now = new Date();
+			const limitDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 		
-		        try {
-		            const res = await fetch("/api/user/myReservationList");
-		            if (!res.ok) throw new Error("서버 오류");
+			// 예약 확인 버튼 클릭 시 모달 열기 + 데이터 채우기
+			btn.addEventListener("click", async function() {
+				// 테이블 기존 내용 초기화 (헤더 제외)
+				table.querySelectorAll("tr:not(:first-child)").forEach(tr => tr.remove());
 		
-		            const data = await res.json();
-		            const myReservationList = data.myReservationList;
+				try {
+					const res = await fetch("/api/user/myReservationList");
+					if (!res.ok) throw new Error("서버 오류");
 		
-		            // 예약 목록 테이블에 채우기
-		            myReservationList.forEach(c => {
-		                const tr = document.createElement("tr");
+					const data = await res.json();
+					const myReservationList = data.myReservationList;
+					
+					console.log("예약 리스트 확인:", myReservationList);
+
 		
-		                // 차량번호
-		                const tdVehicleNo = document.createElement("td");
-		                tdVehicleNo.textContent = c.vehicleNo;
-		                tr.appendChild(tdVehicleNo);
+					// 예약 목록 테이블에 채우기
+					myReservationList.forEach(c => {
+						const tr = document.createElement("tr");
 		
-		                // 대여 시간
-		                const tdRentDate = document.createElement("td");
-		                tdRentDate.textContent = c.rentDate;
-		                tr.appendChild(tdRentDate);
+						// 차량번호
+						const tdVehicleNo = document.createElement("td");
+						tdVehicleNo.textContent = c.vehicleNo;
+						tr.appendChild(tdVehicleNo);
 		
-		                // 반납 시간
-		                const tdReturnDate = document.createElement("td");
-		                tdReturnDate.textContent = c.returnDate;
-		                tr.appendChild(tdReturnDate);
+						// 대여 시간
+						const tdRentDate = document.createElement("td");
+						tdRentDate.textContent = c.rentDate;
+						tr.appendChild(tdRentDate);
 		
-		                // 시간 변경 버튼
-		                const tdChange = document.createElement("td");
-		                const changeBtn = document.createElement("button");
-		                changeBtn.textContent = "시간변경";
-		                // 필요하면 이벤트 추가 가능
-		                tdChange.appendChild(changeBtn);
-		                tr.appendChild(tdChange);
+						// 반납 시간
+						const tdReturnDate = document.createElement("td");
+						tdReturnDate.textContent = c.returnDate;
+						tr.appendChild(tdReturnDate);
+						
+						// 날짜 비교 (이 부분을 forEach 안으로 옮겨야 함)
+						const rentDateObj = new Date(c.rentDate.replace(/-/g, "/"));
+						const isPast = rentDateObj >= limitDate;
 		
-		                // 예약 취소 버튼
-		                const tdCancel = document.createElement("td");
-		                const cancelBtn = document.createElement("button");
-		                cancelBtn.textContent = "취소";
-		                // 필요하면 이벤트 추가 가능
-		                tdCancel.appendChild(cancelBtn);
-		                tr.appendChild(tdCancel);
+						// 시간 변경 버튼
+						const tdChange = document.createElement("td");
+						const changeBtn = document.createElement("button");
+						changeBtn.textContent = "시간변경";
+						if (!isPast) {
+							changeBtn.disabled = true;
+						}
+						tdChange.appendChild(changeBtn);
+						tr.appendChild(tdChange);
 		
-		                table.appendChild(tr);
-		            });
+						// 예약 취소 버튼
+						const tdCancel = document.createElement("td");
+						const cancelBtn = document.createElement("button");
+						cancelBtn.textContent = "취소";
+						if (!isPast) {
+							cancelBtn.disabled = true;
+						}
+						
+						// 예약 취소 이벤트
+						cancelBtn.addEventListener("click", async function(){
+							console.log("취소 차량 예약 ID 확인:", c.vehicleReservationId);
+
+							if(!confirm("예약을 취소하시겠습니까?")) return;
+							
+							try {
+								const res = await fetch("/api/user/cancelMyReservation?vehicleReservation=" + c.vehicleReservationId, {
+									method: "post"
+								});
+								
+								if(!res.ok) throw new Error("서버 오류");
+								
+								alert("예약이 취소되었습니다.");
+								tr.remove(); // 예약내역 삭제
+							} catch (err) {
+								console.error(err);
+								alert("예약 취소중 오류가 발생했습니다.");
+							}
+						});
+						
+						// 버튼생성
+						tdCancel.appendChild(cancelBtn);
+						tr.appendChild(tdCancel);
 		
-		            // 모달 열기
-		            modal.style.display = "flex";
+						table.appendChild(tr);
+					});
 		
-				        } catch (err) {
-				            console.error(err);
-				            alert("예약 내역을 가져오는 중 오류가 발생했습니다.");
-				        }
-				    });
-				
-				    // X 버튼 클릭 시 모달 닫기
-				    closeBtn.addEventListener("click", function() {
-				        modal.style.display = "none";
-				    });
-				
-				    // 닫기 버튼들 클릭 시 모달 닫기
-				    closeBtns.forEach(function(b) {
-				        b.addEventListener("click", function() {
-				            modal.style.display = "none";
-				        });
-				    });
-				
-				    // 모달 외부 클릭 시 모달 닫기
-				    window.addEventListener("click", function(event) {
-				        if (event.target === modal) {
-				            modal.style.display = "none";
-				        }
-				    });
+					// 모달 열기
+					modal.style.display = "flex";
+		
+				} catch (err) {
+					console.error(err);
+					alert("예약 내역을 가져오는 중 오류가 발생했습니다.");
+				}
+				// 모달 닫기버튼 (x)
+			    closeBtn.onclick = function() {
+			        modal.style.display = "none";
+			    }
+			    
+			 	// 모달 닫기버튼
+			    closeBtns.forEach(function(b) {
+					b.onclick = function() {
+						modal.style.display = "none";
+					}
 				});
+		
+			    // 모달 외부 클릭 닫기
+			    window.onclick = function(event) {
+			        if(event.target == modal) {
+			            modal.style.display = "none";
+			        }
+			    }
+			});
+		});
+
 
 
 		

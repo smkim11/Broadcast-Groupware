@@ -41,5 +41,8 @@ public interface ReservationMapper {
 	// 본인차량 예약조회
 	List<MyReservationDto> myReservationList(int userId);
 
+	// 차량 예약 취소
+	int cancelReservation(int vehicleReservationId);
+
 
 }

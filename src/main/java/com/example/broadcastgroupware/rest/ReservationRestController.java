@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -125,8 +126,9 @@ public class ReservationRestController {
 	    } else {
 	        log.info("myReservationList size: {}", myReservationList.size());
 	        for (MyReservationDto r : myReservationList) {
-	            log.info("Reservation: vehicleNo={}, rentDate={}, returnDate={}",
-	                     r.getVehicleNo(), r.getRentDate(), r.getReturnDate());
+	        	log.info("Reservation: id={}, vehicleNo={}, rentDate={}, returnDate={}",
+	        	         r.getVehicleReservationId(), r.getVehicleNo(), r.getRentDate(), r.getReturnDate());
+
 	        }
 	    }
 		
@@ -135,7 +137,26 @@ public class ReservationRestController {
 		return response;
 	}
 
+	// 예약 취소
+	@PostMapping("/user/cancelMyReservation")
+	 public Map<String, Object> cancelReservation(@RequestParam  int vehicleReservation) {
+		Map<String, Object> result = new HashMap<>();
+		
+        try {
 
+            log.info("vehicleReservationId: {}", vehicleReservation);
+
+            boolean success = reservationService.cancelReservation(vehicleReservation);
+            result.put("success", success);
+            if (!success) result.put("message", "취소 실패");
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.put("success", false);
+            result.put("message", "서버 오류");
+        }
+        return result;
+    }
+	
 
 	// 차량 등록
 	@PostMapping("/car/addCar")

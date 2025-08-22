@@ -91,5 +91,13 @@ public class ReservationService {
 		return reservationMapper.myReservationList(userId);
 	}
 
+	// 차량 예약 취소 
+	public boolean cancelReservation(int vehicleReservationId) {
+		
+		int cancel = reservationMapper.cancelReservation(vehicleReservationId);
+		
+		return cancel > 0;
+	}
+
 	
 }
