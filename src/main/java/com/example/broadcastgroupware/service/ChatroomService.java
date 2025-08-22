@@ -39,20 +39,20 @@ public class ChatroomService {
 	    room.setChatroomStatus("Y");
 	    room.setLastMessageAt(null);
 
-	    // ❶ UPSERT 실행 (중복이어도 예외 안 남)
+	    // UPSERT 실행 (중복이어도 예외 안 남)
 	    int affected = chatroomMapper.upsertDmChatroom(room);
 
-	    // ❷ PK 보정 (환경에 따라 getGeneratedKeys가 0일 수 있음)
+	    // PK 보정 (환경에 따라 getGeneratedKeys가 0일 수 있음)
 	    if (room.getChatroomId() == null || room.getChatroomId() == 0) {
 	        Integer id = chatroomMapper.selectLastInsertId();
 	        room.setChatroomId(id);
 	    }
 
-	    // ❸ 조인 테이블은 중복 무시로 안전하게
+	    // 조인 테이블은 중복 무시로 안전하게
 	    chatroomMapper.insertChatroomUserIgnore(room.getChatroomId(), meUserId);
 	    chatroomMapper.insertChatroomUserIgnore(room.getChatroomId(), targetUserId);
 
-	    // ❹ 이미 있었는지 플래그 (INSERT=1, 나머지(UPDATE/변경없음)=true)
+	    // 이미 있었는지 플래그 (INSERT=1, 나머지(UPDATE/변경없음)=true)
 	    ChatroomDto dto = toDto(room);
 	    dto.setAlreadyExists(affected != 1);
 	    return dto;

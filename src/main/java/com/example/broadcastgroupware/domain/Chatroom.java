@@ -9,6 +9,7 @@ public class Chatroom {
 	private String roomType;		// room_type	enum('GROUP', 'DM') 기본값 'DM'
 	private String chatroomName;	// chatroom_name
 	private String chatroomStatus;	// chatroom_status
+	private String lastMessage;		// last_message	마지막 메시지
 	private String lastMessageAt;	// last_message_at 최근대화가 이루어진 방이 위로 올라오도록 정렬
 	private String createDate;		// create_date
 }

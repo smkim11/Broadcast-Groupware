@@ -12,11 +12,13 @@
 		<result column="unread_count"		property="unreadCount"/>
 		<result column="room_type"			property="roomType"/>
 		<result column="dm_key"				property="dmKey"/>
+		<result column="last_incoming_at"   property="lastIncomingAt"/> 
 		
 	<!-- 서비스에서 아바타이미지 계산용 원재료 -->
 		<result column="peer_user_id"		property="peerUserId"/>
 		<result column="peer_avatar_path"	property="peerAvatarPath"/>
 		<result column="group_avatar_path"	property="groupAvatarPath"/>
+		<result column="peer_user_rank"    property="peerUserRank"/>
 	</resultMap>
 	
 	<!-- 내가 속한 DM 목록(상대 정보 포함) -->
@@ -26,10 +28,10 @@
 	      c.room_type,
 	      c.dm_key,
 	
-	      /* 시간: 최신메시지/캐시/생성일 순으로 폴백 */
+	      <!-- 시간: 최신메시지/캐시/생성일 순으로 폴백 -->
 	      COALESCE(lm.created_at, c.last_message_at, c.create_date) AS last_message_at,
 	
-	      /* 마지막 메시지 내용 */
+	      <!-- 마지막 메시지 내용 -->
 	      lm.content AS last_message,
 	
 	      /* (옵션) 안읽음 수: last_read_at이 있으면 유효, 없으면 0 */
@@ -37,9 +39,14 @@
 	
 	      /* 상대방 이름 */
 	      u_peer.full_name AS chatroom_name,
+	      
+	      u_peer.user_rank        AS peer_user_rank,
 	
-	      /* 서비스용 원재료(선택): 상대 유저 ID */
-	      pid.peer_user_id AS peer_user_id
+	      <!-- 서비스용 원재료(선택): 상대 유저 ID -->
+	      pid.peer_user_id AS peer_user_id,
+	      
+	      
+	      li.last_incoming_at AS last_incoming_at
 	  FROM chatroom c
 	
 	  /* 내가 속한 방 */
@@ -77,7 +84,7 @@
 	       AND x.max_id      = m1.chat_message_id
 	  ) lm ON lm.chatroom_id = c.chatroom_id
 	
-	  /* 안읽음 수 (선택) */
+	  /* 안읽음 수  */
 	  LEFT JOIN (
 	    SELECT m.chatroom_id, COUNT(*) AS cnt
 	    FROM chat_message m
@@ -87,9 +94,24 @@
 	    WHERE me.last_read_at IS NULL OR m.create_date > me.last_read_at
 	    GROUP BY m.chatroom_id
 	  ) unread ON unread.chatroom_id = c.chatroom_id
+	  
+	    <!-- ‘내가 받은’ 마지막 시간 계산 서브쿼리 -->
+	  LEFT JOIN (
+	    SELECT
+	      m.chatroom_id,
+	      MAX(m.create_date) AS last_incoming_at
+	    FROM chat_message m
+	    JOIN chatroom_user cu ON cu.chatroom_user_id = m.chatroom_user_id
+	    WHERE cu.user_id &lt;&gt; #{userId}         <!-- 남이 보낸 메시지만 -->
+	    GROUP BY m.chatroom_id
+	  ) li ON li.chatroom_id = c.chatroom_id
+	  
 	
 	  WHERE c.room_type = 'DM'
-	  ORDER BY COALESCE(lm.created_at, c.last_message_at, c.create_date) DESC
+	  ORDER BY
+	   CASE WHEN li.last_incoming_at IS NULL THEN 1 ELSE 0 END ASC, <!--  받은 시간 없는 방은 뒤로 -->
+	   li.last_incoming_at DESC,                          <!--  받은 메시지 최신순 -->
+	   c.chatroom_id ASC                                  <!--  안정적 보조키 (원하면 이름 ASC 등으로 교체) -->
 	</select>
 	
 	  <!-- dm_key로 방 1개 조회 -->
@@ -135,6 +157,14 @@
 	<update id="updateChatroomLastActivity" parameterType="int">
 	  UPDATE chatroom
 	  SET last_message_at = NOW()
+	  WHERE chatroom_id = #{chatroomId}
+	</update>
+	
+	<!-- 마지막 메시지 내용 + 시간 동시 갱신 (last_message 컬럼이 있을 때 권장) -->
+	<update id="updateChatroomLastMessage" parameterType="map">
+	  UPDATE chatroom
+	  SET last_message = #{lastMessage},
+	      last_message_at = NOW()
 	  WHERE chatroom_id = #{chatroomId}
 	</update>
 	

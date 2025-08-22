@@ -39,6 +39,8 @@
            data-room-id="<c:out value='${chatroomId}' default='1'/>"
            data-user-id="<c:out value='${loginUserId}' default='0'/>"
            data-user-name="<c:out value='${loginUserName}' default=''/>">
+           data-context-path="${pageContext.request.contextPath}"
+           data-avatar-default="<c:url value='/resources/images/users/avatar-default.png'/>">
       </div>
 
       <div class="d-lg-flex mb-4">
@@ -115,21 +117,26 @@
         <div class="w-100 user-chat mt-4 mt-sm-0 ms-lg-1" id="chat-panel">
           <div class="card">
             <!-- 채팅방 헤더 -->
-            <div class="p-3 px-lg-4 border-bottom">
-              <div class="row">
-                <div class="col-md-6 col-6">
-                  <h5 class="font-size-16 mb-1 text-truncate">
-                    <a href="#" class="text-reset">채팅방</a>
-                  </h5>
-                  <small id="ws-status" class="text-muted">연결 시도중...</small>
-                </div>
-                <div class="col-md-6 col-6 text-end">
-                  <button class="btn nav-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="uil uil-ellipsis-h"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
+ <div class="p-3 px-lg-4 border-bottom">
+  <div class="d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+      <!--  크기 고정 클래스 적용 -->
+      <img id="room-avatar"
+           src="<c:url value='/resources/images/users/avatar-default.png'/>"
+           class="rounded-circle header-profile-user"
+           alt="avatar">
+
+      <div class="ms-2 min-w-0">
+        <h5 id="room-title" class="font-size-16 mb-0 text-truncate"></h5>
+        <small id="ws-status" class="text-muted">연결됨</small>
+      </div>
+    </div>
+
+    <button class="btn nav-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+      <i class="uil uil-ellipsis-h"></i>
+    </button>
+  </div>
+</div>
 
           <!-- 채팅 메시지 영역 (SimpleBar 사용) -->
 			<div class="chat-conversation py-3" id="messageScroll" data-simplebar style="height:65vh;">

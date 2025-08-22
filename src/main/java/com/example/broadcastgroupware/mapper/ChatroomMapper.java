@@ -28,4 +28,7 @@ public interface ChatroomMapper {
 						   		 @Param("userId") int userId);
 
 	int updateChatroomLastActivity(@Param("chatroomId") int chatroomId);
+	
+	int updateChatroomLastMessage(@Param("chatroomId") int chatroomId,
+								  @Param("lastMessage") String lastMessage);
 }

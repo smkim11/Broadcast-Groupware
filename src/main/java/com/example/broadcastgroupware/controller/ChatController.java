@@ -89,8 +89,8 @@ public class ChatController {
         UserSessionDto login = (UserSessionDto) accessor.getSessionAttributes().get("loginUser");
         if (login == null) return;	// 세션 만료 등
         
-        // 옵션
-        // chatService.updateLastRead(chatroomId, logingetUserId(), read.getChatMessageId());
+        // 읽음처리
+        chatService.markRead(chatroomId, login.getUserId(), read.getChatMessageId());
 
         // 아주 가볍게 브로드캐스트(프런트에서 '읽음' UI에만 사용)
         Map<String, Object> out = Map.of(

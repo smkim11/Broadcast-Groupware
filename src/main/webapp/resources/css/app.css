@@ -4453,6 +4453,7 @@ div.table-responsive > div.dataTables_wrapper > div.row > div[class^=col-]:last-
   }
 }
 
+
 /* 알림 뱃지 */
 .chat-noti-dropdown.active:before {
   content: "";
