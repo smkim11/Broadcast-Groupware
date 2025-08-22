@@ -47,26 +47,29 @@ public class ChatService {
 		chatMapper.insertChatMessage(m);	// chatMessageId 세팅
 		
 		// 3) (옵션) 내 읽음시간 갱신
-		chatMapper.updateLastReadAt(chatroomId, userId);
+		chatMapper.updateLastReadAt(chatroomId, userId, m.getChatMessageId());
 		//System.out.println("[saveMessage] insertedId=" + m.getChatMessageId());
 		
 		// 방의 최근 활동 시간 캐시 갱신(정렬/ 표시 안정화)
-		chatroomMapper.updateChatroomLastActivity(chatroomId);
+		//chatroomMapper.updateChatroomLastActivity(chatroomId);
+		
+		// 메시지 INSERT 직후
+		chatroomMapper.updateChatroomLastMessage(chatroomId, chatMessageContent);
 		
 		// 4) 방금 저장한 메시지를 Dto 뷰로 다시 조회해서 반환
 		ChatMessageDto dto = chatMapper.selectMessageViewById(m.getChatMessageId());
 		  //System.out.println("[saveMessage] dto=" + dto);
 		
-		 //  기존 방 브로드캐스트
+		 //  기존 방 브로드캐스트 (controller에 표시)
 	   // messagingTemplate.convertAndSend("/topic/rooms/" + chatroomId, dto);
 
 	    // 유저 인박스 이벤트 (보낸 사람 제외)
 	    List<Integer> memberIds = chatroomUserMapper.selectMemberIds(chatroomId);
 	    for (Integer uid : memberIds) {
-	      if (uid == null || uid == userId) continue;
+	      if (uid == null) continue;
 	      InboxEvent evt = new InboxEvent(chatroomId, dto.getChatMessageContent(), dto.getCreateDate());
 	      // Principal.getName() == String.valueOf(uid) 여야 수신됨
-	      messagingTemplate.convertAndSendToUser(String.valueOf(uid), "/queue/inbox", evt);
+	      messagingTemplate.convertAndSend("/topic/user." + uid + "/inbox", evt);
 	    }
 		return dto;
 		
@@ -74,5 +77,10 @@ public class ChatService {
 
 	public List<ChatMessageDto> getMessages(int chatroomId, Integer afterId, int limit) {
 		return chatMapper.selectMessages(chatroomId, afterId, limit);
+	}
+
+	public void markRead(int chatroomId, int userId, Integer lastMessageId) {
+		chatMapper.updateLastReadAt(chatroomId, userId, lastMessageId);
+		
 	}
 }

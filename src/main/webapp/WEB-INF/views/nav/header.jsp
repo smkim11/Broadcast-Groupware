@@ -19,6 +19,8 @@
         <link href="${pageContext.request.contextPath}/resources/css/icons.min.css" rel="stylesheet" type="text/css" />
         <!-- App Css-->
         <link href="${pageContext.request.contextPath}/resources/css/app.min.css" id="app-style" rel="stylesheet" type="text/css" />
+        <!-- 뱃지알림 -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/custom.css?v=3">
 
     </head>
 

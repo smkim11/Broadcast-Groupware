@@ -45,33 +45,41 @@
 	<!-- 히스토리 조회 -->
 	<select id="selectMessages"
 			resultType="com.example.broadcastgroupware.dto.ChatMessageDto">
-		SELECT
-			m.chat_message_id        AS chatMessageId,
-	        cu.chatroom_id           AS chatroomId,
-	        cu.user_id               AS userId,
-	        u.full_name              AS fullName,
-	        u.user_rank              AS userRank,
-	        m.chat_message_content   AS chatMessageContent,
-	        m.chat_message_status    AS chatMessageStatus,
-	        m.create_date            AS createDate
-		FROM chat_message m
-		INNER JOIN chatroom_user cu
-			ON cu.chatroom_user_id = m.chatroom_user_id
-		INNER JOIN `user` u
-			ON u.user_id = cu.user_id
-		WHERE cu.chatroom_id = #{chatroomId}
-			<if test="afterId != null">
-				AND m.chat_message_id &gt; #{afterId}
-			</if>
-		ORDER BY m.chat_message_id ASC
-		LIMIT #{limit}
+		 SELECT *
+		  FROM (
+		    SELECT
+		      m.chat_message_id      AS chatMessageId,
+		      cu.chatroom_id         AS chatroomId,
+		      cu.user_id             AS userId,
+		      u.full_name            AS fullName,
+		      u.user_rank            AS userRank,
+		      m.chat_message_content AS chatMessageContent,
+		      m.chat_message_status  AS chatMessageStatus,
+		      m.create_date          AS createDate
+		    FROM chat_message m
+		    INNER JOIN chatroom_user cu
+		      ON cu.chatroom_user_id = m.chatroom_user_id
+		    INNER JOIN `user` u
+		      ON u.user_id = cu.user_id
+		    WHERE cu.chatroom_id = #{chatroomId}
+		      <if test="afterId != null">
+		        AND m.chat_message_id &gt; #{afterId}
+		      </if>
+		    ORDER BY m.chat_message_id DESC
+		    LIMIT #{limit}
+		  ) sub
+		 ORDER BY sub.chatMessageId ASC
 	</select>
 	
 	<!-- 읽음시간 갱신 -->
-	<update id="updateLastReadAt">
-		UPDATE chatroom_user
-		SET last_read_at = NOW()
-		WHERE chatroom_id = #{chatroomId} AND user_id = #{userId}
+	<update id="updateLastReadAt" parameterType="map">
+	  UPDATE chatroom_user cu
+	  JOIN chat_message m
+	    ON m.chatroom_id = cu.chatroom_id
+	   AND m.chat_message_id = #{lastMessageId}
+	  SET cu.last_read_at = GREATEST(COALESCE(cu.last_read_at, '1970-01-01 00:00:00'), m.create_date)
+	  WHERE cu.chatroom_id = #{chatroomId}
+	    AND cu.user_id     = #{userId}
 	</update>
 </mapper>
 

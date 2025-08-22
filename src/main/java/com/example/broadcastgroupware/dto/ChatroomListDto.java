@@ -1,5 +1,7 @@
 package com.example.broadcastgroupware.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Data
@@ -19,6 +21,7 @@ public class ChatroomListDto {
 	private Integer unreadCount;	// unred_count (계산값이면 null 가능 -> Integer)
 	private String roomType;		// room_type ('DM' | 'GROUP')
 	private String dmKey;			// dm_key
+	private LocalDateTime lastIncomingAt;	// 방 나가기 상태
 
 	// 서비스에서 프로필이미지 경로 계산
 	private Integer peerUserId;		// DM일 때 상대 user_id

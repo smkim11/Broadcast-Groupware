@@ -25,6 +25,8 @@ public interface ChatMapper {
 										@Param("limit") int limit);
 	
 	//(옵션) 내 읽음 시간 갱신
-	int updateLastReadAt(@Param("chatroomId") int chatroomId, @Param("userId") int userId);
+	int updateLastReadAt(@Param("chatroomId") int chatroomId,
+						 @Param("userId") int userId,
+						 @Param("lastMessageId") int lastMessageId);
 	
 }
