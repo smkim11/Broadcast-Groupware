@@ -17,10 +17,13 @@ public interface ChatroomMapper {
 	// dm_key로 방 존재 여부 확인
 	Chatroom selectByDmKey(@Param("dmKey") String dmKey);
 	
+	// (옵션) LAST_INSERT_ID() 보정용
+    Integer selectLastInsertId();
+	
 	// 채팅방 생성
-	int insertChatroom(Chatroom room);
+	int upsertDmChatroom(Chatroom room);
 	
 	// 채팅방 - 사용자 추가
-	int insertChatroomUser(@Param("chatroomId") int chatroomId,
-						   @Param("userId") int userId);
+	int insertChatroomUserIgnore(@Param("chatroomId") int chatroomId,
+						   		 @Param("userId") int userId);
 }

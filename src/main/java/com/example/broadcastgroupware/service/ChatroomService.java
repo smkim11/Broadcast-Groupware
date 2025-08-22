@@ -3,6 +3,7 @@ package com.example.broadcastgroupware.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.broadcastgroupware.domain.Chatroom;
@@ -25,36 +26,41 @@ public class ChatroomService {
 	}
 	
 	// DM 생성
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public ChatroomDto createDm(int meUserId, int targetUserId) {
 		int a = Math.min(meUserId, targetUserId);
 		int b = Math.max(meUserId, targetUserId);
 		String dmKey = a + ":" + b;
 		
-		Chatroom exist = chatroomMapper.selectByDmKey(dmKey);
-		if (exist != null) {
-			return toDto(exist);	// toDto : 변환한 결과를 잠시 담아두는 용도라서 “변환된 것”이라는 의미
-		}
-		
 		Chatroom room = new Chatroom();
-		room.setRoomType("DM");
-		room.setDmKey(dmKey);
-		room.setChatroomName("DM-" + meUserId + "-" + targetUserId); 	//DM은 이름을 굳이 저장하지 않아도 (표시명은 조회시 상대방 이름 직급으로)
-		room.setChatroomStatus("Y");
-		room.setLastMessageAt(null);	// 최초엔 null (메시지 도착 시 갱신)
-		System.out.println(">>> ChatroomName = " + room.getChatroomName());
-		chatroomMapper.insertChatroom(room);	// pk 채변됨
-		
-		chatroomMapper.insertChatroomUser(room.getChatroomId(), meUserId);
-		chatroomMapper.insertChatroomUser(room.getChatroomId(), targetUserId);
-		
-		return toDto(room);
+	    room.setRoomType("DM");
+	    room.setDmKey(dmKey);
+	    room.setChatroomName("DM-" + meUserId + "-" + targetUserId);
+	    room.setChatroomStatus("Y");
+	    room.setLastMessageAt(null);
+
+	    // ❶ UPSERT 실행 (중복이어도 예외 안 남)
+	    int affected = chatroomMapper.upsertDmChatroom(room);
+
+	    // ❷ PK 보정 (환경에 따라 getGeneratedKeys가 0일 수 있음)
+	    if (room.getChatroomId() == null || room.getChatroomId() == 0) {
+	        Integer id = chatroomMapper.selectLastInsertId();
+	        room.setChatroomId(id);
+	    }
+
+	    // ❸ 조인 테이블은 중복 무시로 안전하게
+	    chatroomMapper.insertChatroomUserIgnore(room.getChatroomId(), meUserId);
+	    chatroomMapper.insertChatroomUserIgnore(room.getChatroomId(), targetUserId);
+
+	    // ❹ 이미 있었는지 플래그 (INSERT=1, 나머지(UPDATE/변경없음)=true)
+	    ChatroomDto dto = toDto(room);
+	    dto.setAlreadyExists(affected != 1);
+	    return dto;
 	}
 
 	private ChatroomDto toDto(Chatroom chatroom) {
 		ChatroomDto dto	= new ChatroomDto();
 		dto.setChatroomId(chatroom.getChatroomId());
-		//dto.setUserId(chatroom.getUserId());
 		dto.setDmKey(chatroom.getDmKey());
 		dto.setRoomType(chatroom.getRoomType());
 		dto.setChatroomName(chatroom.getChatroomName());

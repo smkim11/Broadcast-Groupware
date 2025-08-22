@@ -4,8 +4,7 @@ import lombok.Data;
 
 @Data
 public class Chatroom {
-	private int chatroomId;			// chatroom_id(PK)
-	//private int userId;				// user_id(FK)
+	private Integer chatroomId;			// chatroom_id(PK)
 	private String dmKey;			// dm_key(unique) 초대한id ex) 3:5
 	private String roomType;		// room_type	enum('GROUP', 'DM') 기본값 'DM'
 	private String chatroomName;	// chatroom_name

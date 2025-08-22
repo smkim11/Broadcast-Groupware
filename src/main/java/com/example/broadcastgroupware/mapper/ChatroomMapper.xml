@@ -68,21 +68,27 @@
   </select>
 	
 	<!-- DM 방 생성 -->
-	<insert id="insertChatroom"
-			parameterType="com.example.broadcastgroupware.domain.Chatroom"
-			useGeneratedKeys="true" keyProperty="chatroomId">
-		INSERT INTO chatroom
-			(room_type, dm_key, chatroom_name, chatroom_status, last_message_at, create_date)
-		VALUES
-			(#{roomType}, #{dmKey}, #{chatroomName}, #{chatroomStatus}, #{lastMessageAt}, NOW())		
+	<insert id="upsertDmChatroom"
+        parameterType="com.example.broadcastgroupware.domain.Chatroom"
+        useGeneratedKeys="true" keyProperty="chatroomId">
+	  INSERT INTO chatroom
+	    (room_type, dm_key, chatroom_name, chatroom_status, last_message_at, create_date)
+	  VALUES
+	    (#{roomType}, #{dmKey}, #{chatroomName}, #{chatroomStatus}, #{lastMessageAt}, NOW())
+	  ON DUPLICATE KEY UPDATE
+	    chatroom_id = LAST_INSERT_ID(chatroom_id),  <!-- 기존 row의 PK를 getGeneratedKeys로 돌려받게 함 -->
+	    chatroom_status = VALUES(chatroom_status)   <!-- 옵션: 상태 갱신 -->
 	</insert>
 	
-	<!-- 방 유저 매핑 -->
-	<insert id="insertChatroomUser">
-		INSERT INTO chatroom_user
-			(chatroom_id, user_id, create_date)
-		VALUES
-			(#{chatroomId}, #{userId}, NOW())
+	<!-- (옵션) 드라이버/환경에 따라 필요할 수 있음 -->
+	<select id="selectLastInsertId" resultType="int">
+	  SELECT LAST_INSERT_ID()
+	</select>
+	
+	<!-- 이미 있으면 무시 -->
+	<insert id="insertChatroomUserIgnore">
+	  INSERT IGNORE INTO chatroom_user (chatroom_id, user_id, create_date)
+	  VALUES (#{chatroomId}, #{userId}, NOW())
 	</insert>
 	
 </mapper>

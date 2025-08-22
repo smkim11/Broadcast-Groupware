@@ -119,7 +119,7 @@
               <div class="row">
                 <div class="col-md-6 col-6">
                   <h5 class="font-size-16 mb-1 text-truncate">
-                    <a href="#" class="text-reset">Chat Room</a>
+                    <a href="#" class="text-reset">채팅방</a>
                   </h5>
                   <small id="ws-status" class="text-muted">연결 시도중...</small>
                 </div>
@@ -141,12 +141,12 @@
               <div class="row">
                 <div class="col">
                   <div class="position-relative">
-                    <input type="text" class="form-control chat-input rounded" id="chat-input" placeholder="Enter Message...">
+                    <input type="text" class="form-control chat-input rounded" id="chat-input" placeholder="메시지 입력...">
                   </div>
                 </div>
                 <div class="col-auto">
                   <button type="button" id="send-btn" class="btn btn-primary chat-send w-md" disabled>
-                    <span class="d-none d-sm-inline-block me-2">Send</span>
+                    <span class="d-none d-sm-inline-block me-2">보내기</span>
                     <i class="mdi mdi-send float-end"></i>
                   </button>
                 </div>
