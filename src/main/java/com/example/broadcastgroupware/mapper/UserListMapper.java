@@ -4,12 +4,12 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.example.broadcastgroupware.dto.ChatUserRowDto;
+import com.example.broadcastgroupware.dto.UserRowDto;
 
 @Mapper
-public interface ChatListMapper {
+public interface UserListMapper {
 	
 	// 조직도 트리 만들 때 사용할 "조인 한 줄" 결과
-	List<ChatUserRowDto> selectUsersRow();
+	List<UserRowDto> selectUsersRow();
 	
 }

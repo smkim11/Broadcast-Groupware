@@ -8,16 +8,16 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.example.broadcastgroupware.dto.ChatUserRowDto;
-import com.example.broadcastgroupware.dto.ChatUserTreeDto;
-import com.example.broadcastgroupware.mapper.ChatListMapper;
+import com.example.broadcastgroupware.dto.UserRowDto;
+import com.example.broadcastgroupware.dto.UserTreeDto;
+import com.example.broadcastgroupware.mapper.UserListMapper;
 
 @Service
-public class ChatListService {
-	private final ChatListMapper chatListMapper;
+public class UserListService {
+	private final UserListMapper userListMapper;
 	
-	public ChatListService(ChatListMapper chatListMapper) {
-		this.chatListMapper = chatListMapper;
+	public UserListService(UserListMapper userListMapper) {
+		this.userListMapper = userListMapper;
 	}
 
 	 /*
@@ -28,16 +28,16 @@ public class ChatListService {
      *  3) 사용자(리프)를 부모(팀/부서)에 추가
      */
 	
-	public List<ChatUserTreeDto> getUserTreeForInvite() {
-		List<ChatUserRowDto> rows = chatListMapper.selectUsersRow();
+	public List<UserTreeDto> getUserTreeForInvite() {
+		List<UserRowDto> rows = userListMapper.selectUsersRow();
 		
-		Map<Integer, ChatUserTreeDto> deptMap = new LinkedHashMap<>();
-		Map<String, ChatUserTreeDto> teamMap = new HashMap<>();
+		Map<Integer, UserTreeDto> deptMap = new LinkedHashMap<>();
+		Map<String, UserTreeDto> teamMap = new HashMap<>();
 		
-		for (ChatUserRowDto r : rows) {
+		for (UserRowDto r : rows) {
 			// 1) 부서
-			ChatUserTreeDto dept = deptMap.computeIfAbsent(r.getDepartmentId(), id -> {
-				ChatUserTreeDto t = new ChatUserTreeDto();
+			UserTreeDto dept = deptMap.computeIfAbsent(r.getDepartmentId(), id -> {
+				UserTreeDto t = new UserTreeDto();
 				t.setId(id);
 				t.setName(r.getDepartmentName());
 				t.setKind("DEPT");
@@ -46,8 +46,8 @@ public class ChatListService {
 			
 			// 2) 팀
 			String key = r.getDepartmentId() + ":" + r.getTeamId();
-			ChatUserTreeDto team = teamMap.computeIfAbsent(key, k -> {
-				ChatUserTreeDto t = new ChatUserTreeDto();
+			UserTreeDto team = teamMap.computeIfAbsent(key, k -> {
+				UserTreeDto t = new UserTreeDto();
 				t.setId(r.getTeamId());
 				t.setName(r.getTeamName());
 				t.setKind("TEAM");
@@ -56,7 +56,7 @@ public class ChatListService {
 			});
 			
 			// 3) 사용자
-			ChatUserTreeDto user = new ChatUserTreeDto();
+			UserTreeDto user = new UserTreeDto();
 			user.setId(r.getUserId());
 			user.setName(r.getFullName());
 			user.setKind("USER");

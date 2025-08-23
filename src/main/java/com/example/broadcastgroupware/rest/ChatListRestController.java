@@ -6,23 +6,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.broadcastgroupware.dto.ChatUserTreeDto;
-import com.example.broadcastgroupware.service.ChatListService;
+import com.example.broadcastgroupware.dto.UserTreeDto;
+import com.example.broadcastgroupware.service.UserListService;
 
 
 @RestController
 @RequestMapping("/api/chat")
 public class ChatListRestController {
 	
-	private final ChatListService chatListService;
+	private final UserListService chatListService;
 	
-	public ChatListRestController (ChatListService chatListService) {
+	public ChatListRestController (UserListService chatListService) {
 		this.chatListService = chatListService;
 	}
 	
 	// 조직도 트리 조회
 	@GetMapping("/org-tree")
-	public List<ChatUserTreeDto> getOrgTree() {
+	public List<UserTreeDto> getOrgTree() {
 		return chatListService.getUserTreeForInvite();
 	}
 

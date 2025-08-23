@@ -3,7 +3,7 @@ package com.example.broadcastgroupware.dto;
 import lombok.Data;
 
 @Data
-public class ChatUserRowDto {
+public class UserRowDto {
 	private int departmentId;		// 부서 Id
 	private String departmentName;	// 부서 이름
 	private int teamId;				// 팀 id

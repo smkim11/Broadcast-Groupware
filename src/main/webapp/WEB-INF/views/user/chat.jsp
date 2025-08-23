@@ -36,9 +36,9 @@
 
       <!-- 로그인/방 메타 (서버에서 내려주세요: loginUserId, loginUserName) -->
       <div id="chat-meta"
-           data-room-id="<c:out value='${chatroomId}' default='1'/>"
-           data-user-id="<c:out value='${loginUserId}' default='0'/>"
-           data-user-name="<c:out value='${loginUserName}' default=''/>">
+           data-room-id="${chatroomId}"
+           data-user-id="${loginUserId}"
+           data-user-name="${loginUserName}"
            data-context-path="${pageContext.request.contextPath}"
            data-avatar-default="<c:url value='/resources/images/users/avatar-default.png'/>">
       </div>
@@ -61,6 +61,9 @@
                 </h5>
                 <p class="text-muted mb-0">Available</p>
               </div>
+                <div class="float-end">
+                  <a href="javascript:void(0);" id="open-invite" class="text-primary"><i class="mdi mdi-plus"></i> 초대하기</a>
+                </div>
             </div>
           </div>
 
@@ -79,9 +82,6 @@
             <div class="chat-message-list" data-simplebar>
               <!-- 그룹 리스트 -->
               <div class="p-4 border-top">
-                <div class="float-end">
-                  <a href="javascript:void(0);" id="open-invite" class="text-primary"><i class="mdi mdi-plus"></i> 초대하기</a>
-                </div>
                 <h5 class="font-size-16 mb-3"><i class="uil uil-users-alt me-1"></i> 그룹채팅</h5>
                 <ul class="list-unstyled chat-list group-list">
                   <li class="active">
