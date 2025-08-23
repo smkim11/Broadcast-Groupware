@@ -114,29 +114,49 @@
         <!-- end chat-leftsidebar -->
 
         <!-- Chat 영역 -->
-        <div class="w-100 user-chat mt-4 mt-sm-0 ms-lg-1" id="chat-panel">
+        <!-- 빈 상태 화면 (처음엔 보이게) -->
+		<div id="chat-empty" class="w-100 user-chat mt-4 mt-sm-0 ms-lg-1">
+		    <div class="card-body d-flex align-items-center justify-content-center" style="height:65vh;">
+		      <div class="text-center">
+		        <div class="mb-2" style="font-size:42px;">💬</div>
+		        <h5 class="mb-1">채팅방을 선택하세요</h5>
+		        <p class="text-muted mb-0">왼쪽 목록에서 1:1 또는 그룹 채팅을 클릭하면 대화가 시작됩니다.</p>
+		      </div>
+		  </div>
+		</div>
+        <!-- 채팅화면 -->
+        <div class="w-100 user-chat mt-4 mt-sm-0 ms-lg-1 d-none" id="chat-panel">
           <div class="card">
             <!-- 채팅방 헤더 -->
- <div class="p-3 px-lg-4 border-bottom">
-  <div class="d-flex align-items-center justify-content-between">
-    <div class="d-flex align-items-center">
-      <!--  크기 고정 클래스 적용 -->
-      <img id="room-avatar"
-           src="<c:url value='/resources/images/users/avatar-default.png'/>"
-           class="rounded-circle header-profile-user"
-           alt="avatar">
-
-      <div class="ms-2 min-w-0">
-        <h5 id="room-title" class="font-size-16 mb-0 text-truncate"></h5>
-        <small id="ws-status" class="text-muted">연결됨</small>
-      </div>
-    </div>
-
-    <button class="btn nav-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
-      <i class="uil uil-ellipsis-h"></i>
-    </button>
-  </div>
-</div>
+			 <div class="p-3 px-lg-4 border-bottom">
+			  <div class="d-flex align-items-center justify-content-between">
+			    <div class="d-flex align-items-center">
+			      <!--  크기 고정 클래스 적용 -->
+			      <img id="room-avatar"
+			           src="<c:url value='/resources/images/users/avatar-default.png'/>"
+			           class="rounded-circle header-profile-user"
+			           alt="avatar">
+			
+			      <div class="ms-2 min-w-0">
+			        <h5 id="room-title" class="font-size-16 mb-0 text-truncate"></h5>
+			        <small id="ws-status" class="text-muted">연결됨</small>
+			      </div>
+			    </div>
+			
+			    <li class="list-inline-item">
+                   <div class="dropdown">
+                       <button class="btn nav-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                           <i class="uil uil-ellipsis-h"></i>
+                       </button>
+                       <div class="dropdown-menu dropdown-menu-end">
+                           <a class="dropdown-item" href="#" id="btn-pin=room">상단고정</a>
+                           <a class="dropdown-item" href="#" id="btn-rename=room">채팅방 이름 변경</a>
+                           <a class="dropdown-item text-danger" href="#" id="action-leave-room">대화방 나가기</a>
+                       </div>
+                   </div>
+               </li>
+			  </div>
+			</div>
 
           <!-- 채팅 메시지 영역 (SimpleBar 사용) -->
 			<div class="chat-conversation py-3" id="messageScroll" data-simplebar style="height:65vh;">

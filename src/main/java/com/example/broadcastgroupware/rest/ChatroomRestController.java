@@ -4,16 +4,19 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.SessionAttribute;
 
+import com.example.broadcastgroupware.domain.ChatroomUser;
 import com.example.broadcastgroupware.dto.ChatroomDmDto;
 import com.example.broadcastgroupware.dto.ChatroomDto;
 import com.example.broadcastgroupware.dto.ChatroomListDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
+import com.example.broadcastgroupware.service.ChatService;
 import com.example.broadcastgroupware.service.ChatroomService;
 
 @RestController
@@ -21,9 +24,12 @@ import com.example.broadcastgroupware.service.ChatroomService;
 public class ChatroomRestController {
 	
 	private final ChatroomService chatroomService;
+	private final ChatService chatService;
 	
-	public ChatroomRestController(ChatroomService chatroomService) {
+	public ChatroomRestController(ChatroomService chatroomService,
+								  ChatService chatService) {
 		this.chatroomService = chatroomService;
+		this.chatService = chatService;
 	}
 	
 	// DM 목록(1:1대화)
@@ -43,6 +49,16 @@ public class ChatroomRestController {
         int meUserId = loginUser.getUserId();
         ChatroomDto dto = chatroomService.createDm(meUserId, req.getTargetUserId());
         return ResponseEntity.ok(dto);
+    }
+    
+    // 채팅방 나가기
+    @PostMapping("/{chatroomId}/leave")
+    public ResponseEntity<Void> leaveRoom(
+    		@PathVariable int chatroomId,
+    		@SessionAttribute("loginUser") UserSessionDto loginUser) {
+    	
+		chatService.leaveRoom(chatroomId, loginUser.getUserId());
+		return ResponseEntity.noContent().build();	// 204
     }
 }
 	

@@ -2,15 +2,15 @@ package com.example.broadcastgroupware.rest;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.SessionAttribute;
 
 import com.example.broadcastgroupware.dto.ChatMessageDto;
+import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ChatService;
 
 @RestController
@@ -27,8 +27,10 @@ public class ChatRestController {
 	public List<ChatMessageDto> getMessages(
 			@PathVariable int chatroomId,
 			@RequestParam(required = false) Integer afterId,
-			@RequestParam(defaultValue = "50") int limit) {
-		return chatService.getMessages(chatroomId, afterId, limit);
+			@RequestParam(defaultValue = "50") int limit,
+			@SessionAttribute("loginUser") UserSessionDto loginUser) {
+		int userId = loginUser.getUserId();
+		return chatService.getMessages(chatroomId, userId, afterId, limit);
 	}
 	
 	/*

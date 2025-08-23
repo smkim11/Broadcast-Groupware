@@ -14,16 +14,16 @@ import com.example.broadcastgroupware.service.UserListService;
 @RequestMapping("/api/chat")
 public class ChatListRestController {
 	
-	private final UserListService chatListService;
+	private final UserListService userListService;
 	
-	public ChatListRestController (UserListService chatListService) {
-		this.chatListService = chatListService;
+	public ChatListRestController (UserListService UserListService) {
+		this.userListService = UserListService;
 	}
 	
 	// 조직도 트리 조회
 	@GetMapping("/org-tree")
 	public List<UserTreeDto> getOrgTree() {
-		return chatListService.getUserTreeForInvite();
+		return userListService.getUserTreeForInvite();
 	}
 
 }

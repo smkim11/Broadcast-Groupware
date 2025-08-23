@@ -53,6 +53,7 @@
 	  JOIN chatroom_user cu_self
 	    ON cu_self.chatroom_id = c.chatroom_id
 	   AND cu_self.user_id     = #{userId}
+	   AND cu_self.chatroom_user_status = 'Y'		<!-- 상대방이 나가면 N이 되므로 Y만 보이게 -->
 	
 	  /* dm_key='min:max'에서 상대 user_id 계산 */
 	  JOIN (
@@ -91,6 +92,7 @@
 	    JOIN chatroom_user me
 	      ON me.chatroom_id = m.chatroom_id
 	     AND me.user_id     = #{userId}
+	     AND me.chatroom_user_status = 'Y'				<!-- 상대방이 나가면 N이 되므로 Y만 보이게 -->
 	    WHERE me.last_read_at IS NULL OR m.create_date > me.last_read_at
 	    GROUP BY m.chatroom_id
 	  ) unread ON unread.chatroom_id = c.chatroom_id

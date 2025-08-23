@@ -7,6 +7,7 @@
 		FROM chatroom_user
 		WHERE chatroom_id = #{chatroomId}
 			AND user_id = #{userId}
+		ORDER BY create_date DESC
 		LIMIT 1
 	</select>
 	
@@ -61,7 +62,18 @@
 		      ON cu.chatroom_user_id = m.chatroom_user_id
 		    INNER JOIN `user` u
 		      ON u.user_id = cu.user_id
-		    WHERE cu.chatroom_id = #{chatroomId}
+		      <!-- 현재 로그인 사용자의 이번 입장 시점(=create_date)을 가져오기 위해 조인 -->
+			 INNER JOIN (
+			      SELECT chatroom_id, user_id, MAX(create_date) AS active_from
+			      FROM chatroom_user
+			      WHERE chatroom_id = #{chatroomId}
+			        AND user_id     = #{userId}
+			        AND chatroom_user_status = 'Y'
+			      GROUP BY chatroom_id, user_id
+			    ) me
+			      ON me.chatroom_id = m.chatroom_id
+			     AND m.create_date >= me.active_from
+			    WHERE m.chatroom_id = #{chatroomId}
 		      <if test="afterId != null">
 		        AND m.chat_message_id &gt; #{afterId}
 		      </if>
@@ -82,44 +94,5 @@
 	    AND cu.user_id     = #{userId}
 	</update>
 </mapper>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

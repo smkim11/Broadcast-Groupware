@@ -2,10 +2,58 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.broadcastgroupware.mapper.ChatroomUserMapper">
 	
+	<!--  현재참여자만(Y) -->
 	<select id="selectMemberIds" parameterType="int" resultType="int">
-	  SELECT user_id 
+	  SELECT DISTINCT user_id 
 	  FROM chatroom_user 
 	  WHERE chatroom_id = #{chatroomId}
+	  	AND chatroom_user_status = 'Y' 
 	</select>
+	
+	  <!-- 전원(상태 무관) -->
+	  <select id="selectAllMemberIds" parameterType="int" resultType="int">
+	    SELECT user_id
+	    FROM chatroom_user
+	    WHERE chatroom_id = #{chatroomId}
+	  </select>
+	
+	<!-- 방 참여자 확인 -->
+	<select id="findStatus" resultType="com.example.broadcastgroupware.domain.ChatroomUser">
+		SELECT 
+			chatroom_user_id AS chatroomUserId,
+      		chatroom_id      AS chatroomId,
+      		user_id          AS userId,
+      		chatroom_user_status AS status,
+      		last_read_at     AS lastReadAt,
+      		create_date      AS createDate
+		FROM chatroom_user
+		WHERE chatroom_id = #{chatroomId}
+			AND user_id = #{userId}
+			AND chatroom_user_status = 'Y'
+		LIMIT 1
+	</select>
+	
+	<!-- 방 나가면 상태 변경 Y -> N -->
+	<update id="updateStatus">
+		UPDATE chatroom_user
+		SET chatroom_user_status = #{status}
+		WHERE chatroom_id = #{chatroomId}
+			AND user_id = #{userId}
+			AND chatroom_user_status = 'Y'
+	</update>
+	
+	<!-- 떠났던 사용자를 다시 활성화(Y)로 되돌리기 위한 upsert 
+		'이번 입장 세션의 기준 시점'을 create_date=NOW() 로 갱신
+	-->
+	<insert id="upsertActive" parameterType="map">
+	  INSERT INTO chatroom_user
+	    (chatroom_id, user_id, chatroom_user_status, create_date)
+	  VALUES
+	    (#{chatroomId}, #{userId}, 'Y', NOW())
+	  ON DUPLICATE KEY UPDATE
+	    <!-- 기존 값이 N일 때만 재입장으로 판단해 기준시각 갱신 -->
+   		 create_date = CASE WHEN chatroom_user_status = 'N' THEN NOW() ELSE create_date END,
+	    chatroom_user_status = 'Y'
+	</insert>
 
 </mapper>
