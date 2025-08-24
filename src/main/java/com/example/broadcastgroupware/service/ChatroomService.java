@@ -10,13 +10,20 @@ import com.example.broadcastgroupware.domain.Chatroom;
 import com.example.broadcastgroupware.dto.ChatroomDto;
 import com.example.broadcastgroupware.dto.ChatroomListDto;
 import com.example.broadcastgroupware.mapper.ChatroomMapper;
+import com.example.broadcastgroupware.mapper.ChatroomUserMapper;
 
 @Service
 public class ChatroomService {
 	private final ChatroomMapper chatroomMapper;
+	private final ChatroomUserMapper chatroomUserMapper;
+	private final ChatService chatService;
 	
-	public ChatroomService(ChatroomMapper chatroomMapper) {
+	public ChatroomService(ChatroomMapper chatroomMapper,
+						   ChatroomUserMapper chatroomUserMapper,
+						   ChatService chatService) {
 		this.chatroomMapper = chatroomMapper;
+		this.chatroomUserMapper = chatroomUserMapper;
+		this.chatService = chatService;
 	}
 	
 	// DM 목록
@@ -51,6 +58,16 @@ public class ChatroomService {
 	    // 조인 테이블은 중복 무시로 안전하게
 	    chatroomMapper.insertChatroomUserIgnore(room.getChatroomId(), meUserId);
 	    chatroomMapper.insertChatroomUserIgnore(room.getChatroomId(), targetUserId);
+	    
+	    // ★ 추가: 두 유저를 활성화(나갔던 사람도 Y로)
+	    chatroomUserMapper.upsertActive(room.getChatroomId(), meUserId);
+	    chatroomUserMapper.upsertActive(room.getChatroomId(), targetUserId);
+
+	    // ★ 추가: 새 방 생성 인박스 이벤트 (좌측 목록 즉시 갱신 트리거)
+	    chatService.publishRoomCreated(
+	        room.getChatroomId(),
+	        java.util.Arrays.asList(meUserId, targetUserId)
+	    );
 
 	    // 이미 있었는지 플래그 (INSERT=1, 나머지(UPDATE/변경없음)=true)
 	    ChatroomDto dto = toDto(room);

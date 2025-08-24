@@ -28,9 +28,8 @@
 	      c.room_type,
 	      c.dm_key,
 	
-	      <!-- 시간: 최신메시지/캐시/생성일 순으로 폴백 -->
-	      COALESCE(lm.created_at, c.last_message_at, c.create_date) AS last_message_at,
-	
+	 	  lm.created_at AS last_message_at,	<!-- 합류 한 뒤 메시지 내용 -->
+	 	  
 	      <!-- 마지막 메시지 내용 -->
 	      lm.content AS last_message,
 	
@@ -73,46 +72,64 @@
 	
 	  /* 각 방의 최신 메시지 1건 */
 	  LEFT JOIN (
-	    SELECT m1.chatroom_id,
-	           m1.chat_message_content AS content,
-	           m1.create_date          AS created_at
-	    FROM chat_message m1
-	    JOIN (
-	      SELECT chatroom_id, MAX(chat_message_id) AS max_id
-	      FROM chat_message
-	      GROUP BY chatroom_id
-	    ) x ON x.chatroom_id = m1.chatroom_id
-	       AND x.max_id      = m1.chat_message_id
-	  ) lm ON lm.chatroom_id = c.chatroom_id
+		  SELECT m1.chatroom_id,
+		         m1.chat_message_content AS content,
+		         m1.create_date          AS created_at
+		  FROM chat_message m1
+		  JOIN (
+		    SELECT m.chatroom_id, MAX(m.chat_message_id) AS max_id
+		    FROM chat_message m
+		    JOIN chatroom_user me
+		      ON me.chatroom_id = m.chatroom_id
+		     AND me.user_id     = #{userId}
+		     AND me.chatroom_user_status = 'Y'
+		    WHERE m.chat_message_status = 'Y'
+		      AND m.create_date >= me.create_date   <!-- 내가 합류한 이후만 -->
+		    GROUP BY m.chatroom_id
+		  ) x ON x.chatroom_id = m1.chatroom_id
+		     AND x.max_id      = m1.chat_message_id
+		) lm ON lm.chatroom_id = c.chatroom_id
 	
-	  /* 안읽음 수  */
+	  <!-- 안읽음 수 -->
 	  LEFT JOIN (
-	    SELECT m.chatroom_id, COUNT(*) AS cnt
-	    FROM chat_message m
-	    JOIN chatroom_user me
-	      ON me.chatroom_id = m.chatroom_id
-	     AND me.user_id     = #{userId}
-	     AND me.chatroom_user_status = 'Y'				<!-- 상대방이 나가면 N이 되므로 Y만 보이게 -->
-	    WHERE me.last_read_at IS NULL OR m.create_date > me.last_read_at
-	    GROUP BY m.chatroom_id
-	  ) unread ON unread.chatroom_id = c.chatroom_id
+		  SELECT me.chatroom_id, COUNT(*) AS cnt
+		  FROM chat_message m
+		  JOIN chatroom_user me
+		    ON me.chatroom_id = m.chatroom_id
+		   AND me.user_id     = #{userId}
+		   AND me.chatroom_user_status = 'Y'
+		  JOIN chatroom_user sender
+		    ON sender.chatroom_user_id = m.chatroom_user_id
+		  WHERE m.chat_message_status = 'Y'
+		    AND m.create_date >= me.create_date      <!-- 합류 이후 -->
+		    AND sender.user_id &lt;&gt; #{userId}        <!-- 남이 보낸 것만 -->
+		    AND (me.last_read_at IS NULL OR m.create_date > me.last_read_at)
+		  GROUP BY me.chatroom_id
+		) unread ON unread.chatroom_id = c.chatroom_id
 	  
 	    <!-- ‘내가 받은’ 마지막 시간 계산 서브쿼리 -->
-	  LEFT JOIN (
-	    SELECT
-	      m.chatroom_id,
-	      MAX(m.create_date) AS last_incoming_at
-	    FROM chat_message m
-	    JOIN chatroom_user cu ON cu.chatroom_user_id = m.chatroom_user_id
-	    WHERE cu.user_id &lt;&gt; #{userId}         <!-- 남이 보낸 메시지만 -->
-	    GROUP BY m.chatroom_id
-	  ) li ON li.chatroom_id = c.chatroom_id
+		LEFT JOIN (
+		  SELECT m.chatroom_id,
+		         MAX(m.create_date) AS last_incoming_at
+		  FROM chat_message m
+		  JOIN chatroom_user msg_cu
+		    ON msg_cu.chatroom_user_id = m.chatroom_user_id
+		  JOIN chatroom_user me
+		    ON me.chatroom_id = m.chatroom_id
+		   AND me.user_id     = #{userId}
+		   AND me.chatroom_user_status = 'Y'
+		  WHERE m.chat_message_status = 'Y'
+		    AND msg_cu.user_id &lt;&gt; #{userId}  <!-- 남이 보낸 것만 -->
+		    AND m.create_date >= me.create_date  <!-- 합류 이후만 -->
+		  GROUP BY m.chatroom_id
+		) li ON li.chatroom_id = c.chatroom_id
 	  
 	
 	  WHERE c.room_type = 'DM'
 	  ORDER BY
 	   CASE WHEN li.last_incoming_at IS NULL THEN 1 ELSE 0 END ASC, <!--  받은 시간 없는 방은 뒤로 -->
 	   li.last_incoming_at DESC,                          <!--  받은 메시지 최신순 -->
+	   CASE WHEN li.last_incoming_at IS NULL THEN cu_self.create_date END DESC,	<!-- 받은 메시지가 아직 없을 경우 그 방에 합류한 시각으로 최신순 -->
 	   c.chatroom_id ASC                                  <!--  안정적 보조키 (원하면 이름 ASC 등으로 교체) -->
 	</select>
 	

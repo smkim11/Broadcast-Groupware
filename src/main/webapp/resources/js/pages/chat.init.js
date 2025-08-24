@@ -209,7 +209,7 @@
     if ($item.length === 0) {
       loadDmList().then(() => {
         if (window.updateDmPreview) window.updateDmPreview(roomId, preview, createdAt, {reorder:true});
-        incrementUnread(roomId);
+       // incrementUnread(roomId);
       });
       return;
     }
@@ -241,6 +241,8 @@
 
   function markReadIfNeeded() {
     if (!stompClient || !stompClient.connected || lastMessageId === 0) return;
+	if (!chatroomId) return; 
+	if (lastMessageId === 0) return;
     stompClient.send(appRead(chatroomId),
       { 'content-type': 'application/json' },
       JSON.stringify({ chatMessageId: lastMessageId })
@@ -360,6 +362,20 @@
     .then(function(res){
       if (res.status === 204) {
         // UI 갱신: 목록에서 제거/표시 변경 + 오른쪽 패널 비우기
+		
+		// 방 토픽 구독을 반드시 끊어야 함
+		if (window.__CHAT_WS_SINGLETON__?.subs?.room) {
+		  try { window.__CHAT_WS_SINGLETON__.subs.room.unsubscribe(); } catch(e){}
+		  window.__CHAT_WS_SINGLETON__.subs.room = null;
+		}
+		if (window.__CHAT_WS_SINGLETON__?.subs?.read) {
+		  try { window.__CHAT_WS_SINGLETON__.subs.read.unsubscribe(); } catch(e){}
+		  window.__CHAT_WS_SINGLETON__.subs.read = null;
+		}
+
+		// 현재 방 상태도 해제
+		if (typeof chatroomId !== 'undefined') chatroomId = null;
+		window.CURRENT_ROOM_ID = null;
         // 항목 제거
         var $ul = getContactsListEl();
         $ul.find('.dm-item[data-room-id="'+roomId+'"]').closest('li').remove();

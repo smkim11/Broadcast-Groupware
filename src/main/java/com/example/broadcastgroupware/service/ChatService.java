@@ -1,6 +1,8 @@
 package com.example.broadcastgroupware.service;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -70,17 +72,25 @@ public class ChatService {
 		ChatMessageDto dto = chatMapper.selectMessageViewById(m.getChatMessageId());
 		  //System.out.println("[saveMessage] dto=" + dto);
 		
-		 //  기존 방 브로드캐스트 (controller에 표시)
-	   // messagingTemplate.convertAndSend("/topic/rooms/" + chatroomId, dto);
-		
-		 // 2) 알림은 현재 참여중(Y)인 사람에게만알림은 현재 참여중(Y)인 사람에게만
-	    List<Integer> memberIds = chatroomUserMapper.selectMemberIds(chatroomId);
-	    // 유저 인박스 이벤트 (보낸 사람 제외)
-		  for (Integer uid : memberIds) {
-		        if (uid == null || uid.intValue() == userId) continue;
-		        InboxEvent evt = new InboxEvent(chatroomId, dto.getChatMessageContent(), dto.getCreateDate());
-		        messagingTemplate.convertAndSend("/topic/user." + uid + "/inbox", evt);
-		    }
+		// ---- (여기만 변경) 인박스 알림: 중복 제거 + 보낸 사람 제외 ----
+		List<Integer> memberIds = chatroomUserMapper.selectMemberIds(chatroomId); // 기존 그대로 사용
+		Set<Integer> targets = new LinkedHashSet<>(); // 순서 유지하며 디듀프
+		if (memberIds != null) {
+			for (Integer uid : memberIds) {
+				if (uid == null || uid.intValue() == userId) continue; // null/보낸사람 제외
+				targets.add(uid.intValue());
+			}
+		}
+		// 이벤트는 한 번만 생성
+		InboxEvent evt = new InboxEvent(
+			chatroomId,
+			dto.getChatMessageId(),
+			dto.getChatMessageContent(),
+			dto.getCreateDate()
+		);
+		for (Integer uid : targets) {
+			messagingTemplate.convertAndSend("/topic/user." + uid + "/inbox", evt);
+		}
 		return dto;
 		
 	}
@@ -100,8 +110,21 @@ public class ChatService {
 		if (cu==null) {
 			throw new IllegalStateException("이미 나갔거나 참여중이 아닙니다.");
 		}
-		System.out.println("cu");
 		chatroomUserMapper.updateStatus(chatroomId, userId, "N");
 		
+	}
+	
+	public void publishRoomCreated(int chatroomId, List<Integer> targetUserIds) {
+	    InboxEvent evt = new InboxEvent(
+	        chatroomId,
+	        0,                             // messageId 없음 → 0 또는 null
+	        "[새 대화 시작]",               // preview (아무 문자열 OK)
+	        java.time.LocalDateTime.now()  // createdAt
+	    );
+	    for (Integer uid : targetUserIds) {
+	        if (uid != null) {
+	            messagingTemplate.convertAndSend("/topic/user." + uid + "/inbox", evt);
+	        }
+	    }
 	}
 }
