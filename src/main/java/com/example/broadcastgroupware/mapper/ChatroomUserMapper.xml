@@ -10,6 +10,34 @@
 	  	AND chatroom_user_status = 'Y' 
 	</select>
 	
+	<!-- 그룹채팅방 목록리스트 현재 참여자만(Y) -->
+	<select id="selectCurrentMembers" 
+			parameterType="int"
+        	resultType="com.example.broadcastgroupware.dto.ChatroomUserDto">
+		 SELECT
+		    u.user_id     AS userId,
+		    u.full_name   AS fullName,
+		    u.user_rank   AS userRank,
+		    /* 프로필: user_images에서 '프로필' 최신 1장 */
+		    COALESCE(img.user_images_path, NULL) AS avatarPath
+		  FROM chatroom_user cu
+		  JOIN `user` u
+		    ON u.user_id = cu.user_id
+		  /* 사용자별 최신 프로필 이미지 id */
+		  LEFT JOIN (
+		    SELECT ui.user_id, MAX(ui.user_images_id) AS max_img_id
+		    FROM user_images ui
+		    WHERE ui.user_images_type = '프로필'
+		    GROUP BY ui.user_id
+		  ) up ON up.user_id = u.user_id
+		  LEFT JOIN user_images img
+		    ON img.user_images_id = up.max_img_id
+		
+		  WHERE cu.chatroom_id = #{chatroomId}
+		    AND cu.chatroom_user_status = 'Y'
+		  ORDER BY u.full_name
+	</select>
+	
 	  <!-- 전원(상태 무관) -->
 	  <select id="selectAllMemberIds" parameterType="int" resultType="int">
 	    SELECT user_id

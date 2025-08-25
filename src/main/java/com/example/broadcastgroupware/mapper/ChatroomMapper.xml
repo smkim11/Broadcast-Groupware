@@ -22,29 +22,32 @@
 	</resultMap>
 	
 	<!-- 내가 속한 DM 목록(상대 정보 포함) -->
-	<select id="selectDmListByUser" parameterType="int" resultMap="ChatroomListMap">
+<select id="selectRoomListByUser" parameterType="map" resultMap="ChatroomListMap">
 	  SELECT
 	      c.chatroom_id,
 	      c.room_type,
 	      c.dm_key,
 	
-	 	  lm.created_at AS last_message_at,	<!-- 합류 한 뒤 메시지 내용 -->
-	 	  
-	      <!-- 마지막 메시지 내용 -->
-	      lm.content AS last_message,
+	      lm.created_at AS last_message_at,
+	      lm.content    AS last_message,
 	
-	      /* (옵션) 안읽음 수: last_read_at이 있으면 유효, 없으면 0 */
 	      COALESCE(unread.cnt, 0) AS unread_count,
 	
-	      /* 상대방 이름 */
-	      u_peer.full_name AS chatroom_name,
-	      
-	      u_peer.user_rank        AS peer_user_rank,
+	      /* 이름: DM은 상대 이름, GROUP은 방 이름 */
+	      CASE WHEN c.room_type = 'DM'
+	           THEN u_peer.full_name
+	           ELSE c.chatroom_name
+	      END AS chatroom_name,
 	
-	      <!-- 서비스용 원재료(선택): 상대 유저 ID -->
+	      /* 직급: DM만 의미 있음 */
+	      CASE WHEN c.room_type = 'DM' THEN u_peer.user_rank ELSE NULL END AS peer_user_rank,
+	
+	      /* 서비스용 원재료 */
 	      pid.peer_user_id AS peer_user_id,
-	      
-	      
+	      /* 아바타 경로: 필요 시 컬럼/로직 맞춰서 채우고, 당장은 NULL이어도 무방 */
+	      NULL AS peer_avatar_path,
+	      NULL AS group_avatar_path,
+	
 	      li.last_incoming_at AS last_incoming_at
 	  FROM chatroom c
 	
@@ -52,85 +55,95 @@
 	  JOIN chatroom_user cu_self
 	    ON cu_self.chatroom_id = c.chatroom_id
 	   AND cu_self.user_id     = #{userId}
-	   AND cu_self.chatroom_user_status = 'Y'		<!-- 상대방이 나가면 N이 되므로 Y만 보이게 -->
+	   AND cu_self.chatroom_user_status = 'Y'
 	
-	  /* dm_key='min:max'에서 상대 user_id 계산 */
-	  JOIN (
+	  /* DM일 때만 상대 user_id 계산 (GROUP에는 매칭되지 않음) */
+	  LEFT JOIN (
 	    SELECT
 	      c2.chatroom_id,
 	      CASE
 	        WHEN CAST(SUBSTRING_INDEX(c2.dm_key, ':', 1) AS UNSIGNED) = #{userId}
 	          THEN CAST(SUBSTRING_INDEX(c2.dm_key, ':', -1) AS UNSIGNED)
-	        ELSE CAST(SUBSTRING_INDEX(c2.dm_key, ':', 1)  AS UNSIGNED)
+	        ELSE CAST(SUBSTRING_INDEX(c2.dm_key, ':', 1) AS UNSIGNED)
 	      END AS peer_user_id
 	    FROM chatroom c2
+	    WHERE c2.room_type = 'DM'
 	  ) pid ON pid.chatroom_id = c.chatroom_id
 	
-	  /* 상대 유저 프로필 */
+	  /* DM일 때만 상대 프로필이 매칭됨 (GROUP이면 전부 NULL) */
 	  LEFT JOIN `user` u_peer
 	    ON u_peer.user_id = pid.peer_user_id
 	
 	  /* 각 방의 최신 메시지 1건 */
 	  LEFT JOIN (
-		  SELECT m1.chatroom_id,
-		         m1.chat_message_content AS content,
-		         m1.create_date          AS created_at
-		  FROM chat_message m1
-		  JOIN (
-		    SELECT m.chatroom_id, MAX(m.chat_message_id) AS max_id
-		    FROM chat_message m
-		    JOIN chatroom_user me
-		      ON me.chatroom_id = m.chatroom_id
-		     AND me.user_id     = #{userId}
-		     AND me.chatroom_user_status = 'Y'
-		    WHERE m.chat_message_status = 'Y'
-		      AND m.create_date >= me.create_date   <!-- 내가 합류한 이후만 -->
-		    GROUP BY m.chatroom_id
-		  ) x ON x.chatroom_id = m1.chatroom_id
-		     AND x.max_id      = m1.chat_message_id
-		) lm ON lm.chatroom_id = c.chatroom_id
+	    SELECT m1.chatroom_id,
+	           m1.chat_message_content AS content,
+	           m1.create_date          AS created_at
+	    FROM chat_message m1
+	    JOIN (
+	      SELECT m.chatroom_id, MAX(m.chat_message_id) AS max_id
+	      FROM chat_message m
+	      JOIN chatroom_user me
+	        ON me.chatroom_id = m.chatroom_id
+	       AND me.user_id     = #{userId}
+	       AND me.chatroom_user_status = 'Y'
+	      WHERE m.chat_message_status = 'Y'
+	        AND m.create_date >= me.create_date   <!-- 내가 합류한 이후만 -->
+	      GROUP BY m.chatroom_id
+	    ) x ON x.chatroom_id = m1.chatroom_id
+	       AND x.max_id      = m1.chat_message_id
+	  ) lm ON lm.chatroom_id = c.chatroom_id
 	
-	  <!-- 안읽음 수 -->
+	  /* 안읽음 수 */
 	  LEFT JOIN (
-		  SELECT me.chatroom_id, COUNT(*) AS cnt
-		  FROM chat_message m
-		  JOIN chatroom_user me
-		    ON me.chatroom_id = m.chatroom_id
-		   AND me.user_id     = #{userId}
-		   AND me.chatroom_user_status = 'Y'
-		  JOIN chatroom_user sender
-		    ON sender.chatroom_user_id = m.chatroom_user_id
-		  WHERE m.chat_message_status = 'Y'
-		    AND m.create_date >= me.create_date      <!-- 합류 이후 -->
-		    AND sender.user_id &lt;&gt; #{userId}        <!-- 남이 보낸 것만 -->
-		    AND (me.last_read_at IS NULL OR m.create_date > me.last_read_at)
-		  GROUP BY me.chatroom_id
-		) unread ON unread.chatroom_id = c.chatroom_id
-	  
-	    <!-- ‘내가 받은’ 마지막 시간 계산 서브쿼리 -->
-		LEFT JOIN (
-		  SELECT m.chatroom_id,
-		         MAX(m.create_date) AS last_incoming_at
-		  FROM chat_message m
-		  JOIN chatroom_user msg_cu
-		    ON msg_cu.chatroom_user_id = m.chatroom_user_id
-		  JOIN chatroom_user me
-		    ON me.chatroom_id = m.chatroom_id
-		   AND me.user_id     = #{userId}
-		   AND me.chatroom_user_status = 'Y'
-		  WHERE m.chat_message_status = 'Y'
-		    AND msg_cu.user_id &lt;&gt; #{userId}  <!-- 남이 보낸 것만 -->
-		    AND m.create_date >= me.create_date  <!-- 합류 이후만 -->
-		  GROUP BY m.chatroom_id
-		) li ON li.chatroom_id = c.chatroom_id
-	  
+	    SELECT me.chatroom_id, COUNT(*) AS cnt
+	    FROM chat_message m
+	    JOIN chatroom_user me
+	      ON me.chatroom_id = m.chatroom_id
+	     AND me.user_id     = #{userId}
+	     AND me.chatroom_user_status = 'Y'
+	    JOIN chatroom_user sender
+	      ON sender.chatroom_user_id = m.chatroom_user_id
+	    WHERE m.chat_message_status = 'Y'
+	      AND m.create_date >= me.create_date
+	      AND sender.user_id &lt;&gt; #{userId}
+	      AND (me.last_read_at IS NULL OR m.create_date > me.last_read_at)
+	    GROUP BY me.chatroom_id
+	  ) unread ON unread.chatroom_id = c.chatroom_id
 	
-	  WHERE c.room_type = 'DM'
+	  /* ‘내가 받은’ 마지막 시간 */
+	  LEFT JOIN (
+	    SELECT m.chatroom_id,
+	           MAX(m.create_date) AS last_incoming_at
+	    FROM chat_message m
+	    JOIN chatroom_user msg_cu
+	      ON msg_cu.chatroom_user_id = m.chatroom_user_id
+	    JOIN chatroom_user me
+	      ON me.chatroom_id = m.chatroom_id
+	     AND me.user_id     = #{userId}
+	     AND me.chatroom_user_status = 'Y'
+	    WHERE m.chat_message_status = 'Y'
+	      AND msg_cu.user_id &lt;&gt; #{userId}
+	      AND m.create_date >= me.create_date
+	    GROUP BY m.chatroom_id
+	  ) li ON li.chatroom_id = c.chatroom_id
+	
+	  WHERE
+	    <!-- roomType이 오면 해당 타입만, 없으면 DM/GROUP 모두 -->
+	    <choose>
+	      <when test="roomType != null and roomType != ''">
+	        c.room_type = #{roomType}
+	      </when>
+	      <otherwise>
+	        c.room_type IN ('DM','GROUP')
+	      </otherwise>
+	    </choose>
+	
 	  ORDER BY
-	   CASE WHEN li.last_incoming_at IS NULL THEN 1 ELSE 0 END ASC, <!--  받은 시간 없는 방은 뒤로 -->
-	   li.last_incoming_at DESC,                          <!--  받은 메시지 최신순 -->
-	   CASE WHEN li.last_incoming_at IS NULL THEN cu_self.create_date END DESC,	<!-- 받은 메시지가 아직 없을 경우 그 방에 합류한 시각으로 최신순 -->
-	   c.chatroom_id ASC                                  <!--  안정적 보조키 (원하면 이름 ASC 등으로 교체) -->
+	    CASE WHEN li.last_incoming_at IS NULL THEN 1 ELSE 0 END ASC,
+	    li.last_incoming_at DESC,
+	    CASE WHEN li.last_incoming_at IS NULL THEN cu_self.create_date END DESC,
+	    c.chatroom_id ASC
 	</select>
 	
 	  <!-- dm_key로 방 1개 조회 -->
@@ -150,8 +163,8 @@
 	
 	<!-- DM 방 생성 -->
 	<insert id="upsertDmChatroom"
-        parameterType="com.example.broadcastgroupware.domain.Chatroom"
-        useGeneratedKeys="true" keyProperty="chatroomId">
+        	parameterType="com.example.broadcastgroupware.domain.Chatroom"
+        	useGeneratedKeys="true" keyProperty="chatroomId">
 	  INSERT INTO chatroom
 	    (room_type, dm_key, chatroom_name, chatroom_status, last_message_at, create_date)
 	  VALUES
@@ -161,6 +174,17 @@
 	    chatroom_status = VALUES(chatroom_status)   <!-- 옵션: 상태 갱신 -->
 	</insert>
 	
+	<!-- GROUP방 생성(dmkey 없이 항상 새로) -->
+	<!-- 같은 사람이라도 그룹은 중복될 수 있으므로 upsert 말고 insert로 해도 된다. -->
+	<insert id="insertGroupChatroom"
+			parameterType="com.example.broadcastgroupware.domain.Chatroom"
+			useGeneratedKeys="true" keyProperty="chatroomId">
+		INSERT INTO chatroom
+		 (room_type, chatroom_name, chatroom_status, last_message_at, create_date)
+		VALUES
+		 ('GROUP', #{chatroomName}, #{chatroomStatus}, #{lastMessageAt}, NOW())
+	</insert>	
+		
 	<!-- (옵션) 드라이버/환경에 따라 필요할 수 있음 -->
 	<select id="selectLastInsertId" resultType="int">
 	  SELECT LAST_INSERT_ID()

@@ -17,7 +17,7 @@ public class ChatroomDto {
 	private String chatroomName;			// 방 이름(DM이면 상대 이름 등)
 	private String chatroomStatus;			// 방 나가기 상태
 	private String lastMessage;				// 마지막 메시지
-	private String lastMessageAt;			// 마지막 메시지 시각(캐시)
+	private LocalDateTime lastMessageAt;			// 마지막 메시지 시각(캐시)
 	private boolean alreadyExists;
 	private String createDate;				// 생성 시각
 

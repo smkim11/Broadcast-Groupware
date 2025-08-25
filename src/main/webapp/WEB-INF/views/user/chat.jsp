@@ -84,20 +84,7 @@
               <div class="p-4 border-top">
                 <h5 class="font-size-16 mb-3"><i class="uil uil-users-alt me-1"></i> 그룹채팅</h5>
                 <ul class="list-unstyled chat-list group-list">
-                  <li class="active">
-                    <a href="#">
-                      <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                          <div class="avatar-xs">
-                            <span class="avatar-title rounded-circle bg-primary-subtle text-primary">G</span>
-                          </div>
-                        </div>
-                        <div class="flex-grow-1">
-                          <h5 class="font-size-14 mb-0">General</h5>
-                        </div>
-                      </div>
-                    </a>
-                  </li>
+                 <!-- 추후 동적 렌더링 -->
                 </ul>
               </div>
 
@@ -139,7 +126,12 @@
 			
 			      <div class="ms-2 min-w-0">
 			        <h5 id="room-title" class="font-size-16 mb-0 text-truncate"></h5>
-			        <small id="ws-status" class="text-muted">연결됨</small>
+			          <!-- 항상 보이게. DM이면 2 Member, 그룹이면 n Members -->
+						  <a href="#" id="room-members-link" class="small text-muted">
+						    <i class="uil uil-users-alt me-1"></i>
+						    <span id="room-members-count">0</span>
+						    <span id="room-members-word">Members</span>
+						  </a>
 			      </div>
 			    </div>
 			
@@ -150,7 +142,7 @@
                        </button>
                        <div class="dropdown-menu dropdown-menu-end">
                            <a class="dropdown-item" href="#" id="btn-pin=room">상단고정</a>
-                           <a class="dropdown-item" href="#" id="btn-rename=room">채팅방 이름 변경</a>
+                           <a class="dropdown-item" href="#" id="action-rename-room">채팅방 이름 변경</a>
                            <a class="dropdown-item text-danger" href="#" id="action-leave-room">대화방 나가기</a>
                        </div>
                    </div>
@@ -217,6 +209,26 @@
   </div>
 </div>
 
+<!-- 멤버 목록 모달 -->
+<div class="modal fade" id="membersModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title mb-0">멤버</h5>
+        <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <ul id="membersList" class="list-group list-group-flush"></ul>
+      </div>
+       <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">닫기</button>
+        <button class="btn btn-primary" id="members-invite-btn">
+          <i class="mdi mdi-plus me-1"></i> 초대하기
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <div><jsp:include page ="../nav/footer.jsp"></jsp:include></div>

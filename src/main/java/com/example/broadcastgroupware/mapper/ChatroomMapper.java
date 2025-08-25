@@ -12,7 +12,11 @@ import com.example.broadcastgroupware.dto.ChatroomListDto;
 public interface ChatroomMapper {
 	
 	// DM 목록 (1:1대화 용)
-	List<ChatroomListDto> selectDmListByUser(@Param("userId") int userId);
+	// List<ChatroomListDto> selectDmListByUser(@Param("userId") int userId);
+	
+	// DM & GROUP 목록
+	List<ChatroomListDto> selectRoomListByUser(@Param("userId") int userId,
+											   @Param("roomType") String roomType); // null이면 DM+GROUP 모두
 	
 	// dm_key로 방 존재 여부 확인
 	Chatroom selectByDmKey(@Param("dmKey") String dmKey);
@@ -20,8 +24,11 @@ public interface ChatroomMapper {
 	// (옵션) LAST_INSERT_ID() 보정용
     Integer selectLastInsertId();
 	
-	// 채팅방 생성
+	// 1:1채팅방 생성
 	int upsertDmChatroom(Chatroom room);
+	
+	// GROUP채팅방 생성
+	int insertGroupChatroom(Chatroom groupRoom);
 	
 	// 채팅방 - 사용자 추가
 	int insertChatroomUserIgnore(@Param("chatroomId") int chatroomId,
@@ -31,4 +38,5 @@ public interface ChatroomMapper {
 	
 	int updateChatroomLastMessage(@Param("chatroomId") int chatroomId,
 								  @Param("lastMessage") String lastMessage);
+
 }
