@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.example.broadcastgroupware.domain.Room;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
+import com.example.broadcastgroupware.dto.AddIssueToRoom;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.MyReservationDto;
@@ -52,8 +54,12 @@ public interface ReservationMapper {
 	// 관리자용 회의실 리스트
 	List<Room> meetingroomAdminList();
 
-	// 관리자-회의실 정보 수정
-	String meetingroomAdminModify(Room room);
+
+	// 관리자-회의실 이슈등록
+	int modifyRoomStatus(AddIssueToRoom addIssueToRoom);
+	int adminMeetingroomReservation(@Param("addIssueToRoom") AddIssueToRoom addIssueToRoom,
+            @Param("userId") int userId);
+	int meetingroomIssue(@Param("addIssueToRoom") AddIssueToRoom addIssueToRoom);
 
 
 }

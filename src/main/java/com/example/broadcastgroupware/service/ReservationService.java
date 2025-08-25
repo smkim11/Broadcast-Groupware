@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.broadcastgroupware.domain.Room;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
+import com.example.broadcastgroupware.dto.AddIssueToRoom;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.MyReservationDto;
@@ -116,9 +117,23 @@ public class ReservationService {
 		return reservationMapper.meetingroomAdminList();
 	}
 
-	// 관리자-회의실 정보 수정
-	public String meetingroomAdminModify(Room room) {
-		return reservationMapper.meetingroomAdminModify(room);
+	// 관리자-회의실 이슈등록
+	@Transactional
+	public boolean meetingroomAdminModify(AddIssueToRoom addIssueToRoom, int userId) {
+		try {
+		
+		// 상태값 변경
+		reservationMapper.modifyRoomStatus(addIssueToRoom);
+		// 회의실 예약
+		reservationMapper.adminMeetingroomReservation(addIssueToRoom, userId);
+		// 이슈등록
+		reservationMapper.meetingroomIssue(addIssueToRoom);
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
+	        return false;
+		}
+		
 	}
 
 	

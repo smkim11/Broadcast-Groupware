@@ -130,9 +130,18 @@
 		WHERE room_type = '회의실'
 	</select>
 	
-	<!-- 관리자-회의실 정보 수정 -->
-	<update id="meetingroomAdminModify" parameterType="com.example.broadcastgroupware.domain.Room">
-		
+	<!-- 관리자-회의실 이슈등록 -->
+	<update id="modifyRoomStatus">
+		UPDATE room set room_status = #{roomStatus}
+		WHERE room_id = #{roomId}
 	</update>
+	<insert id="adminMeetingroomReservation">
+		INSERT INTO room_reservation(user_id, room_id, room_reservation_start_time, room_reservation_end_time)
+		VALUES(#{userId}, #{addIssueToRoom.roomId}, #{addIssueToRoom.roomUseReasonStartDate}, #{addIssueToRoom.roomUseReasonEndDate})
+	</insert>
+	<insert id="meetingroomIssue">
+		INSERT INTO room_use_reason(room_id, room_use_reason_content, room_use_reason_start_date, room_use_reason_end_date)
+		VALUES(#{addIssueToRoom.roomId}, #{addIssueToRoom.roomUseReasonContent}, #{addIssueToRoom.roomUseReasonStartDate}, #{addIssueToRoom.roomUseReasonEndDate})
+	</insert>
 
 </mapper>

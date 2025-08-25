@@ -261,7 +261,7 @@ public class ReservationRestController {
 		return reservationService.meetingroomAdminList();
 	}
 	
-	// 관리자- 회의실 정보 수정
+	// 관리자- 회의실 이슈등록
 	@PostMapping("/meetingroom/adminIssue")
 	public String meetingroomAdminModify(AddIssueToRoom addIssueToRoom, HttpSession session) {
 		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
@@ -273,7 +273,12 @@ public class ReservationRestController {
 		log.info("roomUseReasonEndDate: {}", addIssueToRoom.getRoomUseReasonEndDate());
 		log.info("roomUseReasonContent: {}", addIssueToRoom.getRoomUseReasonContent());
 		
-		return "";
+		boolean success = reservationService.meetingroomAdminModify(addIssueToRoom, userId);
+		
+		if(!success) {
+			return "등록에 실패했습니다";
+		}
+		return "success";
 	}
 	
 }
