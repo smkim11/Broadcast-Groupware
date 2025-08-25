@@ -66,20 +66,6 @@ document.addEventListener("DOMContentLoaded", function(){
 		*/
     ];
 
-    // 외부 이벤트 드래그 가능하게 설정
-    new r(c, {
-        itemSelector: ".external-event",
-        eventData: function(e){
-            return {
-                id: Math.floor(11e3 * Math.random()), // 랜덤 ID
-                title: e.innerText, // 이벤트 제목
-                allDay: !0,
-                start: new Date,
-                className: e.getAttribute("data-class") // 색상 클래스
-            }
-        }
-    });
-
     var m = document.getElementById("calendar");
 
     // 새 이벤트 생성 모달 열기
@@ -111,12 +97,13 @@ document.addEventListener("DOMContentLoaded", function(){
         selectable: true,
         navLinks: true,
         initialView: u(),
+		displayEventTime: false,
 		aspectRatio: 1.6, // 캘린더 세로길이 조절 높아질수록 줄어듬
         themeSystem: "bootstrap",
         headerToolbar: {
             left: "prev,next today",
             center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth"
+            right: "dayGridMonth,dayGridWeek,timeGridDay,listMonth"
         },
 		locale: "ko",
 		buttonText: {
@@ -135,6 +122,10 @@ document.addEventListener("DOMContentLoaded", function(){
 				s[e].end=t.event.end, s[e].type = t.event.type, s[e].memo=t.event.memo);
         },
         eventClick: function(e){
+			// 캘린더에서 공휴일은 클릭해도 모달창이 나오지 않는다
+			if(e.event.extendedProps.type === '공휴일'){
+				return;
+			}
             document.getElementById("edit-event-btn").removeAttribute("hidden"),
             document.getElementById("btn-save-event").setAttribute("hidden", true),
             document.getElementById("edit-event-btn").setAttribute("data-id", "edit-event"),
