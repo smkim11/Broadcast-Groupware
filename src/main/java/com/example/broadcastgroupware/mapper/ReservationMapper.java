@@ -47,5 +47,13 @@ public interface ReservationMapper {
 
 	int addMeetingRoom(Room room);
 
+	
+	// === 회의실 ===
+	// 관리자용 회의실 리스트
+	List<Room> meetingroomAdminList();
+
+	// 관리자-회의실 정보 수정
+	String meetingroomAdminModify(Room room);
+
 
 }

@@ -99,13 +99,26 @@ public class ReservationService {
 		
 		return cancel > 0;
 	}
-
+	
+	// === 회의실 ===
+	// 관리자-회의실 등록
 	public boolean addMeetingRoom(Room room) {
 		
 		int count = reservationMapper.addMeetingRoom(room);
 		
 		return count > 0;
 		
+	}
+
+	// 관리자용 회의실 리스트
+	public List<Room> meetingroomAdminList() {
+		
+		return reservationMapper.meetingroomAdminList();
+	}
+
+	// 관리자-회의실 정보 수정
+	public String meetingroomAdminModify(Room room) {
+		return reservationMapper.meetingroomAdminModify(room);
 	}
 
 	

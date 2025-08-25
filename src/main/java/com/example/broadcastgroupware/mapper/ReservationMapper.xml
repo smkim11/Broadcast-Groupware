@@ -108,14 +108,31 @@
 		ORDER BY v.vehicle_id, r.vehicle_reservation_start_time
 	</select>
 	
+	<!-- 차량 예약 취소 -->
 	<delete id="cancelReservation" parameterType="int">
 		DELETE FROM vehicle_reservation 
 		WHERE vehicle_reservation_id = #{vehicleReservationId}
 	</delete>
 	
+	
+	
+	<!-- === 회의실 === -->
+	<!-- 관리자-회의실등록 -->
 	<insert id="addMeetingRoom" parameterType="com.example.broadcastgroupware.domain.Room">
 		INSERT INTO room(room_type, room_name, room_location, room_capacity, room_status)
 		VALUES('회의실',#{roomName}, #{roomLocation}, #{roomCapacity}, 'Y')
 	</insert>
+	
+	<!-- 관리자용 회의실 리스트 -->
+	<select id="meetingroomAdminList">
+		SELECT room_id AS roomId, room_name AS roomName, room_location AS roomLocation, room_capacity AS roomCapacity, room_status AS roomStatus
+		FROM room
+		WHERE room_type = '회의실'
+	</select>
+	
+	<!-- 관리자-회의실 정보 수정 -->
+	<update id="meetingroomAdminModify" parameterType="com.example.broadcastgroupware.domain.Room">
+		
+	</update>
 
 </mapper>

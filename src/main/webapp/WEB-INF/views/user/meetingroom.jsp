@@ -7,6 +7,16 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <meta charset="UTF-8">
+
+<!-- flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- 한글 로케일 -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+
 <style>
 /* 템플릿에서 제공하는 에러메세지만 사용  */
 .was-validated .form-control:valid,
@@ -285,7 +295,6 @@ input:checked + .slider:before {
 		<!-- 모드 선택 -->
 		<select name="adminType" id="adminType">
 			<option value="등록">등록</option>
-			<option value="수정">수정</option>
 			<option value="이슈관리">이슈관리</option>
 		</select>
 
@@ -302,36 +311,24 @@ input:checked + .slider:before {
 			</div>
 		</form>
 
-		<form id="modifyForm" class="form-section" style="display:none;">
-			<select id="modifyRoomSelect">
-				<option value="">-- 회의실 선택 --</option>
-			</select>
-			<label>위치</label>
-			<input type="text" name="roomLocation" placeholder="변경사항을 입력하세요">
-			<label>수용 인원</label>
-			<input type="number" name="roomCapacity" placeholder="변경사항을 입력하세요">
-			<div class="btn-group">
-				<button class="close" type="button">닫기</button>
-				<button type="submit">등록</button>
-			</div>
-		</form>
-
 		<!-- 이슈등록 폼 -->
 		<form id="issueForm" class="form-section" style="display:none;">
-			<select id="modifyRoomSelect">
+			<input type="hidden" name="roomStatus" value="">
+		
+			<select id="modifyIssueSelect">
 				<option value="">-- 회의실 선택 --</option>
 			</select>
 			<input type="hidden" name="roomId" value="">
 			<label>기간</label>
-			<input type="text" id="issueDate" placeholder="날짜 선택">
-			<!-- ajax 전송용 -->
-			<input type="hidden" name="roomUseReasonStartDate" id="startDate">
-			<input type="hidden" name="roomUseReasonEndDate" id="endDate">
+			<input type="text" id="rentalPeriod" placeholder="시작일 ~ 정료일" readonly>
+		
+		    <select id="startTime"></select>
+		    <select id="endTime"></select>
 
 			<div class="toggle-container">
 				<span>비활성화</span>
 				<label class="switch">
-					<input type="checkbox" id="toggleSwitch" name="toggle">
+					<input type="checkbox" id="toggleSwitch" name="roomStatus">
 					<span class="slider round"></span>
 				</label>
 				<span>활성화</span>
@@ -339,6 +336,9 @@ input:checked + .slider:before {
 
 			<div class="roomReason">사유</div>
 			<input type="text" id="toggleReason" name="roomUseReasonContent" placeholder="ex: 공사, 수리(완료),">
+			
+			<input type="hidden" name="roomUseReasonStartDate" value="">
+			<input type="hidden" name="roomUseReasonEndDate" value="">
 			<div class="btn-group">
 				<button class="close" type="button">닫기</button>
 				<button type="submit">변경</button>

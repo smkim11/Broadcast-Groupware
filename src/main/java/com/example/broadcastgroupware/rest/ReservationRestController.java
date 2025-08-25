@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.broadcastgroupware.domain.Room;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
+import com.example.broadcastgroupware.dto.AddIssueToRoom;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.MyReservationDto;
@@ -24,6 +25,7 @@ import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.dto.ReservationPeriod;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ReservationService;
+import com.sun.net.httpserver.HttpsServer;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -257,6 +259,21 @@ public class ReservationRestController {
 	public List<Room> meetingroomAdminList() {
 		
 		return reservationService.meetingroomAdminList();
+	}
+	
+	// 관리자- 회의실 정보 수정
+	@PostMapping("/meetingroom/adminIssue")
+	public String meetingroomAdminModify(AddIssueToRoom addIssueToRoom, HttpSession session) {
+		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+		int userId = loginUser.getUserId();
+		
+		log.info("roomId: {}", addIssueToRoom.getRoomId());
+		log.info("roomStatus: {}", addIssueToRoom.getRoomStatus());
+		log.info("roomUseReasonStartDate: {}", addIssueToRoom.getRoomUseReasonStartDate());
+		log.info("roomUseReasonEndDate: {}", addIssueToRoom.getRoomUseReasonEndDate());
+		log.info("roomUseReasonContent: {}", addIssueToRoom.getRoomUseReasonContent());
+		
+		return "";
 	}
 	
 }
