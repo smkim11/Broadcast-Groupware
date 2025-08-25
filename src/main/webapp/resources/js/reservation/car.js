@@ -157,144 +157,145 @@
 
 	// 차트 그리기 함수
 	function drawCharts() {
-		const charts = document.querySelectorAll(".chart-container");
+			const charts = document.querySelectorAll(".chart-container");
 
-		charts.forEach(chart => {
+			charts.forEach(chart => {
 
-			chart.innerHTML = "";
+				chart.innerHTML = "";
 
-			const localDrawnTimes = new Set();
+				const localDrawnTimes = new Set();
 
-			let periods = JSON.parse(decodeURIComponent(chart.dataset.reservations || "[]"));
+				let periods = JSON.parse(decodeURIComponent(chart.dataset.reservations || "[]"));
 
-			let canvasStart = new Date(selectedStartDate);
-			let canvasEnd = new Date(selectedEndDate);
+				let canvasStart = new Date(selectedStartDate);
+				let canvasEnd = new Date(selectedEndDate);
 
-			const canvas = document.createElement("canvas");
-			chart.appendChild(canvas);
+				const canvas = document.createElement("canvas");
+				chart.appendChild(canvas);
 
-			canvas.width = chart.clientWidth;
-			canvas.height = chart.clientHeight;
+				canvas.width = chart.clientWidth;
+				canvas.height = chart.clientHeight;
 
-			const ctx = canvas.getContext("2d");
+				const ctx = canvas.getContext("2d");
 
-			const totalHours = (canvasEnd - canvasStart) / (1000 * 60 * 60);
-			const unitWidth = canvas.width / totalHours;
+				const totalHours = (canvasEnd - canvasStart) / (1000 * 60 * 60);
+				const unitWidth = canvas.width / totalHours;
 
-			const drawTimeLabelLocal = (x, date) => {
-				const hourStr = date.getHours().toString().padStart(2, '0') + ":00";
-				if (hourStr === "00:00") return;
-				const key = x + "-" + hourStr;
-				if (localDrawnTimes.has(key)) return;
-				ctx.fillStyle = "black";
-				ctx.font = "10px Arial";
-				ctx.fillText(hourStr, x, 45);
-				localDrawnTimes.add(key);
-			};
+				const drawTimeLabelLocal = (x, date) => {
+					const hourStr = date.getHours().toString().padStart(2, '0') + ":00";
+					if (hourStr === "00:00") return;
+					const key = x + "-" + hourStr;
+					if (localDrawnTimes.has(key)) return;
+					ctx.fillStyle = "black";
+					ctx.font = "10px Arial";
+					ctx.fillText(hourStr, x, 45);
+					localDrawnTimes.add(key);
+				};
 
-			// 1) 전체 바
-			ctx.fillStyle = "#e8e6e6";
-			ctx.fillRect(0, 15, canvas.width, 20);
-			drawTimeLabelLocal(0, canvasStart);
+				// 1) 전체 바
+				ctx.fillStyle = "#e8e6e6";
+				ctx.fillRect(0, 15, canvas.width, 20);
+				drawTimeLabelLocal(0, canvasStart);
 
-			// 2) 예약 구간
-			periods.forEach((p, index) => {
+				// 2) 선택 구간   ← ★ 위치를 예약보다 앞으로 이동
+				const startTimeValue = document.getElementById("startTime").value;
+				const endTimeValue = document.getElementById("endTime").value;
 
-				const startStr = p.reservationStart || p.start;
-				const endStr = p.reservationEnd || p.end;
+				if (startTimeValue && endTimeValue) {
 
-				if (!startStr || !endStr) return;
+					const [sh, sm] = startTimeValue.split(":").map(Number);
+					const [eh, em] = endTimeValue.split(":").map(Number);
 
-				const resStart = new Date(startStr.replace(" ", "T"));
-				const resEnd = new Date(endStr.replace(" ", "T"));
+					const selStart = new Date(selectedStartDate); selStart.setHours(sh, sm, 0);
+					const selEnd = new Date(selectedEndDate); selEnd.setHours(eh, em, 0);
 
-				if (isNaN(resStart.getTime()) || isNaN(resEnd.getTime())) {
-					console.log("예약 데이터 변환 실패:", p);
-					return;
-				}
+					const cs = new Date(Math.max(selStart, canvasStart));
+					const ce = new Date(Math.min(selEnd, canvasEnd));
 
-				const displayStart = resStart < canvasStart ? canvasStart : resStart;
-				const displayEnd = resEnd > canvasEnd ? canvasEnd : resEnd;
+					if (ce > cs) {
 
-				if (displayEnd <= displayStart) return;
+						const x1 = ((cs - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+						const x2 = ((ce - canvasStart) / (1000 * 60 * 60)) * unitWidth;
 
-				const xStart = ((displayStart - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-				const xEnd = ((displayEnd - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+						ctx.fillStyle = "blue";
+						ctx.fillRect(x1, 15, x2 - x1, 20);
 
-
-				// console.log("예약", index + 1, "=> xStart:", xStart, "xEnd:", xEnd, "width:", xEnd - xStart);
-
-				ctx.fillStyle = "red";
-				ctx.fillRect(xStart, 15, xEnd - xStart, 20);
-
-				drawTimeLabelLocal(xStart, displayStart);
-				drawTimeLabelLocal(xEnd, displayEnd);
-			});
-
-			// 3) 선택 구간
-			const startTimeValue = document.getElementById("startTime").value;
-			const endTimeValue = document.getElementById("endTime").value;
-
-			if (startTimeValue && endTimeValue) {
-
-				const [sh, sm] = startTimeValue.split(":").map(Number);
-				const [eh, em] = endTimeValue.split(":").map(Number);
-
-				const selStart = new Date(selectedStartDate); selStart.setHours(sh, sm, 0);
-				const selEnd = new Date(selectedEndDate); selEnd.setHours(eh, em, 0);
-
-				const cs = new Date(Math.max(selStart, canvasStart));
-				const ce = new Date(Math.min(selEnd, canvasEnd));
-
-				if (ce > cs) {
-
-					const x1 = ((cs - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-					const x2 = ((ce - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-
-					ctx.fillStyle = "blue";
-					ctx.fillRect(x1, 15, x2 - x1, 20);
-
-					drawTimeLabelLocal(x1, cs);
-					drawTimeLabelLocal(x2, ce);
-				}
-			}
-
-			// 4) 날짜 표시 (MM-DD)
-			const oneDay = 1000 * 60 * 60 * 24;
-			ctx.fillStyle = "black";
-			ctx.font = "bold 10px Arial";
-
-			for (let d = new Date(canvasStart); d <= canvasEnd; d = new Date(d.getTime() + oneDay)) {
-				const offsetX = ((d - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-				const month = (d.getMonth() + 1).toString().padStart(2, '0');
-				const day = d.getDate().toString().padStart(2, '0');
-				ctx.fillText(month + "-" + day, offsetX, 10);
-			}
-
-			// 5) 오늘 이전 회색 처리
-			const now = new Date();
-			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-			if (now > canvasStart) {
-				const pastHours = Math.min((today - canvasStart) / (1000 * 60 * 60), totalHours);
-				const pastX = pastHours * unitWidth;
-				let grayStartX = 0;
-				let grayEndX = pastX;
-
-				periods.forEach(p => {
-					const reservationStart = new Date(p.reservationStart);
-					if (reservationStart < today) {
-						const reservedStartX = ((reservationStart - canvasStart) / (1000 * 60 * 60)) * unitWidth;
-						grayEndX = Math.max(0, reservedStartX);
+						drawTimeLabelLocal(x1, cs);
+						drawTimeLabelLocal(x2, ce);
 					}
+				}
+
+				// 3) 예약 구간   ← ★ 선택 구간 뒤로 이동해서 빨강이 파랑을 덮음
+				periods.forEach((p, index) => {
+
+					const startStr = p.reservationStart || p.start;
+					const endStr = p.reservationEnd || p.end;
+
+					if (!startStr || !endStr) return;
+
+					const resStart = new Date(startStr.replace(" ", "T"));
+					const resEnd = new Date(endStr.replace(" ", "T"));
+
+					if (isNaN(resStart.getTime()) || isNaN(resEnd.getTime())) {
+						console.log("예약 데이터 변환 실패:", p);
+						return;
+					}
+
+					const displayStart = resStart < canvasStart ? canvasStart : resStart;
+					const displayEnd = resEnd > canvasEnd ? canvasEnd : resEnd;
+
+					if (displayEnd <= displayStart) return;
+
+					const xStart = ((displayStart - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+					const xEnd = ((displayEnd - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+
+
+					// console.log("예약", index + 1, "=> xStart:", xStart, "xEnd:", xEnd, "width:", xEnd - xStart);
+
+					ctx.fillStyle = "red";
+					ctx.fillRect(xStart, 15, xEnd - xStart, 20);
+
+					drawTimeLabelLocal(xStart, displayStart);
+					drawTimeLabelLocal(xEnd, displayEnd);
 				});
 
-				if (grayEndX > grayStartX) {
-					ctx.fillStyle = "#e8e6e6";
-					ctx.fillRect(grayStartX, 15, grayEndX - grayStartX, 20);
+				// 4) 날짜 표시 (MM-DD)
+				const oneDay = 1000 * 60 * 60 * 24;
+				ctx.fillStyle = "black";
+				ctx.font = "bold 10px Arial";
+
+				for (let d = new Date(canvasStart); d <= canvasEnd; d = new Date(d.getTime() + oneDay)) {
+					const offsetX = ((d - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+					const month = (d.getMonth() + 1).toString().padStart(2, '0');
+					const day = d.getDate().toString().padStart(2, '0');
+					ctx.fillText(month + "-" + day, offsetX, 10);
 				}
-			}
-		});
-	}
+
+				// 5) 오늘 이전 회색 처리
+				const now = new Date();
+				const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+				if (now > canvasStart) {
+					const pastHours = Math.min((today - canvasStart) / (1000 * 60 * 60), totalHours);
+					const pastX = pastHours * unitWidth;
+					let grayStartX = 0;
+					let grayEndX = pastX;
+
+					periods.forEach(p => {
+						const reservationStart = new Date(p.reservationStart);
+						if (reservationStart < today) {
+							const reservedStartX = ((reservationStart - canvasStart) / (1000 * 60 * 60)) * unitWidth;
+							grayEndX = Math.max(0, reservedStartX);
+						}
+					});
+
+					if (grayEndX > grayStartX) {
+						ctx.fillStyle = "#e8e6e6";
+						ctx.fillRect(grayStartX, 15, grayEndX - grayStartX, 20);
+					}
+				}
+			});
+		}
+
 
 	// 시간 드롭다운
 	function populateTimeOptions(selectId, firstOptionLabel){

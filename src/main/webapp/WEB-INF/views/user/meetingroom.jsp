@@ -243,12 +243,9 @@ input:checked + .slider:before {
                                             <div class="card-body">
                                             	<div class="d-flex justify-content-between align-items-start mb-2">
 												    
-												    
-												    
-												    
 												    <div class="d-flex gap-3">
 												        <!-- 회의실 리스트 출력 -->
-												       	<select>
+												       	<select id="roomList">
 												       		<option>-- 회의실 선택 --</option>
 												       	</select>
 												    </div>											
@@ -256,9 +253,12 @@ input:checked + .slider:before {
 												    <button class="btn btn-outline-primary" id="">
 												         예약내역
 												    </button>
-												    <button class="btn btn-outline-primary" id="management">
-												         회의실 관리
-												    </button>
+												    <c:if test="${loginUser.role eq 'admin'}">
+														<button class="btn btn-outline-primary" id="management">
+															회의실 관리
+														</button>
+													</c:if>
+
 												</div>
 
                                                 <div id="calendar"></div>
@@ -286,66 +286,66 @@ input:checked + .slider:before {
                         </div>
                         
                         
-        <!-- 임시 위치 모달 -->
-<div id="management-modal" class="modal">
-	<div class="modal-content">
-		<span class="close">&times;</span>
-		<h3>회의실 관리</h3>
-
-		<!-- 모드 선택 -->
-		<select name="adminType" id="adminType">
-			<option value="등록">등록</option>
-			<option value="이슈관리">이슈관리</option>
-		</select>
-
-		<form id="addForm" class="form-section">
-			<label>회의실명</label>
-			<input type="text" name="roomName" placeholder="회의실명을 입력해주세요">
-			<label>위치</label>
-			<input type="text" name="roomLocation" placeholder="ex) 본관2층">
-			<label>수용 인원</label>
-			<input type="number" name="roomCapacity" placeholder="수용가능한 인원 수">
-			<div class="btn-group">
-				<button class="close" type="button">닫기</button>
-				<button type="submit">등록</button>
-			</div>
-		</form>
-
-		<!-- 이슈등록 폼 -->
-		<form id="issueForm" class="form-section" style="display:none;">
-			<input type="hidden" name="roomStatus" value="">
-		
-			<select id="modifyIssueSelect">
-				<option value="">-- 회의실 선택 --</option>
+    <!-- 관리자 모달 -->
+	<div id="management-modal" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<h3>회의실 관리</h3>
+	
+			<!-- 모드 선택 -->
+			<select name="adminType" id="adminType">
+				<option value="등록">등록</option>
+				<option value="이슈관리">이슈관리</option>
 			</select>
-			<input type="hidden" name="roomId" value="">
-			<label>기간</label>
-			<input type="text" id="rentalPeriod" placeholder="시작일 ~ 정료일" readonly>
-		
-		    <select id="startTime"></select>
-		    <select id="endTime"></select>
-
-			<div class="toggle-container">
-				<span>비활성화</span>
-				<label class="switch">
-					<input type="checkbox" id="toggleSwitch" name="roomStatus">
-					<span class="slider round"></span>
-				</label>
-				<span>활성화</span>
-			</div>
-
-			<div class="roomReason">사유</div>
-			<input type="text" id="toggleReason" name="roomUseReasonContent" placeholder="ex: 공사, 수리(완료),">
+	
+			<form id="addForm" class="form-section">
+				<label>회의실명</label>
+				<input type="text" name="roomName" placeholder="회의실명을 입력해주세요">
+				<label>위치</label>
+				<input type="text" name="roomLocation" placeholder="ex) 본관2층">
+				<label>수용 인원</label>
+				<input type="number" name="roomCapacity" placeholder="수용가능한 인원 수">
+				<div class="btn-group">
+					<button class="close" type="button">닫기</button>
+					<button type="submit">등록</button>
+				</div>
+			</form>
+	
+			<!-- 이슈등록 폼 -->
+			<form id="issueForm" class="form-section" style="display:none;">
+				<input type="hidden" name="roomStatus" value="">
 			
-			<input type="hidden" name="roomUseReasonStartDate" value="">
-			<input type="hidden" name="roomUseReasonEndDate" value="">
-			<div class="btn-group">
-				<button class="close" type="button">닫기</button>
-				<button type="submit">변경</button>
-			</div>
-		</form>
+				<select id="modifyIssueSelect">
+					<option value="">-- 회의실 선택 --</option>
+				</select>
+				<input type="hidden" name="roomId" value="">
+				<label>기간</label>
+				<input type="text" id="rentalPeriod" placeholder="시작일 ~ 정료일" readonly>
+			
+			    <select id="startTime"></select>
+			    <select id="endTime"></select>
+	
+				<div class="toggle-container">
+					<span>비활성화</span>
+					<label class="switch">
+						<input type="checkbox" id="toggleSwitch" name="roomStatus">
+						<span class="slider round"></span>
+					</label>
+					<span>활성화</span>
+				</div>
+	
+				<div class="roomReason">사유</div>
+				<input type="text" id="toggleReason" name="roomUseReasonContent" placeholder="ex: 공사, 수리(완료),">
+				
+				<input type="hidden" name="roomUseReasonStartDate" value="">
+				<input type="hidden" name="roomUseReasonEndDate" value="">
+				<div class="btn-group">
+					<button class="close" type="button">닫기</button>
+					<button type="submit">변경</button>
+				</div>
+			</form>
+		</div>
 	</div>
-</div>
 
                         
                     </div> <!-- container-fluid -->

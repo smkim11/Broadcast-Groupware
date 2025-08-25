@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.example.broadcastgroupware.domain.Room;
+import com.example.broadcastgroupware.domain.RoomReservation;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.AddIssueToRoom;
@@ -60,6 +61,12 @@ public interface ReservationMapper {
 	int adminMeetingroomReservation(@Param("addIssueToRoom") AddIssueToRoom addIssueToRoom,
             @Param("userId") int userId);
 	int meetingroomIssue(@Param("addIssueToRoom") AddIssueToRoom addIssueToRoom);
+
+	// 회의실 리스트
+	List<Room> meetingroomList();
+
+	// 회의실 예약 리스트
+	List<RoomReservation> meetingroomReservations(int roomId);
 
 
 }

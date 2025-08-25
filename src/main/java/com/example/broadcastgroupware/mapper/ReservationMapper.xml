@@ -136,12 +136,27 @@
 		WHERE room_id = #{roomId}
 	</update>
 	<insert id="adminMeetingroomReservation">
-		INSERT INTO room_reservation(user_id, room_id, room_reservation_start_time, room_reservation_end_time)
-		VALUES(#{userId}, #{addIssueToRoom.roomId}, #{addIssueToRoom.roomUseReasonStartDate}, #{addIssueToRoom.roomUseReasonEndDate})
+		INSERT INTO room_reservation(user_id, room_id, room_resevation_reason, room_reservation_start_time, room_reservation_end_time)
+		VALUES(#{userId}, #{addIssueToRoom.roomId}, #{addIssueToRoom.roomUseReasonEndDate} #{addIssueToRoom.roomUseReasonStartDate}, #{addIssueToRoom.roomUseReasonEndDate})
 	</insert>
 	<insert id="meetingroomIssue">
 		INSERT INTO room_use_reason(room_id, room_use_reason_content, room_use_reason_start_date, room_use_reason_end_date)
 		VALUES(#{addIssueToRoom.roomId}, #{addIssueToRoom.roomUseReasonContent}, #{addIssueToRoom.roomUseReasonStartDate}, #{addIssueToRoom.roomUseReasonEndDate})
 	</insert>
 
+	<select id="meetingroomList" parameterType="com.example.broadcastgroupware.domain.Room">
+		SELECT room_id AS roomId, room_name AS roomName, room_location AS roomLocation 
+		FROM room
+		ORDER BY room_id
+	</select>
+	
+	<select id="meetingroomReservations">
+		SELECT rr.room_id AS roomId, rr.room_reservation_reason AS roomReservationReason,
+				rr.room_reservation_start_time AS roomReservationStartTime, rr.room_reservation_end_time AS roomReservationEndTime,
+				r.room_name AS roomName, r.room_location AS roomLocation, rr.room_reservation_id AS roomServationId
+		FROM room r
+		INNER JOIN room_reservation rr
+		ON r.room_id = rr.room_id
+		WHERE r.room_id = #{roomId}
+	</select>
 </mapper>

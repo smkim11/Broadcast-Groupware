@@ -6,6 +6,7 @@ import lombok.Data;
 public class AddIssueToRoom {
 	private int roomId;
 	private String roomStatus;
+	private String roomResevationReason;
 	private String roomReservationStartTime;
 	private String roomReservationEndTime;
 	private String roomUseReasonContent;

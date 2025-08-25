@@ -7,6 +7,7 @@ public class RoomReservation {
 	private int roomReservationId;
 	private int userId;
 	private int roomId;
+	private String roomReservationReason;
 	private String roomReservationStartTime;
 	private String roomReservationEndTime;
 	private String createDate;

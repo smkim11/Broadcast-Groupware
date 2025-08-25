@@ -198,38 +198,94 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         });
     }
+	
+	
+	let calendar; // 전역 변수
 
-    // 캘린더
-    const calendarEl = document.getElementById("calendar");
-    if(calendarEl){
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            locale: "ko",
-            themeSystem: "bootstrap",
-            headerToolbar: {
-                left: "prev,next today",
-                center: "title",
-                right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth"
-            },
-            initialView: "dayGridMonth",
-            editable: true,
-            selectable: true,
-            droppable: true,
-            events: window.calendarEvents || [],
-            buttonText: {
-                today: "오늘",
-                month: "월",
-                week: "주",
-                day: "일",
-                list: "목록"
-            },
-            eventClick: function(info){
-                console.log("선택된 이벤트:", info.event);
-            },
-            dateClick: function(info){
-                console.log("선택된 날짜:", info.dateStr);
-            }
-        });
-        calendar.render();
-    }
+	// 1) 캘린더 초기화
+	const calendarEl = document.getElementById("calendar");
+	if(calendarEl){
+		calendar = new FullCalendar.Calendar(calendarEl, {
+			locale: "ko",
+			themeSystem: "bootstrap",
+			headerToolbar: {
+				left: "prev,next today",
+				center: "title",
+				right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth"
+			},
+			initialView: "dayGridMonth",
+			editable: false,
+			selectable: true,
+			droppable: false,
+			events: [] // 초기 이벤트 없음
+		});
+		calendar.render();
+	}
+
+	// 2) 회의실 리스트 불러오기
+	$.ajax({
+		url: '/api/meetingroom/roomlist',
+		type: 'GET',
+		success: function(meetingroomList) {
+			const select = $('#roomList');
+			select.empty();
+			select.append('<option value="">-- 회의실 선택 --</option>');
+
+			meetingroomList.forEach(function(room, index) {
+				select.append('<option value="' + room.roomId + '">' + room.roomName + ' (' + room.roomLocation + ')</option>');
+			});
+
+			// 첫 번째 회의실 자동 선택 및 예약내역 출력
+			if(meetingroomList.length > 0){
+				const firstRoomId = meetingroomList[0].roomId;
+				select.val(firstRoomId).trigger("change");
+			}
+		},
+		error: function(err) {
+			console.error('회의실 목록 불러오기 실패:', err);
+		}	
+		
+	});
+	
+	// 선택한 회의실 예약 목록
+	$("#roomList").on("change", function() {
+		const roomId = $(this).val();
+		
+		// console.log("예약리스트 roomId: ", roomId);
+
+		if(!roomId) {
+			// 선택 안했을 때 → 캘린더 비움
+			calendar.removeAllEvents();
+			return;
+		}
+
+		$.ajax({
+			url: '/api/meetingroom/reservations', // 해당 회의실 예약목록
+			type: 'GET',
+			data: { roomId: roomId },
+			success: function(reservations) {
+				console.log("서버에서 받은 예약 데이터:", reservations);
+				// 기존 이벤트 모두 제거
+				calendar.removeAllEvents();
+
+				// 새로운 이벤트 추가
+				reservations.forEach(r => {
+					calendar.addEvent({
+						id: r.roomReservationId,
+						title: r.roomReservationReason,
+						start: r.roomReservationStartTime,
+						end: r.roomReservationEndTime,
+						color: r.color || "#007bff"
+					});
+				});
+			},
+			error: function(err) {
+				console.error("예약내역 불러오기 실패:", err);
+			}
+		});
+	});
+
+
+
 
 });

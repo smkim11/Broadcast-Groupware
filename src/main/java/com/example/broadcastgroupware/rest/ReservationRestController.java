@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.Room;
+import com.example.broadcastgroupware.domain.RoomReservation;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.AddIssueToRoom;
@@ -25,7 +26,6 @@ import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.dto.ReservationPeriod;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ReservationService;
-import com.sun.net.httpserver.HttpsServer;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -279,6 +279,19 @@ public class ReservationRestController {
 			return "등록에 실패했습니다";
 		}
 		return "success";
+	}
+	
+	// 회의실 리스트
+	@GetMapping("/meetingroom/roomlist")
+	public List<Room> meetingroomList() {
+		return reservationService.meetingroomList();
+	}
+	
+	// 회의실 예약 내역
+	@GetMapping("/meetingroom/reservations")
+	public List<RoomReservation> meetingroomReservations(@RequestParam int roomId) {
+		log.info("roomId: {}", roomId);
+		return reservationService.meetingroomReservations(roomId);
 	}
 	
 }

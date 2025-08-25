@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.broadcastgroupware.domain.Room;
+import com.example.broadcastgroupware.domain.RoomReservation;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.AddIssueToRoom;
@@ -134,6 +135,16 @@ public class ReservationService {
 	        return false;
 		}
 		
+	}
+
+	// 회의실 리스트
+	public List<Room> meetingroomList() {
+		return reservationMapper.meetingroomList();
+	}
+
+	// 회의실 예약 리스트
+	public List<RoomReservation> meetingroomReservations(int roomId) {
+		return reservationMapper.meetingroomReservations(roomId);
 	}
 
 	
