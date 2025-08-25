@@ -1,9 +1,12 @@
 package com.example.broadcastgroupware;
 
 import org.springframework.boot.SpringApplication;
+
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
+@EnableScheduling
 @SpringBootApplication
 public class BroadcastGroupwareApplication {
 
