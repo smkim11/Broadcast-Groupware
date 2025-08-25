@@ -75,6 +75,8 @@ public class ChatController {
     			);
     	
     	
+    	
+    	
         // 구독 채널로 전송 (프런트는 /topic/rooms/{roomId} 구독)
         messagingTemplate.convertAndSend("/topic/rooms/" + chatroomId, saved);
     }

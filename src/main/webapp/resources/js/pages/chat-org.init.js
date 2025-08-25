@@ -40,6 +40,7 @@
   $(document).on('click','#invite-selected .chip-remove',function(){
     const id = Number($(this).closest('[data-id]').data('id'));
     STATE.selectedUsers.delete(id);
+	if (window.selectedUsers) window.selectedUsers.delete(id);
     $('#invite-modal-body .invite-user[data-id="'+id+'"]').prop('checked', false);
     renderSelectedChips();
   });
@@ -48,6 +49,10 @@
     const u = { id:Number($c.data('id')), name:String($c.data('name')||''), rank:String($c.data('rank')||''), deptPath:String($c.data('dept')||'') };
     if ($c.is(':checked')) STATE.selectedUsers.set(u.id, u);
     else STATE.selectedUsers.delete(u.id);
+	// 전역 Map도 동일하게 유지
+	   window.selectedUsers = window.selectedUsers || new Map();
+	   if ($c.is(':checked')) window.selectedUsers.set(u.id, u);
+	   else window.selectedUsers.delete(u.id);
     renderSelectedChips();
   });
 
@@ -119,6 +124,7 @@
   // ---- 모달 열기/닫기 ----
   $(document).on('click','#open-invite', async function(e){
     e.preventDefault();
+	e.stopImmediatePropagation(); // 다른 핸들러 차단
     try{
       const res = await fetch('/api/chat/org-tree', { credentials:'same-origin' });
       if(!res.ok) throw new Error('HTTP '+res.status);
@@ -126,6 +132,7 @@
 
       // 초기화
       STATE.selectedUsers.clear();
+	  window.selectedUsers = new Map();
       renderSelectedChips();
       $('#inviteSearch').val('');
       const $root = $('#invite-modal-body').empty();
@@ -144,26 +151,10 @@
     $('#inviteSearch').val('');
     $('#invite-modal-body').empty();
     STATE.selectedUsers.clear();
+	window.selectedUsers = new Map();
     $('#invite-selected').empty().append('<small class="text-muted">선택한 사용자가 여기에 표시됩니다.</small>');
   });
 
-  /*
-  // ---- 초대 ----
-  $('#invite-submit-btn').on('click', async function(){
-    let ids = $('#invite-modal-body .invite-user:checked').map(function(){ return Number($(this).data('id')); }).get();
-    if (ids.length === 0 && STATE.selectedUsers.size > 0) ids = Array.from(STATE.selectedUsers.keys());
-    if (ids.length === 0) { alert('선택된 사용자가 없습니다.'); return; }
-
-    const roomId = Number(document.getElementById('chat-meta')?.dataset.roomId || 1);
-    const headers = { 'Content-Type': 'application/json' };
-    const res = await fetch(`/api/rooms/${roomId}/invites`, { method:'POST', headers, body: JSON.stringify({ userIds: ids }) });
-    if (!res.ok) { alert('초대에 실패했습니다.'); return; }
-
-    const el = document.getElementById('inviteModal');
-    const inst = window.bootstrap?.Modal.getInstance(el);
-    if (inst) inst.hide();
-  });
-*/
 })(window, jQuery);
 
 // ======================= 조직도(DM 생성) =======================
@@ -188,11 +179,14 @@ function getCsrfHeaders() {
 $(document).on('click', '#invite-submit-btn', async function () {
   // 1) 선택된 사용자 ID 수집 (체크박스 우선, 없으면 전역 Map 보조)
   let ids = $('#invite-modal-body .invite-user:checked')
-    .map(function(){ return Number($(this).data('id')); })
-    .get();
-  if (ids.length === 0 && window.selectedUsers && window.selectedUsers.size > 0) {
-    ids = Array.from(window.selectedUsers.keys());
-  }
+      .map(function(){ return Number($(this).data('id')); })
+      .get();
+    // DOM에서 사라진(필터로 숨겨진) 선택들도 반영
+    if (window.selectedUsers && window.selectedUsers.size > 0) {
+      ids = ids.concat(Array.from(window.selectedUsers.keys()));
+    }
+    // 중복 제거
+    ids = Array.from(new Set(ids));
   if (ids.length === 0) { alert('선택된 사용자가 없습니다.'); return; }
 
   const headers = Object.assign({ 'Content-Type': 'application/json' }, getCsrfHeaders());
@@ -226,8 +220,13 @@ $(document).on('click', '#invite-submit-btn', async function () {
       if (room && room.chatroomId && typeof window.openChatRoom === 'function') {
         window.openChatRoom(room.chatroomId);
       }
+      return; // DM 분기 종료 (그룹 로직 타지 않도록)
     } else {
-      // 2명 이상 → 그룹방: 이름 입력(취소하면 중단)
+      // 여기서부터는 2명 이상(그룹) 분기
+      const me = Number(document.getElementById('chat-meta')?.dataset.userId || 0);
+      const memberIds = Array.from(new Set([me, ...ids]));
+
+      // 2) 없으면 새 그룹 생성
       const roomName = prompt('그룹방 이름(선택):', '');
       if (roomName === null) return;
 
@@ -235,58 +234,39 @@ $(document).on('click', '#invite-submit-btn', async function () {
         method: 'POST',
         headers,
         credentials: 'same-origin',
-        body: JSON.stringify({ roomName, memberIds: ids })
+        body: JSON.stringify({ roomName, memberIds })
       });
+
+      // 3) (폴백) 서버가 중복 금지라 409를 주면 본문에서 existingRoomId 파싱해 이동 처리
+	  if (res.status === 409) {
+	    let msg = ''; try { msg = await res.text(); } catch {}
+	    let rid = null; try { const j = JSON.parse(msg); rid = j.existingRoomId; } catch {}
+	    if (rid) {
+	      if (confirm('같은 멤버의 그룹채팅이 이미 있습니다. 해당 방으로 이동할까요?')) {
+	        if (typeof window.openChatRoom === 'function') window.openChatRoom(rid);
+	      }
+	      return;
+	    }
+	    alert('같은 멤버의 그룹채팅이 이미 있습니다.');
+	    return;
+	  }
+
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json(); // { roomId, roomName }
-	  
-	       try {
-	         const $ul   = (typeof getContactsListEl === 'function')
-	                         ? getContactsListEl()
-	                         : $('.chat-leftsidebar .chat-list').last();
-	         const name   = (data.roomName && data.roomName.trim()) || '그룹채팅';
-	         const avatar = window.DEFAULT_AVATAR
-	                      || '/resources/images/users/avatar-default.png';
-	  
-	         const html =
-	           '<li>' +
-	             '<a href="#" class="d-flex align-items-center dm-item" ' +
-	                'data-room-id="'+ data.roomId +'" ' +
-	                'data-peer-name="'+ escapeHtml(name) +'" ' +
-	                'data-peer-rank="" ' +
-	                'data-peer-avatar="'+ escapeHtml(avatar) +'">' +
-	               '<div class="flex-shrink-0 me-3">' +
-	                 '<div class="avatar-xs">' +
-	                   '<img src="'+ escapeHtml(avatar) +'" class="rounded-circle avatar-img-fix" alt="avatar">' +
-	                 '</div>' +
-	               '</div>' +
-	               '<div class="flex-grow-1 w-100">' +
-	                 '<div class="d-flex align-items-center">' +
-	                   '<h5 class="font-size-14 mb-0 flex-grow-1 text-truncate">'+ escapeHtml(name) +'</h5>' +
-	                   '<span class="badge rounded-pill dm-badge-unread ms-2" style="display:none"></span>' +
-	                 '</div>' +
-	                 '<div class="d-flex align-items-center mt-1">' +
-	                   '<small class="text-muted dm-last text-truncate flex-grow-1"></small>' +
-	                   '<small class="text-muted dm-when ms-2"></small>' +
-	                 '</div>' +
-	               '</div>' +
-	             '</a>' +
-	           '</li>';
-	         $ul.prepend(html);
-	       } catch(e){ console.warn('group item prepend skipped', e); }
 
       // 모달 닫기
       const modalEl = document.getElementById('inviteModal');
       const inst = (window.bootstrap && bootstrap.Modal) ? bootstrap.Modal.getInstance(modalEl) : null;
       if (inst) inst.hide();
 
-      // 바로 새 방으로 전환 (목록은 인박스 이벤트 or 이후 갱신 로직으로 반영)
+      // 목록 갱신 후 새 방으로 이동
+      if (typeof window.loadDmList === 'function') await window.loadDmList();
       if (data && data.roomId && typeof window.openChatRoom === 'function') {
         window.openChatRoom(data.roomId);
       }
     }
   } catch (err) {
     console.error('초대 처리 실패:', err);
-    alert('초대 처리에 실패했습니다.\n' + (err.message || err));
+    alert('초대 처리 중 오류가 발생했습니다.');
   }
 });

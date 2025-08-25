@@ -33,22 +33,6 @@ public class ChatRestController {
 		return chatService.getMessages(chatroomId, userId, afterId, limit);
 	}
 	
-	/*
-	// 채팅방 사용자 초대
-	@PostMapping("/{chatroomId}/invites")
-	public ResponseEntity<Void> inviteUsers(
-			@PathVariable int chatroomId,
-			@RequestBody ChatInviteRequest request
-			@AuthenticationPrincipal LoginUser me
-	) {
-		if(request == null || request.getUserIds() == null || request.getUserIds().isEmpty()) {
-			return ResponseEntity.badRequest().build();
-		}
-		// invierId가 필요하면 me.getUserId() 전달
-		chatService.inviteUsers(chatroomId, request.getUserIds());
-		return ResponseEntity.noContent().build();	// 204		
-	}
-	*/
 }
 
 

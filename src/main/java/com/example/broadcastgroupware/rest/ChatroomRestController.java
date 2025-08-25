@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,13 +30,16 @@ public class ChatroomRestController {
 	private final ChatService chatService;
 	private final ChatroomService chatroomService;
 	private final ChatroomUserMapper chatroomUserMapper;
+	private final SimpMessagingTemplate messagingTemplate;
 	
 	public ChatroomRestController( ChatService chatService,
 								  ChatroomService chatroomService,
-								  ChatroomUserMapper chatroomUserMapper) {
+								  ChatroomUserMapper chatroomUserMapper,
+								  SimpMessagingTemplate messagingTemplate) {
 		this.chatService = chatService;
 		this.chatroomService = chatroomService;
 		this.chatroomUserMapper = chatroomUserMapper;
+		this.messagingTemplate = messagingTemplate;
 	}
 	
 	// DM 목록(1:1대화)
@@ -99,6 +103,14 @@ public class ChatroomRestController {
     		@SessionAttribute("loginUser") UserSessionDto loginUser) {
     	
 		chatService.leaveRoom(chatroomId, loginUser.getUserId());
+		
+
+		    // 방 토픽으로 멤버수 갱신 이벤트
+		    messagingTemplate.convertAndSend("/topic/rooms/" + chatroomId, Map.of(
+		        "type",        "GROUP_MEMBER_LEFT",
+		        "roomId",      chatroomId,
+		        "userId",      loginUser.getUserId()
+		    ));
 		return ResponseEntity.noContent().build();	// 204
     }
 }
