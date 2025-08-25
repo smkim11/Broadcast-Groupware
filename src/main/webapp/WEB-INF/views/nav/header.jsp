@@ -355,7 +355,7 @@
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
 								    <li>
-								        <a href="#">문서작성</a>
+								        <a href="/approval/document/main">문서작성</a>
 								    </li>
 								    <li>
 								        <a href="#">받은 문서함</a>
