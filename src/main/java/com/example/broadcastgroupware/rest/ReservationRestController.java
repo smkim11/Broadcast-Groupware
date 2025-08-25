@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.broadcastgroupware.domain.Room;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarReservationDto;
@@ -213,11 +214,13 @@ public class ReservationRestController {
 	@ResponseBody
 	public String CarReservation(@RequestBody VehicleReservation vehicleReservation) {
 
+		/*
 	    log.info("=== Ajax로 전달된 차량 정보(차량예약) ===");
 	    log.info("userId: {}", vehicleReservation.getUserId());
 	    log.info("vehicleId: {}", vehicleReservation.getVehicleId());
 	    log.info("vehicleReservationStartTime: {}", vehicleReservation.getVehicleReservationStartTime());
 	    log.info("vehicleReservationEndTime: {}", vehicleReservation.getVehicleReservationEndTime());
+	    */
 
 	    boolean success = reservationService.carReservation(vehicleReservation);
 
@@ -227,6 +230,33 @@ public class ReservationRestController {
 
 	    return "예약 성공";
 	}
+	
+	
+	// ====== 회의실 ========
+	
+	// 회의실 등록
+	@PostMapping("meetingroom/addRoom")
+	public String addMeetingRoom(Room room) {
+		
+		log.info("=== Ajax로 전달된 회의실등록 ===");
+		log.info("roomName: {}", room.getRoomName());
+		log.info("roomLocation: {}", room.getRoomLocation());
+		log.info("roomCapaticy: {}", room.getRoomCapacity());
 
+		boolean success = reservationService.addMeetingRoom(room);
+		
+		if(!success) {
+			return "등록에 실패했습니다";
+		}
+		
+		return "success";
+	}
+
+	// 관리자용 회의실 리스트
+	@GetMapping("meetingroom/adminList")
+	public List<Room> meetingroomAdminList() {
+		
+		return reservationService.meetingroomAdminList();
+	}
 	
 }

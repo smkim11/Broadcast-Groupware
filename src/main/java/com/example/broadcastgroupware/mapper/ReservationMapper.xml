@@ -112,5 +112,10 @@
 		DELETE FROM vehicle_reservation 
 		WHERE vehicle_reservation_id = #{vehicleReservationId}
 	</delete>
+	
+	<insert id="addMeetingRoom" parameterType="com.example.broadcastgroupware.domain.Room">
+		INSERT INTO room(room_type, room_name, room_location, room_capacity, room_status)
+		VALUES('회의실',#{roomName}, #{roomLocation}, #{roomCapacity}, 'Y')
+	</insert>
 
 </mapper>

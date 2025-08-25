@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.broadcastgroupware.domain.Room;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarReservationDto;
@@ -97,6 +98,14 @@ public class ReservationService {
 		int cancel = reservationMapper.cancelReservation(vehicleReservationId);
 		
 		return cancel > 0;
+	}
+
+	public boolean addMeetingRoom(Room room) {
+		
+		int count = reservationMapper.addMeetingRoom(room);
+		
+		return count > 0;
+		
 	}
 
 	

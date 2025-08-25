@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 
+import com.example.broadcastgroupware.domain.Room;
 import com.example.broadcastgroupware.domain.Vehicle;
 import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.CarReservationDto;
@@ -43,6 +44,8 @@ public interface ReservationMapper {
 
 	// 차량 예약 취소
 	int cancelReservation(int vehicleReservationId);
+
+	int addMeetingRoom(Room room);
 
 
 }

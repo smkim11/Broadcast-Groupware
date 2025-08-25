@@ -16,9 +16,185 @@
   box-shadow: none !important;
 }
 
+/* 모달 배경 */
+.modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	display: none; /* JS에서 열고 닫기 */
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+
+/* 모달 박스 */
+.modal-content {
+	background: #fff;
+	width: 200px;
+	max-width: 90%;
+	padding: 30px 25px;
+	border-radius: 12px;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+	position: relative;
+	box-sizing: border-box;
+	animation: fadeIn 0.3s ease;
+}
+
+/* 닫기(X) 버튼 */
+.modal-content .close {
+	position: absolute;
+	top: 12px;
+	right: 15px;
+	font-size: 22px;
+	font-weight: bold;
+	color: #777;
+	cursor: pointer;
+	background: none;
+	border: none;
+}
+
+/* 제목 */
+.modal-content h3 {
+	margin: 0 0 20px;
+	font-size: 20px;
+	font-weight: 600;
+	text-align: center;
+	color: #333;
+}
+
+/* 폼 영역 */
+.form-section {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-top: 15px;
+}
+
+/* label */
+.form-section label {
+	font-size: 14px;
+	font-weight: 500;
+	color: #444;
+}
+
+/* input, select */
+.form-section input,
+.form-section select {
+	padding: 10px;
+	font-size: 14px;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	width: 100%;
+	box-sizing: border-box;
+	transition: border-color 0.2s;
+}
+
+.form-section input:focus,
+.form-section select:focus {
+	border-color: #007bff;
+	outline: none;
+}
+
+/.btn-group {
+	display: flex;
+	justify-content: flex-end; /* 오른쪽 정렬 */
+	gap: 10px;                 /* 버튼 간격 */
+	margin-top: 15px;
+}
+
+.btn-group button {
+	min-width: 80px;
+	padding: 8px 14px;
+	border-radius: 6px;
+	cursor: pointer;
+	border: none;
+	font-size: 14px;
+}
+
+.btn-group button.close {
+	background: #f1f1f1;
+	color: #333;
+}
+
+.btn-group button[type="submit"] {
+	background: #007bff;
+	color: #fff;
+}
+
+
+.btn-group button.close:hover {
+	background: #999;
+}
+
+.btn-group button[type="submit"] {
+	background: #007bff;
+	color: #fff;
+}
+
+.btn-group button[type="submit"]:hover {
+	background: #0056b3;
+}
+
+/* 토글 스위치 */
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 50px;
+	height: 24px;
+	margin: 0 8px;
+}
+
+.switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	transition: 0.3s;
+	border-radius: 24px;
+}
+
+.slider:before {
+	content: "";
+	position: absolute;
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	bottom: 3px;
+	background: #fff;
+	border-radius: 50%;
+	transition: 0.3s;
+}
+
+input:checked + .slider {
+	background-color: #007bff;
+}
+
+input:checked + .slider:before {
+	transform: translateX(26px);
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+	from { opacity: 0; transform: scale(0.9); }
+	to   { opacity: 1; transform: scale(1); }
+}
+
+
 
 </style>
-<title>방송국</title>
+<title>회의실</title>
 </head>
 <body>
 
@@ -43,6 +219,7 @@
                 </div>
             </div>
             
+            <div id="loginUser" data-user-id="${loginUser.userId}"></div>
             
                         <div class="row">
                             <div class="col-12">
@@ -98,76 +275,85 @@
                             </div>
                         </div>
                         
+                        
+        <!-- 임시 위치 모달 -->
+<div id="management-modal" class="modal">
+	<div class="modal-content">
+		<span class="close">&times;</span>
+		<h3>회의실 관리</h3>
+
+		<!-- 모드 선택 -->
+		<select name="adminType" id="adminType">
+			<option value="등록">등록</option>
+			<option value="수정">수정</option>
+			<option value="이슈관리">이슈관리</option>
+		</select>
+
+		<form id="addForm" class="form-section">
+			<label>회의실명</label>
+			<input type="text" name="roomName" placeholder="회의실명을 입력해주세요">
+			<label>위치</label>
+			<input type="text" name="roomLocation" placeholder="ex) 본관2층">
+			<label>수용 인원</label>
+			<input type="number" name="roomCapacity" placeholder="수용가능한 인원 수">
+			<div class="btn-group">
+				<button class="close" type="button">닫기</button>
+				<button type="submit">등록</button>
+			</div>
+		</form>
+
+		<form id="modifyForm" class="form-section" style="display:none;">
+			<select id="modifyRoomSelect">
+				<option value="">-- 회의실 선택 --</option>
+			</select>
+			<label>위치</label>
+			<input type="text" name="roomLocation" placeholder="변경사항을 입력하세요">
+			<label>수용 인원</label>
+			<input type="number" name="roomCapacity" placeholder="변경사항을 입력하세요">
+			<div class="btn-group">
+				<button class="close" type="button">닫기</button>
+				<button type="submit">등록</button>
+			</div>
+		</form>
+
+		<!-- 이슈등록 폼 -->
+		<form id="issueForm" class="form-section" style="display:none;">
+			<select id="modifyRoomSelect">
+				<option value="">-- 회의실 선택 --</option>
+			</select>
+			<input type="hidden" name="roomId" value="">
+			<label>기간</label>
+			<input type="text" id="issueDate" placeholder="날짜 선택">
+			<!-- ajax 전송용 -->
+			<input type="hidden" name="roomUseReasonStartDate" id="startDate">
+			<input type="hidden" name="roomUseReasonEndDate" id="endDate">
+
+			<div class="toggle-container">
+				<span>비활성화</span>
+				<label class="switch">
+					<input type="checkbox" id="toggleSwitch" name="toggle">
+					<span class="slider round"></span>
+				</label>
+				<span>활성화</span>
+			</div>
+
+			<div class="roomReason">사유</div>
+			<input type="text" id="toggleReason" name="roomUseReasonContent" placeholder="ex: 공사, 수리(완료),">
+			<div class="btn-group">
+				<button class="close" type="button">닫기</button>
+				<button type="submit">변경</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+                        
                     </div> <!-- container-fluid -->
                 </div>
                </div>
                
                
-               <!-- 임시 위치 모달 -->
-               
-		<div id="management-modal" class="modal">
-			<div class="modal-content"></div>
-			<span class="close">&times;</span>
-			<h3>회의실 관리</h3>
-			
-			<!-- 모드 선택 -->
-			<select name="adminType" id="adminType">
-				<option value="등록">등록</option>
-				<option value="수정">수정</option>
-				<option value="이슈관리">이슈관리</option>
-			</select>
-			
-			<form id="addForm" class="form-section">
-				<label>회의실명</label>
-				<input type="text" name="roomName" placeholder="회의실명을 입력해주세요">
-				<label>위치</label>
-				<input type="text" name="roomLocation" placeholder="ex) 본관2층">
-				<label>수용 인원</label>
-				<input type="number" name="roomCapacity" placeholder="수용가능한 인원 수">
-				<button class="close" type="button">닫기</button>
-				<button type="submit">등록</button>
-			</form>
-			
-			<form id="modifyForm" class="form-section" style="display:none;">
-				<select id="modifyRoomSelect">
-				    <option value="">-- 회의실 선택 --</option>
-				</select>
-				<label>위치</label>
-				<input type="text" name="roomLocation" placeholder="변경사항을 입력하세요">
-				<label>수용 인원</label>
-				<input type="number" name="roomCapacity" placeholder="변경사항을 입력하세요">
-				<button class="close" type="button">닫기</button>
-				<button type="submit">등록</button>
-			</form>
-			
-			<!-- 이슈등록 폼 -->
-			<form id="issueForm" class="form-section" style="display:none;">
-				<select id="modifyRoomSelect">
-				    <option value="">-- 회의실 선택 --</option>
-				</select>
-				<input type="hidden" name="roomId" value="">
-				<label>기간</label>
-				<input type="text" id="issueDate" placeholder="날짜 선택">
-				<!-- ajax 전송용 -->
-				<input type="hidden" name="roomUseReasonStartDate" id="startDate">
-   				<input type="hidden" name="roomUseReasonEndDate" id="endDate">
-   				
-				<div class="toggle-container">
-				    <span>비활성화</span>
-				    <label class="switch">
-				        <input type="checkbox" id="toggleSwitch" name="toggle">
-				        <span class="slider round"></span>
-				    </label>
-				    <span>활성화</span>
-				</div>
-
-				<div class="roomReason">사유</div>
-				<input type="text" id="toggleReason" name="roomUseReasonContent" placeholder="ex: 공사, 수리(완료),">
-				<button class="close" type="button">닫기</button>
-				<button type="submit">변경</button>
-			</form>
-			
-		</div>
+       
 <div>
     <jsp:include page ="../nav/footer.jsp"></jsp:include>
 </div>
@@ -181,8 +367,6 @@
 <script src="${pageContext.request.contextPath}/resources/libs/jquery-ui-dist/jquery-ui.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/fullcalendar/index.global.min.js"></script>
 
-<!-- Calendar init -->
-<script src="${pageContext.request.contextPath}/resources/js/pages/calendar.init.js"></script>
 <!-- Sweet Alerts js -->
 <script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 <!-- parsleyjs -->
