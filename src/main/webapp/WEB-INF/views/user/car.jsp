@@ -488,6 +488,8 @@ box-sizing: border-box;
                     </div>
                 </div>
             </div>
+            
+    <div id="loginUser" data-user-id="${loginUser.userId}"></div>
 	
 	<div class="list">
 		<form id="reservationForm" action="/api/car" method="post">

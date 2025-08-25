@@ -42,7 +42,7 @@
 					if (c.vehicleStatus === "Y") {
 						tdBtn.innerHTML = '<button class="reservationBtn" data-vehicle-id="' + c.vehicleId + '">예약하기</button>';
 					} else {
-						tdBtn.innerHTML = '<button>예약불가</button>';
+						tdBtn.innerHTML = '<button style="background-color: red; border-color: red;">예약불가</button>';
 					}
 					tr.appendChild(tdBtn);
 
@@ -125,7 +125,7 @@
 
 
 	// 로그인 사용자 ID
-	const userId = "<c:out value='${loginUser.userId}'/>";
+	const userId = document.getElementById("loginUser").dataset.userId;
 
 	// 초기 날짜 세팅: 현재시간 ~ 23:59
 	let today = new Date();

@@ -136,17 +136,6 @@ public class ReservationRestController {
 		
 		return response;
 	}
-	
-	// 예약 시간 변경
-	@PostMapping("/user/modifyMyReservation")
-	public Map<String, Object> modifyMyReservation(@RequestParam VehicleReservation vehicleReservation) {
-		Map<String, Object> result = new HashMap<>();
-		
-		
-		
-		return result;
-	}
-	
 
 	// 예약 취소
 	@PostMapping("/user/cancelMyReservation")
