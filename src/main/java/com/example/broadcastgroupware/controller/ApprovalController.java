@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.example.broadcastgroupware.domain.User;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.mapper.UserMapper;
+import com.example.broadcastgroupware.service.UserListService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -17,9 +18,11 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/approval")
 public class ApprovalController {
 	private final UserMapper userMapper;
+	private final UserListService userListService;
 
-    public ApprovalController(UserMapper userMapper) {
+    public ApprovalController(UserMapper userMapper, UserListService userListService) {
         this.userMapper = userMapper;
+        this.userListService = userListService; 
     }
     
     // 결재 화면 부서명 / 팀명 조회
@@ -84,13 +87,17 @@ public class ApprovalController {
     
     // 결재선 선택
     @GetMapping("/line/input")
-    public String approvalLineInput() {
+    public String approvalLineInput(Model model) {
+    	// 팀원(UserListService) 조직도 메서드 재사용
+    	model.addAttribute("orgTree", userListService.getUserTreeForInvite());
         return "approval/line_input";
     }
 
     // 참조선 선택
     @GetMapping("/reference/input")
-    public String referenceLineInput() {
+    public String referenceLineInput(Model model) {
+    	// 팀원(UserListService) 조직도 메서드 재사용
+    	model.addAttribute("orgTree", userListService.getUserTreeForInvite());
         return "approval/reference_input";
     }
 

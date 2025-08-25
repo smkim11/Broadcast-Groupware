@@ -25,68 +25,150 @@
             <!-- 본문 -->
             <div class="card">
                 <div class="card-body">
-                    <ul class="nav nav-tabs mb-3">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-bs-toggle="tab" href="#tab-org2">조직도</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#tab-search2">검색</a>
-                        </li>
-                    </ul>
 
-                    <div class="row">
-                        <!-- 조직도/검색 -->
-                        <div class="col-md-5">
-                            <div class="tab-content border rounded p-2" style="height: 440px; overflow:auto;">
-                                <div id="tab-org2" class="tab-pane fade show active">
-                                    <small class="text-muted d-block mb-2">샘플 조직도 (체크 후 ▶ 버튼)</small>
-                                    <ul class="list-unstyled">
-                                        <li class="form-check">
-                                            <input class="form-check-input ref-chk" type="checkbox" id="r101" data-user-id="101" data-user-name="홍길동">
-                                            <label class="form-check-label" for="r101">홍길동</label>
-                                        </li>
-                                        <li class="form-check">
-                                            <input class="form-check-input ref-chk" type="checkbox" id="r102" data-user-id="102" data-user-name="김민아">
-                                            <label class="form-check-label" for="r102">김민아</label>
-                                        </li>
-                                        <li class="form-check">
-                                            <input class="form-check-input ref-chk" type="checkbox" id="r201" data-user-id="201" data-user-name="박준호">
-                                            <label class="form-check-label" for="r201">박준호</label>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div id="tab-search2" class="tab-pane fade">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" placeholder="이름 검색">
-                                        <button class="btn btn-primary" type="button">검색</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 가운데 이동 버튼 -->
-                        <div class="col-md-1 d-flex flex-column align-items-center justify-content-center gap-2">
-                            <button type="button" id="btnRefAdd" class="btn btn-outline-primary">&gt;</button>
-                            <button type="button" id="btnRefRemove" class="btn btn-outline-secondary">&lt;</button>
-                        </div>
-
-                        <!-- 오른쪽: 선택 결과 -->
-                        <div class="col-md-6">
-                            <div class="border rounded p-2" style="height: 440px; overflow:auto;">
-                                <ul class="list-group" id="refList">
-                                    <!-- 동적 추가 -->
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- 상단 탭 -->
+					<ul class="nav nav-tabs mb-3">
+					    <li class="nav-item">
+					        <a class="nav-link active" data-bs-toggle="tab" href="#tab-org">조직도</a>
+					    </li>
+					    <!--
+					    <li class="nav-item">
+					        <a class="nav-link" data-bs-toggle="tab" href="#tab-search">검색</a>
+					    </li>
+					    -->
+					</ul>
+					
+						<div class="row">						
+						    <!-- 조직도 / 검색 패널 -->
+						    <div class="col-md-5">
+						        <div class="tab-content border rounded p-2" style="height: 440px; overflow:auto;">
+						        
+						            <!-- 조직도 -->
+						            <div id="tab-org" class="tab-pane fade show active">
+									    <small class="text-muted d-block mb-2">조직도 (체크 후 ▶ 버튼)</small>
+									    <ul class="list-unstyled" id="orgTreeBox">
+									        <c:forEach var="dept" items="${orgTree}">
+									            <li class="mb-2">
+									                <a class="text-decoration-none d-inline-flex align-items-center org-toggle"
+									                   data-bs-toggle="collapse"
+									                   href="#dept-${dept.id}"
+									                   role="button"
+									                   aria-expanded="true"
+									                   aria-controls="dept-${dept.id}">
+									                    <span class="me-1 caret" style="display:inline-block; transition:.2s transform;">▾</span>
+									                    <i class="uil uil-building me-1"></i> ${dept.name}
+									                </a>
+									                
+									                <!-- 부서: 기본 펼침 -->
+									                <ul class="list-unstyled ms-3 mt-1 collapse show" id="dept-${dept.id}">
+									                	<%-- dept.users가 없을 때(forEach NPE) 방지 --%>
+									                	<c:if test="${not empty dept.users}">
+										                    <c:forEach var="team" items="${dept.users}">
+										                        <li class="mt-2">
+										                            <a class="text-decoration-none d-inline-flex align-items-center org-toggle"
+										                               data-bs-toggle="collapse"
+										                               href="#team-${dept.id}-${team.id}"
+										                               role="button"
+										                               aria-expanded="false"
+										                               aria-controls="team-${dept.id}-${team.id}">
+										                                <span class="me-1 caret" style="display:inline-block; transition:.2s transform;">▸</span>
+										                                <i class="uil uil-sitemap me-1"></i> ${team.name}
+										                            </a>
+										                            
+										                            <!-- 팀: 기본 접힘 -->
+										                            <ul class="list-unstyled ms-3 mt-1 collapse" id="team-${dept.id}-${team.id}">
+										                            	<!-- 팀 자체 참조용 체크박스 -->
+										                            	<li class="form-check mb-1">
+																	        <input class="form-check-input ref-chk team-chk"
+																	               type="checkbox"
+																	               id="t${team.id}"
+																	               data-type="TEAM"
+																	               data-id="${team.id}"
+																	               data-name="${team.name}"
+																	               data-dept="${dept.name}"
+																	               data-team="${team.name}">
+																	        <label class="form-check-label" for="t${team.id}">
+																	            👥 팀 전체 참조: ${team.name}
+																	        </label>
+																	    </li>
+										                            
+										                                <!-- 팀 소속 사용자 목록 -->
+																	    <c:forEach var="user" items="${team.users}">
+																	        <li class="form-check">
+																	            <input class="form-check-input ref-chk user-chk"
+																	                   type="checkbox"
+																	                   id="u${user.id}"
+																	                   data-type="USER"
+																	                   data-id="${user.id}"
+																	                   data-name="${user.name}"
+																	                   data-rank="${user.userRank}"
+																	                   data-dept="${dept.name}"
+																	                   data-team="${team.name}">
+																	            <label class="form-check-label" for="u${user.id}">
+																	                👤 ${user.name} <span class="text-muted">(${user.userRank})</span>
+																	            </label>
+																	        </li>
+																	    </c:forEach>
+										                            </ul>
+										                            
+										                        </li>
+										                    </c:forEach>
+										                </c:if>
+									                </ul>
+									                
+									            </li>
+									        </c:forEach>
+									    </ul>
+									</div>
+						
+						            <!-- 검색 -->
+						            <!--
+						            <div id="tab-search" class="tab-pane fade">
+						                <div class="input-group">
+						                    <input type="text" class="form-control" id="keyword" placeholder="이름/부서/팀 검색">
+						                    <button class="btn btn-primary" type="button" id="btnSearch">검색</button>
+						                </div>
+						                <div class="mt-2" id="searchResultsBox"></div>
+						            </div>
+						            -->
+						            
+						        </div>
+						    </div>
+						
+						    <!-- 가운데 이동 버튼 -->
+						    <div class="col-md-1 d-flex flex-column align-items-center justify-content-center gap-2">
+						        <button type="button" id="btnAdd" class="btn btn-outline-primary">&gt;</button>
+						        <button type="button" id="btnRemove" class="btn btn-outline-secondary">&lt;</button>
+						        <button type="button" id="btnReset" class="btn btn-outline-danger">&#x21BA;</button>
+						    </div>
+						
+						    <!-- 우측: 결재선 정보 -->
+						    <div class="col-md-6">
+						        <div class="border rounded p-2" style="height: 440px; overflow:auto;">
+						            <table class="table table-sm table-hover align-middle text-center" id="tblLines">
+						                <thead class="table-light">
+						                    <tr>
+						                        <th style="width:8%;">선택</th>
+										        <th style="width:12%;">유형</th>  <!-- 개인 / 팀 -->
+										        <th style="width:30%;">대상</th>  <!-- 이름 또는 팀명 -->
+										        <th style="width:30%;">소속</th>  <!-- 부서 / 팀 (개인일 때만 표시) -->
+						                    </tr>
+						                </thead>
+						                <!-- tbody는 JavaScript에서 동적으로 행(tr) 추가 -->
+						                <tbody>
+						                	<!-- JS addSelectedRefs() 실행 시 여기에 행이 추가됨 -->
+						                </tbody>
+						            </table>
+						        </div>
+						    </div>						    
+						</div>
 
                     <!-- 하단 버튼 -->
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <button type="button" id="btnRefApply" class="btn btn-outline-success">적용</button>
                         <a href="javascript:history.back();" class="btn btn-outline-secondary">닫기</a>
                     </div>
-
-                    <input type="hidden" id="referenceLinesJson" value="[]">
+                   
                 </div>
             </div>
 
@@ -98,63 +180,227 @@
     <jsp:include page ="../nav/footer.jsp"></jsp:include>
 </div>
 
+<div>
+    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
+</div>
+
 <script>
-    (function () {
-        const ul = document.getElementById('refList');
-        const add = document.getElementById('btnRefAdd');
-        const remove = document.getElementById('btnRefRemove');
-        const apply = document.getElementById('btnRefApply');
-        const jsonField = document.getElementById('referenceLinesJson');
+	(function () {
+	    // ===== 조직도(부서/팀) 접기/펼치기 =====
+	    function setCaret(el, expanded) {
+	        const caret = el.querySelector('.caret');
+	        if (!caret) return;
+	        caret.textContent = expanded ? '▾' : '▸';
+	    }
+	
+	    // 초기 caret 상태 설정 (부서: 펼침, 팀: 접힘)
+	    document.querySelectorAll('a.org-toggle').forEach(function(a) {
+	        const target = document.querySelector(a.getAttribute('href'));
+	        const expanded = target && target.classList.contains('show');
+	        setCaret(a, expanded);
+	    });
+	
+	    // collapse 이벤트에 맞춰 caret(▾/▸) 자동 전환
+	    document.addEventListener('shown.bs.collapse', function (e) {
+	        const id = e.target.id;
+	        // aria-controls 또는 href로 해당 id를 가리키는 토글 앵커 선택
+	        const selector =
+	            'a.org-toggle[aria-controls="' + id + '"], ' +
+	            'a.org-toggle[href="#' + id + '"]';
+	        const toggle = document.querySelector(selector);
+	        if (!toggle) return;
+	        setCaret(toggle, true);
+	    });
+	
+	    document.addEventListener('hidden.bs.collapse', function (e) {
+	        const id = e.target.id;
+	        const selector =
+	            'a.org-toggle[aria-controls="' + id + '"], ' +
+	            'a.org-toggle[href="#' + id + '"]';
+	        const toggle = document.querySelector(selector);
+	        if (!toggle) return;
+	        setCaret(toggle, false);
+	    });
 
-        function addSelected() {
-            document.querySelectorAll('.ref-chk:checked').forEach(chk => {
-                const id = chk.getAttribute('data-user-id');
-                const name = chk.getAttribute('data-user-name');
-                if (ul.querySelector('li[data-user-id="' + id + '"]')) return;
+        
+        // ===== 참조선 목록 업데이트 로직 =====
+        const tblBody = document.querySelector('#tblLines tbody');
+        const addBtn = document.getElementById('btnAdd');
+        const removeBtn = document.getElementById('btnRemove');
+        const resetBtn = document.getElementById('btnReset');
+        const applyBtn = document.getElementById('btnRefApply');  // id에 맞게 수정
 
-                const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                li.setAttribute('data-user-id', id);
-                li.innerHTML = '<span>' + name + '</span>' +
-                               '<button type="button" class="btn btn-outline-danger btn-sm btn-del">삭제</button>';
-                ul.appendChild(li);
-                chk.checked = false;
-            });
+        // 상한 값
+        const MAX_TEAMS = 3;   // 최대 3팀
+        const MAX_USERS = 10;  // 최대 10명
+        const MAX_TOTAL = 15;  // 총합 15 (팀+개인)
+
+        // 현재 카운트
+        function countTeams() {
+            return tblBody.querySelectorAll('tr[data-type="TEAM"]').length;
+        }
+        function countUsers() {
+            return tblBody.querySelectorAll('tr[data-type="USER"]').length;
+        }
+        function countTotal() {
+            return tblBody.querySelectorAll('tr').length;
         }
 
-        function removeSelected() {
-            ul.querySelectorAll('.list-group-item.active').forEach(li => li.remove());
+        // 추가 버튼 상태 (총합 15개 선택 시 비활성화)
+        function updateAddBtnState() {
+            const count = countTotal();
+            addBtn.disabled = (count >= MAX_TOTAL);
         }
         
-        ul.addEventListener('click', function (e) {
-            const li = e.target.closest('li');
-            if (!li) return;
-            if (e.target.classList.contains('btn-del')) {
-                li.remove();
-            } else {
-                li.classList.toggle('active');
+        // 좌측에서 선택된 참조 대상들을 우측 테이블에 추가 (중복 방지 + 상한 제한)
+        function addSelectedRefs() {
+            const checked = Array.from(document.querySelectorAll('.ref-chk:checked'));
+            if (!checked.length) return;
+
+            let teamCnt = countTeams();
+            let userCnt = countUsers();
+            let totalCnt = countTotal();
+
+            let blockedByLimit = false;  // 상한 초과로 추가하지 못한 참조자 존재 여부
+
+            for (const chk of checked) {
+                const type = chk.dataset.type;            // USER | TEAM
+                const id = chk.dataset.id;
+                const name = chk.dataset.name || '';
+                const rank = chk.dataset.rank || '';
+                const dept = chk.dataset.dept || '';
+                const team = chk.dataset.team || '';
+
+                // 중복 확인: 이미 추가된 대상이면 패스
+                if (tblBody.querySelector('tr[data-type="' + type + '"][data-id="' + id + '"]')) {
+                    chk.checked = false;
+                    continue;
+                }
+
+                // 총합 상한 체크
+                if (totalCnt >= MAX_TOTAL) {
+                    blockedByLimit = true;
+                    chk.checked = false;
+                    continue;
+                }
+
+                // 유형별 상한 체크
+                if (type == 'TEAM' && teamCnt >= MAX_TEAMS) {
+                    alert('팀 참조는 최대 ' + MAX_TEAMS + '팀까지만 가능합니다.');
+                    chk.checked = false;
+                    continue;
+                }
+                if (type == 'USER' && userCnt >= MAX_USERS) {
+                    alert('개인 참조는 최대 ' + MAX_USERS + '명까지만 가능합니다.');
+                    chk.checked = false;
+                    continue;
+                }
+
+                // 행 추가
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-type', type);
+                tr.setAttribute('data-id', id);
+                tr.innerHTML =
+                    '<td class="text-center"><input type="checkbox" class="row-chk"></td>' +
+                    '<td class="text-center">' + (type == 'USER' ? '개인' : '팀') + '</td>' +
+                    '<td class="text-start">' + (type == 'USER' ? name + (rank ? ' (' + rank + ')' : '') : name) + '</td>' +
+                    '<td class="text-start"><span class="small text-muted d-inline-block text-truncate" style="max-width: 220px;">' +
+                        (dept || '') + ((dept && team) ? ' / ' : '') + (team || '') +
+                    '</span></td>';
+
+                tblBody.appendChild(tr);
+
+                // 카운트 증가
+                if (type == 'TEAM') teamCnt++;
+                if (type == 'USER') userCnt++;
+                totalCnt++;
+
+                // 좌측 체크 해제
+                chk.checked = false;
             }
+
+            if (blockedByLimit) {
+                alert('참조 대상은 총합 ' + MAX_TOTAL + '개까지만 추가할 수 있습니다.');
+            }
+
+            updateAddBtnState();
+        }
+
+        
+        // 체크된 참조자 행 삭제
+        function removeSelectedRows() {
+            tblBody.querySelectorAll('input.row-chk:checked')
+                .forEach(function(chk){ chk.closest('tr').remove(); });
+            updateAddBtnState();
+        }
+
+        // 참조자 전체 초기화
+        function resetAll() {
+            tblBody.innerHTML = '';
+            document.querySelectorAll('.ref-chk:checked').forEach(function(chk){ chk.checked = false; });
+            updateAddBtnState();
+        }
+
+        // 체크 시 행 강조
+        tblBody.addEventListener('change', function (e) {
+            if (!e.target.classList.contains('row-chk')) return;
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+            tr.classList.toggle('table-active', e.target.checked);
         });
 
+        // 선택한 참조선 저장 후 이전 페이지로 이동
         function applySelection() {
-            const list = [];
-            ul.querySelectorAll('li').forEach(li => {
-                list.push({ userId: parseInt(li.getAttribute('data-user-id'), 10) });
+            // 현재 테이블의 모든 행 수집
+            const rows = tblBody.querySelectorAll('tr');
+            
+            if (rows.length == 0) {
+                alert('참조 대상을 최소 1개 이상 선택해 주세요.');
+                return;
+            }
+
+            // 최종 검증
+            const teamCnt = countTeams();
+            const userCnt = countUsers();
+            const totalCnt = teamCnt + userCnt;
+
+            if (teamCnt > MAX_TEAMS) {
+                alert('팀 참조는 최대 ' + MAX_TEAMS + '팀까지만 가능합니다.');
+                return;
+            }
+            if (userCnt > MAX_USERS) {
+                alert('개인 참조는 최대 ' + MAX_USERS + '명까지만 가능합니다.');
+                return;
+            }
+            if (totalCnt > MAX_TOTAL) {
+                alert('참조 대상은 총합 ' + MAX_TOTAL + '개까지만 가능합니다.');
+                return;
+            }
+                
+            // 선택된 행들을 전송/저장용 최소 데이터로 변환
+            const list = Array.from(rows).map(function(tr, idx){
+                return {
+                    type: tr.getAttribute('data-type'),      // USER or TEAM
+                    id: parseInt(tr.getAttribute('data-id'), 10),  // userId or teamId
+                    seq: idx + 1
+                };
             });
-            const json = JSON.stringify(list);
-            jsonField.value = json;
-            localStorage.setItem('referenceLines', json);
+            
+            // 다음 화면에서 읽을 수 있도록 localStorage에 저장
+            localStorage.setItem('referenceLines', JSON.stringify(list));
+            
+            // 뒤로가기
             history.back();
         }
 
-        add.addEventListener('click', addSelected);
-        remove.addEventListener('click', removeSelected);
-        apply.addEventListener('click', applySelection);
+        // 버튼 바인딩
+        addBtn.addEventListener('click', addSelectedRefs);
+        removeBtn.addEventListener('click', removeSelectedRows);
+        resetBtn.addEventListener('click', resetAll);
+        applyBtn.addEventListener('click', applySelection);
+        updateAddBtnState();  // 초기 로드 시 추가 버튼 상태 초기화
     })();
 </script>
 
 </body>
-<div>
-    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
-</div>
 </html>
