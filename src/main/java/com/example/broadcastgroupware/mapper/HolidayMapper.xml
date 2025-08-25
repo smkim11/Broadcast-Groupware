@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.broadcastgroupware.mapper.HolidayMapper">
-	<!--공휴일 캘린더에 저장-->
-	<insert id="insertHoliday" parameterType="com.example.broadcastgroupware.dto.HolidayDto">
+	<!--공휴일 캘린더에 저장 (userId=관리부 팀장) 시작일=00:00:00, 종료일=23:59:59-->
+	<insert id="insertHoliday" parameterType="com.example.broadcastgroupware.dto.HolidayFormDto">
 		INSERT INTO calendar(user_id,calendar_title,calendar_location,calendar_type,
 			calendar_start_time,calendar_end_time) 
-		VALUES(#{userId},#{dateName},'공휴일','공휴일'
-			,#{calendarStartTime},#{calendarEndTime})
+		VALUES(115,#{holidayName},'공휴일','공휴일'
+			,STR_TO_DATE(#{holidayDate},'%Y-%m-%d'),STR_TO_DATE(CONCAT(#{holidayDate}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s'))
 	</insert>
 </mapper>

@@ -17,7 +17,7 @@ public class HolidayRest {
 		this.holidayService = holidayService;
 	}
 	
-	// 공휴일 api로 원하는 년도 공휴일 검색
+	// 공휴일 api로 원하는 년도 공휴일 저장
 	@GetMapping("/holidays")
     public String holidays(@RequestParam String year) throws UnsupportedEncodingException, URISyntaxException, JsonProcessingException, IllegalArgumentException {
         holidayService.getHolidays(year);
