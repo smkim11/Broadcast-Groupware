@@ -201,7 +201,52 @@ input:checked + .slider:before {
 	to   { opacity: 1; transform: scale(1); }
 }
 
+/*예약 모달 css*/
+.modal {
+	display: none;
+	position: fixed;
+	top: 0; left: 0;
+	width: 100%; height: 100%;
+	background: rgba(0,0,0,0.5);
+	justify-content: center; align-items: center;
+	z-index: 1000;
+}
 
+.reservation-modal {
+	background: #fff;
+	padding: 20px;
+	border-radius: 8px;
+	width: 400px;
+	max-width: 90%;
+}
+
+.time-slots {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 15px;
+}
+
+.time-slots label {
+	background: #f0f0f0;
+	padding: 5px 10px;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.time-slots input[type="checkbox"] {
+	display: none;
+}
+
+.time-slots input[type="checkbox"]:checked + span {
+	background: #007bff;
+	color: #fff;
+}
+.btn-group {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}
 
 </style>
 <title>회의실</title>
@@ -342,6 +387,33 @@ input:checked + .slider:before {
 				<div class="btn-group">
 					<button class="close" type="button">닫기</button>
 					<button type="submit">변경</button>
+				</div>
+			</form>
+		</div>
+	</div>
+	
+	<!-- 날짜 클릭시 모달 => 예약 -->
+	<div id="reservationMeetingroom-modal" class="modal">
+		<div class="reservation-modal">
+			<span class="close">&times;</span>
+			<h3>회의실 예약</h3>
+			<form id="reservationMeetingroom">
+			<input type="hidden" id="reservationRoomId" name="roomId">
+		    <input type="hidden" id="reservationReasonHidden" name="roomReservationReason">
+		    <input type="hidden" id="reservationStartTime" name="roomReservationStartTime">
+		    <input type="hidden" id="reservationEndTime" name="roomReservationEndTime">
+		    
+			<p id="chooseDate" class="chooseDate">선택한 날짜:</p>
+			<div>
+				사유 : <input type="text" id="roomReservationReason" placeholder="예약 사유를 입력하세요.">
+			</div>
+				<div id="timeSlots" class="time-slots">
+					
+				</div>
+				
+				<div class="btn-group">
+					<button class="close" type="button">닫기</button>
+					<button type="submit">예약하기</button>
 				</div>
 			</form>
 		</div>

@@ -290,8 +290,26 @@ public class ReservationRestController {
 	// 회의실 예약 내역
 	@GetMapping("/meetingroom/reservations")
 	public List<RoomReservation> meetingroomReservations(@RequestParam int roomId) {
-		log.info("roomId: {}", roomId);
+		//log.info("roomId: {}", roomId);
 		return reservationService.meetingroomReservations(roomId);
 	}
+	
+	// 회의실 예약
+	@PostMapping("/meetingroom/reservation")
+	public String meetingroomReservation(@RequestBody List<RoomReservation> reservations, HttpSession session) {
+	    UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+	    int userId = loginUser.getUserId();
+
+	    for(RoomReservation r : reservations) {
+	        r.setUserId(userId);
+	        log.info("roomId: {}", r.getRoomId());
+	        log.info("roomReservationReason: {}", r.getRoomReservationReason());
+	        log.info("roomReservationStartTime: {}", r.getRoomReservationStartTime());
+	        log.info("roomReservationEndTime: {}", r.getRoomReservationEndTime());
+	    }
+
+	    return "success";
+	}
+
 	
 }
