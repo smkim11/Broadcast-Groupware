@@ -38,8 +38,8 @@ public class CalendarRest {
 	
 	// 전체일정 조회
 	@GetMapping("/selectTotalCalendar")
-	public List<HashMap<String,Object>> selectTotalCalendar(@RequestParam int userId){
-		return calendarService.selectTotalCalendar(userId);
+	public List<HashMap<String,Object>> selectTotalCalendar(){
+		return calendarService.selectTotalCalendar();
 	}
 	
 	// 일정 등록
@@ -64,10 +64,5 @@ public class CalendarRest {
 	public void deleteCalendar(@RequestBody Calendar calendar) {
 		calendarService.deleteCalendar(calendar);
 	}
-	/*
-	@GetMapping("/holidays")
-    public String holidays(@RequestParam String year) {
-        return calendarService.getHolidays(year);
-    }
-    */
+	
 }

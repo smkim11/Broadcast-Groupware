@@ -183,6 +183,24 @@
     <jsp:include page ="../views/nav/javascript.jsp"></jsp:include>
 </div>
 </body>
+<script>
+	// 공휴일 조회
+	window.calendarEvents = [
+	    <c:forEach var="event" items="${events}" varStatus="loop">
+	        {
+	            id: "${event.calendarId}",
+	            userId: "${event.userId}",
+	            title: "${fn:escapeXml(event.calendarTitle)}",
+	            location: "${event.calendarLocation}",
+	            start: "${event.calendarStartTime}",
+	            end: "${event.calendarEndTime}",
+	            type: "${event.calendarType}",
+	            className: "bg-danger",
+	            memo: "${event.calendarMemo}"
+	        }<c:if test="${!loop.last}">,</c:if>
+	    </c:forEach>
+	];
+</script>
 <!-- plugin js -->
 <script src="${pageContext.request.contextPath}/resources/libs/moment/min/moment.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/jquery-ui-dist/jquery-ui.min.js"></script>

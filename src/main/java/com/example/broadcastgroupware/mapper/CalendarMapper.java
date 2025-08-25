@@ -16,7 +16,9 @@ public interface CalendarMapper {
 	// Id에 맞는 팀 일정
 	List<HashMap<String,Object>> selectTeamCalendar(int userId);
 	// 전체 일정
-	List<HashMap<String,Object>> selectTotalCalendar(int userId);
+	List<HashMap<String,Object>> selectTotalCalendar();
+	// 공휴일 조회
+	List<HashMap<String,Object>> selectHoliday();
 	// 일정 생성
 	void insertCalendar(Calendar calendar);
 	// 일정 수정

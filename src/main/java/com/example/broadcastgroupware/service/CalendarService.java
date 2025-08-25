@@ -1,9 +1,5 @@
 package com.example.broadcastgroupware.service;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 
@@ -37,8 +33,13 @@ public class CalendarService {
 	}
 	
 	// 전체일정
-	public List<HashMap<String,Object>> selectTotalCalendar(int userId){
-		return calendarMapper.selectTotalCalendar(userId);
+	public List<HashMap<String,Object>> selectTotalCalendar(){
+		return calendarMapper.selectTotalCalendar();
+	}
+	
+	// 공휴일 조회
+	public List<HashMap<String,Object>> selectHoliday(){
+		return calendarMapper.selectHoliday();
 	}
 	
 	// 일정 생성
@@ -55,37 +56,5 @@ public class CalendarService {
 	public void deleteCalendar(Calendar calendar) {
 		calendarMapper.deleteCalendar(calendar);
 	}
-	/*
-	private final String SERVICE_KEY = "X5crsn5JobgfMEbWjbf2jZ8751ZRHfZPmGLvOmiwf9VxUxRS5PgbuzO2HNu%2BVyjQvk9%2B2c2A1%2B%2FtVSM%2FvPUSyw%3D%3D";
-
-    public String getHolidays(String year) {
-        try {
-            String apiURL = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo"
-                    + "?numOfRows=100&solYear=" + year
-                    + "&ServiceKey=" + SERVICE_KEY
-                    + "&_type=json"; // JSON 요청
-
-            HttpURLConnection conn = (HttpURLConnection) new URL(apiURL).openConnection();
-            conn.setRequestMethod("GET");
-
-            int responseCode = conn.getResponseCode();
-            BufferedReader br = new BufferedReader(new InputStreamReader(
-                    (responseCode == 200) ? conn.getInputStream() : conn.getErrorStream()
-            ));
-
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                response.append(line);
-            }
-            br.close();
-
-            return response.toString();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-    */
+    
 }
