@@ -8,6 +8,6 @@
 <title>Insert title here</title>
 </head>
 <body>
-
+	유저마이페이지
 </body>
 </html>

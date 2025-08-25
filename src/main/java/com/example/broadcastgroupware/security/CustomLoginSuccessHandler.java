@@ -52,6 +52,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         // 권한에 따라 리디렉션
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
+        System.out.println("🔒 로그인된 사용자 권한 목록: " + roles);
         if (roles.contains("ROLE_admin") || roles.contains("ROLE_user")) {
             response.sendRedirect("/home");
         } else {

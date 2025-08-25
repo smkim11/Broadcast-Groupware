@@ -5,10 +5,16 @@
 <head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <meta charset="UTF-8">
+	<c:if test="${not empty sessionScope.loginUser}">
+        <script>
+            const role = '<c:out value="${sessionScope.loginUser.role}" />';
+            console.log('User role from session:', role);
+        </script>
+    </c:if>
 <title>Insert title here</title>
 </head>
 <body>
-
+	
 <div>
     <jsp:include page ="../views/nav/header.jsp"></jsp:include>
 </div>

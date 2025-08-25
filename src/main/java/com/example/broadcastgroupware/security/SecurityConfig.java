@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/css/**", "/js/**", "/ws-stomp/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("admin")
                 .requestMatchers("/user/**").hasAnyRole("admin", "user")
+                .requestMatchers("/myPage").hasAnyRole("admin", "user")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

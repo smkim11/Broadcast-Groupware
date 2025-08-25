@@ -8,6 +8,6 @@
 <title>Insert title here</title>
 </head>
 <body>
-
+	관리자마이페이지
 </body>
 </html>

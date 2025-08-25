@@ -20,6 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     	System.out.println(">>> 사용자 조회 시도: " + username);
         User user = userMapper.findByUsername(username);
         System.out.println(">>> 사용자 조회 완료: " + user);
+        System.out.println(">>> 권한: ROLE_" + user.getRole());
         if (user == null) {
             throw new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username);
         }
