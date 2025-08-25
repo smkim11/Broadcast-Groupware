@@ -279,7 +279,7 @@
                             </li>
 
                             <li>
-                                <a href="calendar" class="waves-effect">
+                                <a href="/calendar" class="waves-effect">
                                     <i class="uil-calender"></i>
                                     <span>캘린더</span>
                                 </a>
@@ -341,7 +341,7 @@
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
 								    <li>
-								        <a href="#">본인근태</a>
+								        <a href="/attendance">본인근태</a>
 								    </li>
 								    <li>
 								        <a href="#">-근태</a>
