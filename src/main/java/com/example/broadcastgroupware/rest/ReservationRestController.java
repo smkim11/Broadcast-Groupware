@@ -268,11 +268,11 @@ public class ReservationRestController {
 		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 		int userId = loginUser.getUserId();
 		
-		log.info("roomId: {}", addIssueToRoom.getRoomId());
-		log.info("roomStatus: {}", addIssueToRoom.getRoomStatus());
-		log.info("roomUseReasonStartDate: {}", addIssueToRoom.getRoomUseReasonStartDate());
-		log.info("roomUseReasonEndDate: {}", addIssueToRoom.getRoomUseReasonEndDate());
-		log.info("roomUseReasonContent: {}", addIssueToRoom.getRoomUseReasonContent());
+		//log.info("roomId: {}", addIssueToRoom.getRoomId());
+		//log.info("roomStatus: {}", addIssueToRoom.getRoomStatus());
+		//log.info("roomUseReasonStartDate: {}", addIssueToRoom.getRoomUseReasonStartDate());
+		//log.info("roomUseReasonEndDate: {}", addIssueToRoom.getRoomUseReasonEndDate());
+		//log.info("roomUseReasonContent: {}", addIssueToRoom.getRoomUseReasonContent());
 		
 		boolean success = reservationService.meetingroomAdminModify(addIssueToRoom, userId);
 		
@@ -301,20 +301,25 @@ public class ReservationRestController {
 	    UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 	    int userId = loginUser.getUserId();
 
-	    boolean success = reservationService.meetingroomReservation(reservations, userId);
-	    
-	    for(MeetingroomReservationDto r : reservations) {
-	        log.info("roomId: {}", r.getRoomId());
-	        log.info("roomReservationReason: {}", r.getRoomReservationReason());
-	        log.info("roomReservationStartTime: {}", r.getRoomReservationStartTime());
-	        log.info("roomReservationEndTime: {}", r.getRoomReservationEndTime());
+	    // 단일 예약이면 size가 1, 복합 예약이면 size > 1
+	    if(reservations == null || reservations.isEmpty()) {
+	        return "예약 정보가 없습니다.";
 	    }
-	    if(!success) {
-			return "등록에 실패했습니다";
-		}
-		return "success";
 
+	    // 로그 확인
+	    /*
+	    for(MeetingroomReservationDto r : reservations) {
+	        log.info("컨트롤러 DTO: roomId={}, reason={}, start={}, end={}",
+	            r.getRoomId(), r.getRoomReservationReason(),
+	            r.getRoomReservationStartTime(), r.getRoomReservationEndTime());
+	    }
+	    */
+
+	    boolean success = reservationService.meetingroomReservation(reservations, userId);
+
+	    return success ? "success" : "등록에 실패했습니다";
 	}
+
 
 	
 }

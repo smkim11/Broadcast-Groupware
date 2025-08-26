@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class MeetingroomReservationDto {
-	private int roomId;
-	private String roomReservationReason;
-	private String roomReservationStartTime;
-	private String roomReservationEndTime;
+    private int roomId;
+    private String roomReservationReason;
+    private String roomReservationStartTime; 
+    private String roomReservationEndTime;  
 }

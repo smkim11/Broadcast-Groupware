@@ -75,9 +75,16 @@ public interface ReservationMapper {
 	// 회의실 예약 리스트
 	List<RoomReservation> meetingroomReservations(int roomId);
 
+	// 회의실 예약-중복체크
+	int checkReservationsRoom(@Param("reservation") MeetingroomReservationDto reservation,
+	                          @Param("userId") int userId);
+
 	// 회의실 예약
-	void meetingroomReservation(@Param("reservations") List<MeetingroomReservationDto> reservations, 
+	void meetingroomReservation(@Param("reservations") List<MeetingroomReservationDto> reservations,
 	                            @Param("userId") int userId);
+
+
+
 
 
 

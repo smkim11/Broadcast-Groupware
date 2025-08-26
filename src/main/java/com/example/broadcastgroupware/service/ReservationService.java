@@ -157,16 +157,28 @@ public class ReservationService {
 	}
 
 	// 회의실 예약
+	@Transactional
 	public boolean meetingroomReservation(List<MeetingroomReservationDto> reservations, int userId) {
-		try {
-			reservationMapper.meetingroomReservation(reservations, userId);
-			return true;
-		} catch(Exception e) {
-			e.printStackTrace();
-	        return false;
-		}
-		
+
+	    for(MeetingroomReservationDto dto : reservations) {
+	        /*
+	    	log.info("서비스단 DTO 확인: roomId={}, reason={}, start={}, end={}",
+	            dto.getRoomId(), dto.getRoomReservationReason(),
+	            dto.getRoomReservationStartTime(), dto.getRoomReservationEndTime());
+	            */
+
+	        int count = reservationMapper.checkReservationsRoom(dto, userId);
+	        if(count > 0) {
+	            //log.info("중복 예약 있음: roomId={}, start={}, end={}", dto.getRoomId(), dto.getRoomReservationStartTime(), dto.getRoomReservationEndTime());
+	            return false; // 하나라도 중복 있으면 실패
+	        }
+	    }
+
+	    // 중복 없으면 복수건 삽입
+	    reservationMapper.meetingroomReservation(reservations, userId);
+	    return true;
 	}
+
 
 	
 

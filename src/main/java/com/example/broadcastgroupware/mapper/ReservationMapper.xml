@@ -156,20 +156,22 @@
 		WHERE room_id = #{roomId}
 	</update>
 	<insert id="adminMeetingroomReservation">
-		INSERT INTO room_reservation(user_id, room_id, room_resevation_reason, room_reservation_start_time, room_reservation_end_time)
-		VALUES(#{userId}, #{addIssueToRoom.roomId}, #{addIssueToRoom.roomUseReasonEndDate} #{addIssueToRoom.roomUseReasonStartDate}, #{addIssueToRoom.roomUseReasonEndDate})
+		INSERT INTO room_reservation(user_id, room_id, room_reservation_reason, room_reservation_start_time, room_reservation_end_time)
+		VALUES(#{userId}, #{addIssueToRoom.roomId}, #{addIssueToRoom.roomUseReasonContent}, #{addIssueToRoom.roomUseReasonStartDate}, #{addIssueToRoom.roomUseReasonEndDate})
 	</insert>
 	<insert id="meetingroomIssue">
 		INSERT INTO room_use_reason(room_id, room_use_reason_content, room_use_reason_start_date, room_use_reason_end_date)
 		VALUES(#{addIssueToRoom.roomId}, #{addIssueToRoom.roomUseReasonContent}, #{addIssueToRoom.roomUseReasonStartDate}, #{addIssueToRoom.roomUseReasonEndDate})
 	</insert>
 
+	<!-- 회의실 리스트 -->
 	<select id="meetingroomList" parameterType="com.example.broadcastgroupware.domain.Room">
 		SELECT room_id AS roomId, room_name AS roomName, room_location AS roomLocation 
 		FROM room
 		ORDER BY room_id
 	</select>
 	
+	<!-- 회의실 예약 조회 -->
 	<select id="meetingroomReservations">
 		SELECT rr.room_id AS roomId, rr.room_reservation_reason AS roomReservationReason,
 				rr.room_reservation_start_time AS roomReservationStartTime, rr.room_reservation_end_time AS roomReservationEndTime,
@@ -180,11 +182,21 @@
 		WHERE r.room_id = #{roomId}
 	</select>
 	
+	<!-- 예약 중복 체크 -->
+	<select id="checkReservationsRoom" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM room_reservation
+	    WHERE room_id = #{reservation.roomId}
+			AND room_reservation_start_time &lt; STR_TO_DATE(#{reservation.roomReservationStartTime}, '%Y-%m-%d %H:%i:%s')
+			AND room_reservation_end_time &gt; STR_TO_DATE(#{reservation.roomReservationEndTime}, '%Y-%m-%d %H:%i:%s')
+	</select>
+	<!-- 회의실 예약 -->
 	<insert id="meetingroomReservation">
-		INSERT INTO room_reservation(room_id, user_id, room_reservation_reason, room_reservation_start_time, room_reservation_end_time)
-		VALUES
-			<foreach collection="reservations" item="r" separator=",">
-				(#{r.roomId}, #{userId}, #{r.roomReservationReason}, #{r.roomReservationStartTime}, #{r.roomReservationEndTime})
-			</foreach>
+	    INSERT INTO room_reservation(room_id, user_id, room_reservation_reason, room_reservation_start_time, room_reservation_end_time)
+	    VALUES
+	    <foreach collection="reservations" item="r" separator=",">
+	        (#{r.roomId}, #{userId}, #{r.roomReservationReason}, #{r.roomReservationStartTime}, #{r.roomReservationEndTime})
+	    </foreach>
 	</insert>
+
 </mapper>

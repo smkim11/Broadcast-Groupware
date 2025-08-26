@@ -448,7 +448,7 @@ input:checked + .slider:before {
 		    
 			<p id="chooseDate" class="chooseDate">선택한 날짜:</p>
 			<div>
-				사유 : <input type="text" id="roomReservationReason" placeholder="회의 주제를 입력하세요.">
+				회의 주제 : <textarea rows="2" cols="20" id="roomReservationReason" placeholder="회의 주제를 입력하세요."></textarea>
 			</div>
 				<div id="timeSlots" class="time-slots">
 					

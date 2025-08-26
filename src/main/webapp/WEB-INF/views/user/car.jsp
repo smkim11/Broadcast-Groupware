@@ -463,6 +463,41 @@ box-sizing: border-box;
     color: white;
 }
 
+/* 차량번호 */
+.vehicleNo {
+	width: 100%;
+	padding: 4px 6px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	background-color: #f0f0f0;
+	border-radius: 4px;
+	margin-bottom: 4px;
+}
+
+/* 차량명 + 타입 */
+.vehicleNameType {
+	width: 100%;
+	display: flex;
+	justify-content: space-between; /* 좌우 배치 */
+	align-items: center;
+	font-size: 13px;
+	background-color: #f8f8f8;
+	padding: 2px 3px;
+	border-radius: 4px;
+}
+.vehicleNameType .vehicleName {
+	flex: 1;
+	text-align: left;
+}
+.vehicleNameType .vehicleType {
+	flex: 1;
+	text-align: right;
+}
+
+
 </style>
 
 </head>
