@@ -1,7 +1,8 @@
-// resources/js/pages/chat.init.js
+//resources/js/pages/chat.init.js
+
 (function (window, $) {
   'use strict';
-  
+
   // ---- WS 싱글톤(탭 내 1개만) & 인박스 디듀프 ----
   const WS_KEY = '__CHAT_WS_SINGLETON__';
   if (!window[WS_KEY]) {
@@ -12,8 +13,65 @@
       subs: { room: null, read: null, inbox: null }
     };
   }
-  // 인박스 이벤트 중복 방지용 (1.5초 윈도우)
-  const recentInbox = new Map();
+
+  // 인박스 이벤트 중복 방지(짧은 윈도우)
+  const recentInbox = new Map(); // key: roomId|msgId(or preview)|createdAt
+  // 모든 채널 공용 디듀프(룸/인박스 교차)
+  const recentEvt = new Map();   // key: synthetic key -> ts
+  // 방별 마지막 메시지 등장 시각(시스템 이벤트 억제용)
+  const lastMsgSeenByRoom = new Map(); // roomId -> ts
+  // 인박스에서 받은 "같은 방, 같은 메시지ID" 재수신 차단
+  const inboxMsgSeen = new Map(); // key: `${roomId}|${msgId}` -> ts
+  function seenInboxMsg(roomId, msgId, ttlMs = 60000) {
+    if (!roomId || !msgId) return false;
+    const key = String(roomId) + '|' + String(msgId);
+    const now = Date.now();
+    const last = inboxMsgSeen.get(key);
+    if (last && (now - last) < ttlMs) return true;
+    inboxMsgSeen.set(key, now);
+    if (inboxMsgSeen.size > 800) {
+      for (const [k, ts] of inboxMsgSeen) if (now - ts > ttlMs * 2) inboxMsgSeen.delete(k);
+    }
+    return false;
+  }
+
+  function dedupeEvent(evt, ttlMs = 5000) {
+    try {
+      const t = String(evt?.type || evt?.eventType || evt?.kind || '').toUpperCase();
+      const roomId = Number(evt?.roomId ?? evt?.chatroomId ?? evt?.chatRoomId ?? evt?.groupId ?? evt?.id ?? 0);
+      const actor  = Number(evt?.userId ?? evt?.inviterUserId ?? evt?.senderUserId ?? 0);
+      const target = Number(evt?.targetUserId ?? evt?.invitedUserId ?? 0);
+      const msgId  = String(evt?.messageId ?? evt?.chatMessageId ?? '');
+      const evId   = String(evt?.eventId ?? evt?.uuid ?? '');
+
+      let key = '';
+      if (evId) {
+        key = 'EID|' + evId;
+      } else if (msgId) {
+        key = 'MSG|' + roomId + '|' + msgId;
+      } else if (/GROUP_MEMBER|ROOM_MEMBER/.test(t)) {
+        key = 'MEM|' + roomId + '|' + (target || actor || 0) + '|' + t;
+      } else if (/READ/.test(t)) {
+        const lastId = String(evt?.lastMessageId ?? evt?.chatMessageId ?? '');
+        key = 'READ|' + roomId + '|' + actor + '|' + lastId;
+      } else {
+        const payload = String(evt?.preview ?? evt?.content ?? '').slice(0, 64);
+        key = 'GEN|' + t + '|' + roomId + '|' + actor + '|' + target + '|' + payload;
+      }
+
+      const now = Date.now();
+      const last = recentEvt.get(key);
+      if (last && (now - last) < ttlMs) return true;
+
+      recentEvt.set(key, now);
+      if (recentEvt.size > 400) {
+        for (const [k, ts] of recentEvt) if (now - ts > ttlMs * 3) recentEvt.delete(k);
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 
   // ---- 엘리먼트 & 메타 ----
   const $status  = document.getElementById('ws-status');
@@ -22,16 +80,15 @@
   const $list    = document.getElementById('chat-messages');
 
   const meta        = document.getElementById('chat-meta')?.dataset || {};
-  // 서버에서 roomId가 와도 "처음엔 무조건 미선택" 상태로 시작
-    const __rawRoomId   = (meta.roomId ?? '').trim();
-    const initialRoomId = /^\d+$/.test(__rawRoomId) ? Number(__rawRoomId) : null; // 필요 시 참고용
-    let chatroomId      = null; //  자동입장 방지: 항상 null로 시작
+  const __rawRoomId   = (meta.roomId ?? '').trim();
+  const initialRoomId = /^\d+$/.test(__rawRoomId) ? Number(__rawRoomId) : null; // 참고용(자동입장 막음)
+  let chatroomId      = null; // 항상 null로 시작(자동입장 방지)
   const myUserId    = Number(meta.userId || 0);
   const ctx = meta.contextPath || '';
-  window.CONTEXT_PATH  = ctx;               // 전역에 저장
-  window.DEFAULT_AVATAR = meta.avatarDefault || '/resources/images/users/avatar-default.png';	// 기본 이미지
+  window.CONTEXT_PATH   = ctx;
+  window.DEFAULT_AVATAR = meta.avatarDefault || '/resources/images/users/avatar-default.png';
 
-  // ---- SimpleBar 스크롤 유틸 ----
+  // ---- SimpleBar 스크롤 ----
   function resolveScroller() {
     const container = document.getElementById('messageScroll');
     if (window.SimpleBar) {
@@ -58,7 +115,7 @@
     if (el) el.scrollTop = el.scrollHeight;
   }
 
-  // ---- 상태변수  ----
+  // ---- 상태변수 ----
   let stompClient = null;
   let lastMessageId = 0;
   let lastDateLabel = '';
@@ -71,13 +128,14 @@
   let readSub = null;
   let inboxSub = null;
 
-  // ---- 유틸 ----
+  // ---- 토픽 util ----
   function topicRoom(id){ return '/topic/rooms/' + id; }
   function topicRead(id){ return '/topic/rooms/' + id + '/read'; }
   function appSend(id){ return '/app/rooms/' + id + '/send'; }
   function appRead(id){ return '/app/rooms/' + id + '/read'; }
   function topicInbox(uid){ return '/topic/user.' + uid + '/inbox'; }
 
+  // ---- 포맷/정규화 ----
   function formatTime(s) {
     if (!s) return '';
     const hhmm = (s.match(/\d{2}:\d{2}/) || [])[0];
@@ -121,7 +179,7 @@
     }
   }
 
-  // ---- 렌더 ----
+  // ---- 메시지 렌더 ----
   function appendMessage(raw) {
     const msg = normalizeMessage(raw);
     if (typeof msg.messageId === 'number') {
@@ -169,15 +227,15 @@
     li.appendChild(conv);
     $list.appendChild(li);
 
-    // 목록 프리뷰 즉시 갱신
-	if (window.updateDmPreview) {
-	      // 현재 방 메시지 렌더 → 프리뷰만 갱신, 정렬 X
-	  window.updateDmPreview(chatroomId, msg.content, msg.createdAt, {reorder:false});
-   }
+    // 목록 프리뷰 즉시 갱신(정렬X)
+    if (window.updateDmPreview) {
+      window.updateDmPreview(chatroomId, msg.content, msg.createdAt, {reorder:false});
+    }
 
     scrollToBottom();
   }
-  
+
+  // ---- 인박스용 짧은 디듀프 ----
   function inboxDedupe(evt) {
     const roomId    = evt.roomId ?? evt.chatroomId ?? evt.id ?? '';
     const msgId     = evt.messageId ?? evt.chatMessageId ?? '';
@@ -186,7 +244,7 @@
     const key = roomId + '|' + (msgId || preview) + '|' + createdAt;
     const now = Date.now();
     const last = recentInbox.get(key);
-    if (last && now - last < 1500) return false; // 1.5초 내 재수신 → 무시
+    if (last && now - last < 1500) return false;
     recentInbox.set(key, now);
     if (recentInbox.size > 200) {
       for (const [k, t] of recentInbox) if (now - t > 60000) recentInbox.delete(k);
@@ -194,82 +252,130 @@
     return true;
   }
 
+  // ---- 인박스 핸들러 (알림/프리뷰/배지 전담) ----
   function inboxHandler(frame){
-	const evtRaw = JSON.parse(frame.body);
-	  if (!inboxDedupe(evtRaw)) return;
-	
-	  var t = String(evtRaw.type || evtRaw.eventType || evtRaw.kind || '').toUpperCase();
-	  var hasMsgId   = !!(evtRaw.messageId || evtRaw.chatMessageId);
-	  var hasContent = !!(evtRaw.content && String(evtRaw.content).trim()) ||
-	                   !!(evtRaw.preview && String(evtRaw.preview).trim());
-	  var isMessage  = hasMsgId || /MESSAGE/.test(t);
-	
-	  // 멤버십/시스템 이벤트는 여기서 정리(정렬/프리뷰 없이 헤더만 갱신)
-	  if (!isMessage && (t === 'GROUP_MEMBER_LEFT' || t === 'GROUP_MEMBER_JOINED' || t === 'ROOM_MEMBER_UPDATE')) {
-	    var ridForMembers = Number(evtRaw.roomId || evtRaw.chatroomId || 0);
-	    if (ridForMembers && ridForMembers === Number(chatroomId)) refreshMemberCount(chatroomId);
-	    return;
-	  }
-	  // 메시지도 아니면 무시
-	  if (!isMessage) return;
+    const evtRaw = JSON.parse(frame.body);
 
-    const roomId    = evtRaw.roomId ?? evtRaw.chatroomId ?? evtRaw.id;
-     const preview   = (evtRaw.preview ?? evtRaw.content ?? '') || ''; // 없을 수도 있음
-    const createdAt = evtRaw.createdAt ?? evtRaw.createDate ?? evtRaw.created_at ?? '';
+    const t = String(evtRaw.type || evtRaw.eventType || evtRaw.kind || '').toUpperCase();
+    const roomId = Number(evtRaw.roomId ?? evtRaw.chatroomId ?? evtRaw.id ?? 0);
     if (!roomId) return;
 
-	 const $lists = getAllListsEl();
-	 const $item  = $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li');
+    const msgIdNum  = Number(evtRaw.messageId ?? evtRaw.chatMessageId ?? 0);
+    const hasMsgId  = msgIdNum > 0;
+    const hasContent= !!(evtRaw.content && String(evtRaw.content).trim()) ||
+                      !!(evtRaw.preview && String(evtRaw.preview).trim());
+    const isMessage = hasMsgId || /MESSAGE/.test(t);
 
-    if ($item.length === 0) {
-		// 항목이 없으면 목록 새로고침으로 동기화 (내용이 없어도 정렬/뱃지 반영됨)
-		    loadDmList().then(function(){
-		      if (window.updateDmPreview) window.updateDmPreview(roomId, preview, createdAt, {reorder:true});
-		      if (Number(roomId) !== Number(chatroomId)) incrementUnread(roomId);
-		    });
+	// 🔧 [FIX] 프리뷰( msgId 없음 )와 정상( msgId 있음 )을 같은 메시지로 묶는다.
+	// - 프리뷰는 senderId가 비어있거나 createdAt이 다를 수 있으므로
+	//   (1) 내용만으로 만든 키, (2) 보낸사람+내용 키, (3) evId, (4) msgId
+	//   네 가지를 모두 60초 동안 캐시해서 어느 경로로 와도 한 번만 카운트되게 함.
+	{
+	  if (isMessage) {
+	    const content64 = String(evtRaw.preview ?? evtRaw.content ?? '').slice(0, 64);
+	    const senderId  = Number(evtRaw.senderUserId ?? evtRaw.userId ?? evtRaw.senderId ?? 0);
+
+	    // ① 내용 전용 키 (프리뷰에 senderId가 없는 케이스 커버)
+	    const sigContent       = 'SIGC|'  + content64;
+	    // ② 보낸사람+내용 키 (다중 발신자 동일 내용 구분)
+	    const sigSenderContent = 'SIGSC|' + senderId + '|' + content64;
+	    // ③ 이벤트 ID 키
+	    const evKey = (evtRaw.eventId || evtRaw.uuid) ? ('EVID|' + String(evtRaw.eventId ?? evtRaw.uuid)) : null;
+	    // ④ 메시지 ID 키
+	    const midKey = hasMsgId ? ('MID|' + msgIdNum) : null;
+
+	    // seenInboxMsg는 "조회 + 저장"을 동시에 함.
+	    // 첫 이벤트(프리뷰든 정상든)는 키들을 저장만 하고 통과,
+	    // 뒤이어 오는 짝 이벤트는 여기서 true가 되어 바로 리턴 → 배지 +1이 한 번만 됨.
+	    const dup =
+	      seenInboxMsg(roomId, sigContent,       60000) ||
+	      seenInboxMsg(roomId, sigSenderContent, 60000) ||
+	      (evKey && seenInboxMsg(roomId, evKey,  60000)) ||
+	      (midKey && seenInboxMsg(roomId, midKey,60000));
+
+	    if (dup) return;
+	  }
+	}
+
+
+    // 룸/인박스 교차 디듀프 + 짧은 윈도우 디듀프
+    if (dedupeEvent(evtRaw)) return;
+    if (!inboxDedupe(evtRaw)) return;
+
+    // 메시지면 최근 메시지 시각 기록, 시스템 이벤트는 메시지 직후 2초 억제
+    if (isMessage) {
+      lastMsgSeenByRoom.set(roomId, Date.now());
+    } else {
+      const last = lastMsgSeenByRoom.get(roomId) || 0;
+      if (Date.now() - last < 2000) return;
+    }
+
+    // 시스템 이벤트(멤버십 등): 현재 방 헤더 갱신 정도만
+    if (!isMessage) {
+      if (t === 'GROUP_MEMBER_LEFT' || t === 'GROUP_MEMBER_JOINED' || t === 'ROOM_MEMBER_UPDATE') {
+        if (roomId === Number(chatroomId)) refreshMemberCount(chatroomId);
+      }
       return;
     }
+
+    const preview   = (evtRaw.preview ?? evtRaw.content ?? '') || '';
+    const createdAt = evtRaw.createdAt ?? evtRaw.createDate ?? evtRaw.created_at ?? '';
+
+    const $lists = getAllListsEl();
+    const $item  = $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li');
+
+    if ($item.length === 0) {
+		loadDmList().then(function(){
+		       // 목록은 서버 unreadCount로 이미 정확함. 여기서 추가 증가 금지.
+		       if (window.updateDmPreview) {
+		         // 정렬만 보장하고 싶으면 유지(사실 없어도 됨)
+		         window.updateDmPreview(roomId, preview, createdAt, {reorder:true});
+		       }
+		     });
+      return;
+    }
+
     if (roomId !== chatroomId) {
       if (window.updateDmPreview) window.updateDmPreview(roomId, preview, createdAt, {reorder:true});
       incrementUnread(roomId);
     }
   }
 
+  // ---- 방 토픽 핸들러(메시지 렌더 전담) ----
   function roomHandler(message){
-     try {
-       const evt = JSON.parse(message.body);
-       const t = String(evt.type || evt.eventType || evt.kind || '').toUpperCase();
-  
-       // 멤버십 이벤트: 헤더의 멤버 수 즉시 갱신 (메시지 렌더/정렬은 건너뜀)
-       if (t === 'GROUP_MEMBER_LEFT' || t === 'GROUP_MEMBER_JOINED' || t === 'ROOM_MEMBER_UPDATE') {
-         // 내가 그 방을 보고 있을 때만
-         const rid = Number(evt.roomId || evt.chatroomId || 0);
-         if (!chatroomId || (rid && rid !== Number(chatroomId))) return;  
-         // 서버가 memberCount를 같이 보내주면 재요청 없이 바로 반영
-         if (typeof evt.memberCount === 'number') {
-           const $count = $('#room-members-count');
+    try {
+      const evt = JSON.parse(message.body);
+      const t = String(evt.type || evt.eventType || evt.kind || '').toUpperCase();
+
+      // 멤버십 이벤트: 내가 그 방을 보고 있을 때만 헤더 갱신
+      if (t === 'GROUP_MEMBER_LEFT' || t === 'GROUP_MEMBER_JOINED' || t === 'ROOM_MEMBER_UPDATE') {
+        if (dedupeEvent(evt)) return;
+        const rid = Number(evt.roomId || evt.chatroomId || 0);
+        if (!chatroomId || (rid && rid !== Number(chatroomId))) return;
+
+		     if (rtype !== 'GROUP') return;
+        if (typeof evt.memberCount === 'number') {
+          const $count = $('#room-members-count');
           const $word  = $('#room-members-word');
           $count.text(evt.memberCount);
-           $word.text(evt.memberCount === 1 ? 'Member' : 'Members');
-         } else {
-           // 없으면 API로 최신 멤버수 조회
-           refreshMemberCount(chatroomId);
-         }
-         return;
-       }
- 
-       // 일반 채팅 메시지
-       appendMessage(evt);
-     } catch(e){
-       console.error('메시지 파싱 실패', e);
-     }
-   }
+          $word.text(evt.memberCount === 1 ? 'Member' : 'Members');
+        } else {
+          refreshMemberCount(chatroomId);
+        }
+        return;
+      }
+
+      // 일반 메시지 렌더
+      appendMessage(evt);
+    } catch(e){
+      console.error('메시지 파싱 실패', e);
+    }
+  }
 
   // ---- API ----
   function loadMessages(roomId) {
     $.getJSON('/api/rooms/' + roomId + '/messages?limit=50', function(messages) {
       $('#chat-messages').empty();
-      // 서버가 DESC로 보내면 필요 시 역정렬
       if (messages.length >= 2) {
         const a = messages[0], b = messages[messages.length - 1];
         const ida = a.chatMessageId || a.messageId || 0;
@@ -283,75 +389,72 @@
 
   function markReadIfNeeded() {
     if (!stompClient || !stompClient.connected || lastMessageId === 0) return;
-	if (!chatroomId) return; 
-	if (lastMessageId === 0) return;
+    if (!chatroomId) return;
     stompClient.send(appRead(chatroomId),
       { 'content-type': 'application/json' },
       JSON.stringify({ chatMessageId: lastMessageId })
     );
   }
 
-  
-	 function updateSendBtn(){
-	   $sendBtn && ($sendBtn.disabled = !(stompClient && stompClient.connected && chatroomId));
-	}
-	 function setConnected(connected){
-	   if ($status) $status.textContent = connected ? '연결됨' : '연결 끊김 - 재시도 중...';
-	   updateSendBtn();
-	 }
+  function updateSendBtn(){
+    if ($sendBtn) $sendBtn.disabled = !(stompClient && stompClient.connected && chatroomId);
+  }
+  function setConnected(connected){
+    if ($status) $status.textContent = connected ? '연결됨' : '연결 끊김 - 재시도 중...';
+    updateSendBtn();
+  }
 
-	 function connect() {
-	   // 이미 연결돼 있거나 연결 중이면 재진입 금지
-	   if (window[WS_KEY].connected) { setConnected(true); return; }
-	   if (window[WS_KEY].connecting) return;
+  function connect() {
+    if (window[WS_KEY].connected) { setConnected(true); return; }
+    if (window[WS_KEY].connecting) return;
 
-	   window[WS_KEY].connecting = true;
-	   isConnecting = true;
+    window[WS_KEY].connecting = true;
+    isConnecting = true;
 
-	   const socket = new SockJS('/ws-stomp', null, { withCredentials: true });
-	   const client = Stomp.over(socket);
-	   window[WS_KEY].client = client;
+    const socket = new SockJS('/ws-stomp', null, { withCredentials: true });
+    const client = Stomp.over(socket);
+    window[WS_KEY].client = client;
 
-	   client.connect({}, () => {
-	     window[WS_KEY].connecting = false;
-	     window[WS_KEY].connected  = true;
-	     stompClient = client; // 기존 코드 호환
-	     setConnected(true);
+    client.connect({}, () => {
+      window[WS_KEY].connecting = false;
+      window[WS_KEY].connected  = true;
+      stompClient = client;
+      setConnected(true);
 
-	     // 방 구독(있을 때만). 이전 구독 있으면 해제
-	     if (window[WS_KEY].subs.room) { try{ window[WS_KEY].subs.room.unsubscribe(); }catch(e){} }
-	     if (window[WS_KEY].subs.read) { try{ window[WS_KEY].subs.read.unsubscribe(); }catch(e){} }
+      // 이전 구독 해제
+      try{ window[WS_KEY].subs.room?.unsubscribe(); }catch(e){}
+      try{ window[WS_KEY].subs.read?.unsubscribe(); }catch(e){}
 
-	     if (chatroomId) {
-	       window[WS_KEY].subs.room = roomSub = client.subscribe(topicRoom(chatroomId), roomHandler);
-	       window[WS_KEY].subs.read = readSub = client.subscribe(topicRead(chatroomId), function(){});
-	     }
+      if (chatroomId) {
+        window[WS_KEY].subs.room = roomSub = client.subscribe(topicRoom(chatroomId), roomHandler);
+        window[WS_KEY].subs.read = readSub = client.subscribe(topicRead(chatroomId), function(){});
+      }
 
-	     // 인박스는 세션당 정확히 1개만
-	     if (window[WS_KEY].subs.inbox) { try{ window[WS_KEY].subs.inbox.unsubscribe(); }catch(e){} }
-	     window[WS_KEY].subs.inbox = inboxSub = client.subscribe(topicInbox(myUserId), inboxHandler);
+      // 인박스는 세션당 1개
+      try{ window[WS_KEY].subs.inbox?.unsubscribe(); }catch(e){}
+      window[WS_KEY].subs.inbox = inboxSub = client.subscribe(topicInbox(myUserId), inboxHandler);
 
-	     if (document.hasFocus()) markReadIfNeeded();
-	     isConnecting = false;
-	   }, (err) => {
-	     console.error('STOMP error', err);
-	     window[WS_KEY].connecting = false;
-	     window[WS_KEY].connected  = false;
-	     isConnecting = false;
-	     setConnected(false);
+      if (document.hasFocus()) markReadIfNeeded();
+      isConnecting = false;
+    }, (err) => {
+      console.error('STOMP error', err);
+      window[WS_KEY].connecting = false;
+      window[WS_KEY].connected  = false;
+      isConnecting = false;
+      setConnected(false);
 
-	     retry = Math.min(retry + 1, 5);
-	     if (!reconnectTimer) {
-	       const delay = Math.min(1000 * Math.pow(2, retry), 10000);
-	       reconnectTimer = setTimeout(() => { reconnectTimer = null; connect(); }, delay);
-	     }
-	   });
+      retry = Math.min(retry + 1, 5);
+      if (!reconnectTimer) {
+        const delay = Math.min(1000 * Math.pow(2, retry), 10000);
+        reconnectTimer = setTimeout(() => { reconnectTimer = null; connect(); }, delay);
+      }
+    });
 
-	   socket.onclose = function() {
-	     window[WS_KEY].connected = false;
-	     setConnected(false);
-	   };
-	 }
+    socket.onclose = function() {
+      window[WS_KEY].connected = false;
+      setConnected(false);
+    };
+  }
 
   function sendMessage() {
     if (!stompClient || !stompClient.connected) return;
@@ -360,87 +463,61 @@
     stompClient.send(appSend(chatroomId), {}, JSON.stringify({ chatMessageContent: content }));
     $input.value = ''; $input.focus();
 
-    // 내 화면의 목록 프리뷰도 즉시 갱신
     if (window.updateDmPreview) {
-	//내가 보낸 직후에도 정렬 X (프리뷰/시간만 갱신)
-		window.updateDmPreview(chatroomId, content, new Date().toISOString(), {reorder:false});
-  	}
+      window.updateDmPreview(chatroomId, content, new Date().toISOString(), {reorder:false});
+    }
     scrollToBottom();
   }
 
-  
-  
   // ---- 이벤트 ----
   $sendBtn && $sendBtn.addEventListener('click', sendMessage);
   $input && $input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
   window.addEventListener('focus', markReadIfNeeded);
-  
+
   // 채팅방 나가기
   $(document).on('click', '#action-leave-room', function(e){
     e.preventDefault();
 
-    // 항상 현재 열린 방 기준으로!
     var roomId = (typeof window.CURRENT_ROOM_ID !== 'undefined' && window.CURRENT_ROOM_ID)
                    ? window.CURRENT_ROOM_ID
                    : (document.getElementById('chat-meta')?.dataset.roomId || null);
 
-    if (!roomId) {
-      alert('열린 채팅방이 없습니다.');
-      return;
-    }
-
+    if (!roomId) { alert('열린 채팅방이 없습니다.'); return; }
     if (!confirm('이 대화방을 나가시겠습니까?')) return;
 
     fetch('/api/rooms/' + roomId + '/leave', {
       method: 'POST',
       credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json'
-        // ,'X-CSRF-TOKEN': window.CSRF_TOKEN
-      }
+      headers: { 'Content-Type': 'application/json' }
     })
     .then(function(res){
-		 if (res.status === 204) {
-		        // 1) 방 토픽 구독 해제 (로컬/전역 모두)
-		        try { if (roomSub) { roomSub.unsubscribe(); roomSub = null; } } catch(e){}
-		        try { if (readSub) { readSub.unsubscribe(); readSub = null; } } catch(e){}
-		        if (window.__CHAT_WS_SINGLETON__?.subs?.room) {
-		         try { window.__CHAT_WS_SINGLETON__.subs.room.unsubscribe(); } catch(e){}
-		          window.__CHAT_WS_SINGLETON__.subs.room = null;
-		        }
-		        if (window.__CHAT_WS_SINGLETON__?.subs?.read) {
-		          try { window.__CHAT_WS_SINGLETON__.subs.read.unsubscribe(); } catch(e){}
-		          window.__CHAT_WS_SINGLETON__.subs.read = null;
-		        }
-		
-		        // 2) 현재 방 상태 해제 + 메타도 비움
-		        if (typeof chatroomId !== 'undefined') chatroomId = null;
-		        window.CURRENT_ROOM_ID = null;
-		        var metaEl = document.getElementById('chat-meta');
-		        if (metaEl) metaEl.setAttribute('data-room-id','');
-		
-		        // 3) 좌측 리스트에서 항목 즉시 제거(그룹/DM 모두)
-		        var $lists = getAllListsEl();
-		        $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li').remove();
-		
-		        // 4) 패널 초기화
-		        $('#chat-messages').empty();
-		        showEmpty();
-		        if (typeof updateSendBtn === 'function') updateSendBtn();
-		
-		        // 5) 서버 재조회로 목록 정확히 동기화(그룹+DM 둘 다 새로 그림)
-		        loadDmList().catch(function(){});
-		
-		        // 6) (선택) 헤더 타이틀도 초기화
-		        if (document.getElementById('chat-header-title')) {
-		          document.getElementById('chat-header-title').textContent = '채팅방을 선택하세요';
-		        }
-		
-		        alert('대화방에서 나갔습니다.');
-		        return;
-		      }
+      if (res.status === 204) {
+        try { roomSub?.unsubscribe(); roomSub = null; } catch(e){}
+        try { readSub?.unsubscribe(); readSub = null; } catch(e){}
+        try { if (window.__CHAT_WS_SINGLETON__?.subs?.room) { window.__CHAT_WS_SINGLETON__.subs.room.unsubscribe(); window.__CHAT_WS_SINGLETON__.subs.room = null; } } catch(e){}
+        try { if (window.__CHAT_WS_SINGLETON__?.subs?.read) { window.__CHAT_WS_SINGLETON__.subs.read.unsubscribe(); window.__CHAT_WS_SINGLETON__.subs.read = null; } } catch(e){}
+
+        chatroomId = null;
+        window.CURRENT_ROOM_ID = null;
+        var metaEl = document.getElementById('chat-meta');
+        if (metaEl) metaEl.setAttribute('data-room-id','');
+
+        var $lists = getAllListsEl();
+        $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li').remove();
+
+        $('#chat-messages').empty();
+        showEmpty();
+        updateSendBtn();
+
+        loadDmList().catch(function(){});
+        if (document.getElementById('chat-header-title')) {
+          document.getElementById('chat-header-title').textContent = '채팅방을 선택하세요';
+        }
+        alert('대화방에서 나갔습니다.');
+        return;
+      }
       return res.text().then(function(t){ throw new Error(t || ('HTTP '+res.status)); });
     })
     .catch(function(err){
@@ -451,46 +528,45 @@
 
   // ---- 부트 ----
   $(function () {
-      showEmpty();       // ★ 무조건 빈화면부터
-     loadDmList();      // 좌측 목록만 먼저 로딩
-      connect();         // ws 연결 (방 구독은 선택 후)
-    });
+    showEmpty();      // 빈 화면부터
+    loadDmList();     // 좌측 목록 로딩
+    connect();        // WS 연결(방 구독은 선택 후)
+  });
 
   // 🔵 방 전환: 연결 유지, room/read만 재구독
   window.openChatRoom = function(roomId){
-	showPane();
+    showPane();
     $('#chat-messages').empty();
     chatroomId = roomId;
     window.CURRENT_ROOM_ID = roomId;
     lastMessageId = 0;
     lastDateLabel = '';
     loadMessages(roomId);
-	//  현재 방 배지 제거
-    clearUnread(roomId);
-	applyRoomHeaderFromList(roomId);
-	refreshMemberCount(roomId);
 
-	if (window[WS_KEY].connected) {
-	  if (roomSub) { try{ roomSub.unsubscribe(); }catch(e){} roomSub = null; }
-	  if (readSub) { try{ readSub.unsubscribe(); }catch(e){} readSub = null; }
-	  roomSub = window[WS_KEY].subs.room = window[WS_KEY].client.subscribe(topicRoom(chatroomId), roomHandler);
-	  readSub = window[WS_KEY].subs.read = window[WS_KEY].client.subscribe(topicRead(chatroomId), function(){});
-	} else {
-	  connect(); // 완전히 끊겼을 때만 재연결
-	}
+    clearUnread(roomId);
+    applyRoomHeaderFromList(roomId);
+    refreshMemberCount(roomId);
+
+    if (window[WS_KEY].connected) {
+      try{ roomSub?.unsubscribe(); }catch(e){} roomSub = null;
+      try{ readSub?.unsubscribe(); }catch(e){} readSub = null;
+      roomSub = window[WS_KEY].subs.room = window[WS_KEY].client.subscribe(topicRoom(chatroomId), roomHandler);
+      readSub = window[WS_KEY].subs.read = window[WS_KEY].client.subscribe(topicRead(chatroomId), function(){});
+    } else {
+      connect();
+    }
     $('.page-title-box h4').text('Chat Room #' + roomId);
-	 // 들어오자마자 읽음 서버전송
-	 updateSendBtn();
-	 setTimeout(markReadIfNeeded, 50);
+    updateSendBtn();
+    setTimeout(markReadIfNeeded, 50);
   };
-  
+
   // 현재 방의 '읽지 않음' 배지 제거
   function clearUnread(roomId){
     var $lists = getAllListsEl();
     var $item = $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li');
     if ($item.length === 0) return;
-	 var $badge = $item.find('.dm-badge-unread');                   // 오른쪽 배지 숨김
-	 $badge.text('').hide();
+    var $badge = $item.find('.dm-badge-unread');
+    $badge.text('').hide();
   }
 
 })(window, jQuery);
@@ -502,11 +578,9 @@ function getContactsListEl() {
 }
 
 function getAllListsEl() {
-  // 그룹+DM 두 리스트를 모두
   return $('.chat-leftsidebar .chat-list');
 }
 function getGroupListEl() {
-  // 첫 번째 리스트를 그룹 리스트로 가정 (스크린샷 구조 기준)
   var $lists = getAllListsEl();
   return $lists.length > 1 ? $lists.first() : $lists.last();
 }
@@ -525,146 +599,138 @@ function escapeHtml(str){
 }
 
 function renderDmList(list) {
-	  var $dm  = getContactsListEl(); // 기존: 마지막 UL = DM
-	  var $grp = getGroupListEl();    // 첫 번째 UL = 그룹
+  var $dm  = getContactsListEl();
+  var $grp = getGroupListEl();
 
-	  // 두 리스트가 같으면(한 개만 있는 레이아웃이면) 하나만 비움, 아니면 둘 다 비움
-	  if ($grp[0] === $dm[0]) { $dm.empty(); }
-	  else { $grp.empty(); $dm.empty(); }
+  if ($grp[0] === $dm[0]) { $dm.empty(); }
+  else { $grp.empty(); $dm.empty(); }
 
-	  if (!list || list.length === 0) {
-	    $dm.append('<li class="text-muted px-3">대화 상대가 없습니다.</li>');
-	    return;
-	  }
+  if (!list || list.length === 0) {
+    $dm.append('<li class="text-muted px-3">대화 상대가 없습니다.</li>');
+    return;
+  }
 
-	  var ctx = window.CONTEXT_PATH || '';
+  var ctx = window.CONTEXT_PATH || '';
 
-	  list.forEach(function(item){
-	    var isGroup = String(item.roomType || '').toUpperCase() === 'GROUP';
-	    var name    = item.chatroomName || '(이름 없음)';
-	    var peerUserRank = isGroup ? '' : (item.peerUserRank || '');
+  list.forEach(function(item){
+    var isGroup = String(item.roomType || '').toUpperCase() === 'GROUP';
+    var name    = item.chatroomName || '(이름 없음)';
+    var peerUserRank = isGroup ? '' : (item.peerUserRank || '');
 
-	    var avatar = window.DEFAULT_AVATAR;
-	    if (!isGroup && item.peerAvatarPath) {
-	      avatar = ctx + '/resources/images/users/' + item.peerAvatarPath;
-	    } else if (isGroup && item.groupAvatarPath) {
-	      try { var arr = JSON.parse(item.groupAvatarPath); if (Array.isArray(arr) && arr.length) avatar = arr[0]; } catch(e){}
-	    }
+    var avatar = window.DEFAULT_AVATAR;
+    if (!isGroup && item.peerAvatarPath) {
+      avatar = ctx + '/resources/images/users/' + item.peerAvatarPath;
+    } else if (isGroup && item.groupAvatarPath) {
+      try { var arr = JSON.parse(item.groupAvatarPath); if (Array.isArray(arr) && arr.length) avatar = arr[0]; } catch(e){}
+    }
 
-	    var unread = (item.unreadCount != null ? Number(item.unreadCount) : 0);
-	    var when   = formatWhen(item.lastMessageAt || item.lastActivityAt || item.updatedAt || item.createdAt);
-	    var lastMsg= item.lastMessage ? String(item.lastMessage) : '';
-	    var unreadText = unread > 0 ? String(Math.min(99, unread)).padStart(2, '0') : '';
-	    var badgeHtml =
-	      '<span class="badge rounded-pill dm-badge-unread ms-2"' +
-	      (unread > 0 ? '' : ' style="display:none"') + '>' + unreadText + '</span>';
+    var unread = (item.unreadCount != null ? Number(item.unreadCount) : 0);
+    var when   = formatWhen(item.lastMessageAt || item.lastActivityAt || item.updatedAt || item.createdAt);
+    var lastMsg= item.lastMessage ? String(item.lastMessage) : '';
+    var unreadText = unread > 0 ? String(Math.min(99, unread)).padStart(2, '0') : '';
+    var badgeHtml =
+      '<span class="badge rounded-pill dm-badge-unread ms-2"' +
+      (unread > 0 ? '' : ' style="display:none"') + '>' + unreadText + '</span>';
 
-	    var html =
-	      '<li>' +
-	        '<a href="#" class="d-flex align-items-center dm-item" ' +
-	          'data-room-id="'   + item.chatroomId      + '" ' +
-	          'data-room-type="' + (item.roomType || '') + '" ' +
-	          'data-peer-name="' + escapeHtml(name)     + '" ' +
-	          'data-peer-rank="' + escapeHtml(peerUserRank) + '" ' +
-	          'data-peer-avatar="'+ escapeHtml(avatar)  + '">' +
-	            '<div class="flex-shrink-0 me-3">' +
-	              '<div class="avatar-xs">' +
-	                '<img src="' + escapeHtml(avatar) + '" class="rounded-circle avatar-img-fix" alt="avatar">' +
-	              '</div>' +
-	            '</div>' +
-	            '<div class="flex-grow-1 w-100">' +
-	              '<div class="d-flex align-items-center">' +
-	                '<h5 class="font-size-14 mb-0 flex-grow-1 text-truncate">' +
-	                  escapeHtml(peerUserRank ? (name + ' ' + peerUserRank) : name) +
-	                '</h5>' +
-	                badgeHtml +
-	              '</div>' +
-	              '<div class="d-flex align-items-center mt-1">' +
-	                '<small class="text-muted dm-last text-truncate flex-grow-1">' + escapeHtml(lastMsg) + '</small>' +
-	                '<small class="text-muted dm-when ms-2">' + escapeHtml(when) + '</small>' +
-	              '</div>' +
-	            '</div>' +
-	        '</a>' +
-	      '</li>';
+    var html =
+      '<li>' +
+        '<a href="#" class="d-flex align-items-center dm-item" ' +
+          'data-room-id="'   + item.chatroomId      + '" ' +
+          'data-room-type="' + (item.roomType || '') + '" ' +
+          'data-peer-name="' + escapeHtml(name)     + '" ' +
+          'data-peer-rank="' + escapeHtml(peerUserRank) + '" ' +
+          'data-peer-avatar="'+ escapeHtml(avatar)  + '">' +
+            '<div class="flex-shrink-0 me-3">' +
+              '<div class="avatar-xs">' +
+                '<img src="' + escapeHtml(avatar) + '" class="rounded-circle avatar-img-fix" alt="avatar">' +
+              '</div>' +
+            '</div>' +
+            '<div class="flex-grow-1 w-100">' +
+              '<div class="d-flex align-items-center">' +
+                '<h5 class="font-size-14 mb-0 flex-grow-1 text-truncate">' +
+                  escapeHtml(peerUserRank ? (name + ' ' + peerUserRank) : name) +
+                '</h5>' +
+                badgeHtml +
+              '</div>' +
+              '<div class="d-flex align-items-center mt-1">' +
+                '<small class="text-muted dm-last text-truncate flex-grow-1">' + escapeHtml(lastMsg) + '</small>' +
+                '<small class="text-muted dm-when ms-2">' + escapeHtml(when) + '</small>' +
+              '</div>' +
+            '</div>' +
+        '</a>' +
+      '</li>';
 
-	    // 그룹은 그룹 리스트에, DM은 DM 리스트에
-	    (isGroup ? $grp : $dm).append(html);
-	  });
-	}
+    (isGroup ? $grp : $dm).append(html);
+  });
+}
 
 function loadDmList() {
-	  // 1) DM 먼저
-	  return fetch('/api/rooms/dm', { credentials: 'same-origin' })
-	    .then(function(res){ if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); })
-	    .catch(function(){ return []; })
-	    .then(function(dmList){
-	      // 2) GROUP 시도 (엔드포인트가 아직 없으면 404 → 그냥 빈 배열)
-	      return fetch('/api/rooms/group', { credentials: 'same-origin' })
-	        .then(function(res){ return res.ok ? res.json() : []; })
-	        .catch(function(){ return []; })
-	        .then(function(groupList){
-	          // 3) 합치고 최신순 정렬(받은 시간 ▶︎ 마지막메시지 ▶︎ chatroomId)
-	          var list = [].concat(dmList || [], groupList || []);
-	          list.sort(function(a, b){
-	            function ts(x){ return new Date(String(x||'')).getTime() || 0; }
-	            var ai = ts(a.lastIncomingAt || a.last_message_at || a.lastMessageAt);
-	            var bi = ts(b.lastIncomingAt || b.last_message_at || b.lastMessageAt);
-	            if (ai !== bi) return bi - ai;
-	            var al = ts(a.lastMessageAt || a.lastActivityAt || a.updatedAt || a.createdAt);
-	            var bl = ts(b.lastMessageAt || b.lastActivityAt || b.updatedAt || b.createdAt);
-	            if (al !== bl) return bl - al;
-	            return (Number(b.chatroomId||0) - Number(a.chatroomId||0));
-	          });
-	          renderDmList(list);
-	          return list;
-	        });
-	    })
-	    .catch(function(err){
-	      console.error('목록 로딩 실패:', err);
-	      var $ul = getContactsListEl();
-	      $ul.empty().append('<li class="text-danger px-3">목록 로딩 실패</li>');
-	      return [];
-	    });
-	}
+  return fetch('/api/rooms/dm', { credentials: 'same-origin' })
+    .then(function(res){ if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); })
+    .catch(function(){ return []; })
+    .then(function(dmList){
+      return fetch('/api/rooms/group', { credentials: 'same-origin' })
+        .then(function(res){ return res.ok ? res.json() : []; })
+        .catch(function(){ return []; })
+        .then(function(groupList){
+          var list = [].concat(dmList || [], groupList || []);
+          list.sort(function(a, b){
+            function ts(x){ return new Date(String(x||'')).getTime() || 0; }
+            var ai = ts(a.lastIncomingAt || a.last_message_at || a.lastMessageAt);
+            var bi = ts(b.lastIncomingAt || b.last_message_at || b.lastMessageAt);
+            if (ai !== bi) return bi - ai;
+            var al = ts(a.lastMessageAt || a.lastActivityAt || a.updatedAt || a.createdAt);
+            var bl = ts(b.lastMessageAt || b.lastActivityAt || b.updatedAt || b.createdAt);
+            if (al !== bl) return bl - al;
+            return (Number(b.chatroomId||0) - Number(a.chatroomId||0));
+          });
+          renderDmList(list);
+          return list;
+        });
+    })
+    .catch(function(err){
+      console.error('목록 로딩 실패:', err);
+      var $ul = getContactsListEl();
+      $ul.empty().append('<li class="text-danger px-3">목록 로딩 실패</li>');
+      return [];
+    });
+}
 
 // 현재 방 외의 DM 항목 프리뷰/시간 갱신
 function updateDmPreview(roomId, lastMsg, lastAt, opts) {
   opts = opts || {};
-  var shouldReorder = !!opts.reorder; // 기본 false
-    //  현재 열린 방이면 절대 정렬 금지 (안전 가드)
-    if (typeof window.CURRENT_ROOM_ID !== 'undefined' &&
-       Number(roomId) === Number(window.CURRENT_ROOM_ID)) {
-      shouldReorder = false;
-    }
-  
-	var $lists = getAllListsEl();
-	var $item  = $lists.find('.dm-item[data-room-id="' + roomId + '"]').closest('li');
+  var shouldReorder = !!opts.reorder;
+  if (typeof window.CURRENT_ROOM_ID !== 'undefined' &&
+      Number(roomId) === Number(window.CURRENT_ROOM_ID)) {
+    shouldReorder = false;
+  }
+
+  var $lists = getAllListsEl();
+  var $item  = $lists.find('.dm-item[data-room-id="' + roomId + '"]').closest('li');
   if ($item.length === 0) return;
 
   var when  = formatWhen(lastAt || '');
   $item.find('.dm-last').text(String(lastMsg || ''));
   $item.find('.dm-when').text(when);
 
-  // 해당 항목이 속한 리스트(그룹/DM)의 맨 위로만 이동
-    if (shouldReorder) $item.parent().prepend($item);
+  if (shouldReorder) $item.parent().prepend($item);
 }
 
 // (보조) 미확인 배지 증가
 function incrementUnread(roomId) {
-	var $lists = getAllListsEl();
-    var $item  = $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li');
+  var $lists = getAllListsEl();
+  var $item  = $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li');
   if ($item.length === 0) return;
-    var $badge = $item.find('.dm-badge-unread');   // 윗줄 전용 배지
-    if ($badge.length === 0) {
-      var $h5 = $item.find('h5');
-      $h5.after('<span class="badge rounded-pill dm-badge-unread ms-2">01</span>');
-    } else {
-      var n = parseInt($badge.text(), 10) || 0;
-      n = Math.min(99, n + 1);
-      $badge.text(String(n).padStart(2,'0')).show();
-    }
-	 // 해당 항목이 속한 리스트 최상단으로만
-      $item.parent().prepend($item);
+  var $badge = $item.find('.dm-badge-unread');
+  if ($badge.length === 0) {
+    var $h5 = $item.find('h5');
+    $h5.after('<span class="badge rounded-pill dm-badge-unread ms-2">01</span>');
+  } else {
+    var n = parseInt($badge.text(), 10) || 0;
+    n = Math.min(99, n + 1);
+    $badge.text(String(n).padStart(2,'0')).show();
+  }
+  $item.parent().prepend($item);
 }
 
 // Contacts 항목 클릭 → 방 이동
@@ -674,40 +740,40 @@ $(document).on('click', '.dm-item', function(e){
   if (roomId) window.openChatRoom(roomId);
 });
 
-
 function applyRoomHeaderFromList(roomId){
-	// DM 리스트 + 그룹 리스트 둘 다에서 해당 roomId 항목 찾기
-	var $item = $('.chat-leftsidebar .group-list .dm-item, .chat-leftsidebar .chat-list .dm-item')
-	              .filter('[data-room-id="'+ roomId +'"]').first();
+  var $item = $('.chat-leftsidebar .group-list .dm-item, .chat-leftsidebar .chat-list .dm-item')
+                .filter('[data-room-id="'+ roomId +'"]').first();
 
-	var $avatar = $('#room-avatar');
-	var $title  = $('#room-title');
-	
-	// 드롭다운 버튼 핸들(각각 별도 변수!)
-	  var btnRename  = document.getElementById('action-rename-room');  // 이름 변경
+  var $avatar = $('#room-avatar');
+  var $title  = $('#room-title');
 
-	if ($item.length) {
-	  var name     = $item.data('peer-name')   || '채팅방';
-	  var rank     = $item.data('peer-rank')   || '';
-	  var avatar   = $item.data('peer-avatar') || window.DEFAULT_AVATAR;
-	  var roomType = String($item.data('room-type') || '').toUpperCase();
+  var btnRename  = document.getElementById('action-rename-room');  // 이름 변경
+   var $membersLink = $('#room-members-link');
+   var $membersCnt  = $('#room-members-count');
+   var $membersWord = $('#room-members-word');
 
-	  $avatar.attr('src', avatar);
-	  $title.text(rank ? (name + ' ' + rank) : name);
+  if ($item.length) {
+    var name     = $item.data('peer-name')   || '채팅방';
+    var rank     = $item.data('peer-rank')   || '';
+    var avatar   = $item.data('peer-avatar') || window.DEFAULT_AVATAR;
+    var roomType = String($item.data('room-type') || '').toUpperCase();
 
-	  // 그룹 전용 버튼만 보이게
-	     if (btnRename)  btnRename.classList.toggle('d-none',  roomType !== 'GROUP');
+    $avatar.attr('src', avatar);
+    $title.text(rank ? (name + ' ' + rank) : name);
 
-	   } else {
-	     // 목록이 아직 비어있을 때(방 생성 직후 등) 기본값 + 버튼 숨김
-	     $avatar.attr('src', window.DEFAULT_AVATAR);
-	     $title.text('채팅방 #' + roomId);
-	     if (btnMembers) btnMembers.classList.add('d-none');
-	     if (btnRename)  btnRename.classList.add('d-none');
-	   }
+    if (btnRename)  btnRename.classList.toggle('d-none',  roomType !== 'GROUP');
+  } else {
+    $avatar.attr('src', window.DEFAULT_AVATAR);
+    $title.text('채팅방 #' + roomId);
+    if (btnRename)  btnRename.classList.add('d-none');
+	   // 방 정보를 못 찾으면 멤버 UI도 안전하게 감춤
+	   $('#room-members-link').addClass('d-none').off('click');
+	   $('#room-members-count').text('');
+	   $('#room-members-word').text('');
+  }
 }
 
-// 채팅방 누르면 채팅방 아니면 빈화면
+// 채팅패널 on/off
 const pane  = document.getElementById('chat-panel');
 const empty = document.getElementById('chat-empty');
 const send  = document.getElementById('send-btn');
@@ -724,39 +790,66 @@ function showPane(){
 }
 
 window.addEventListener('beforeunload', function(){
-  try { if (window[WS_KEY].subs.room)  window[WS_KEY].subs.room.unsubscribe(); } catch(e){}
-  try { if (window[WS_KEY].subs.read)  window[WS_KEY].subs.read.unsubscribe(); } catch(e){}
-  try { if (window[WS_KEY].subs.inbox) window[WS_KEY].subs.inbox.unsubscribe(); } catch(e){}
-  try { window[WS_KEY].client && window[WS_KEY].client.disconnect(()=>{}); } catch(e){}
-  window[WS_KEY].subs = { room:null, read:null, inbox:null };
-  window[WS_KEY].client = null;
-  window[WS_KEY].connected = false;
-  window[WS_KEY].connecting = false;
+  try { window.__CHAT_WS_SINGLETON__?.subs?.room?.unsubscribe(); } catch(e){}
+  try { window.__CHAT_WS_SINGLETON__?.subs?.read?.unsubscribe(); } catch(e){}
+  try { window.__CHAT_WS_SINGLETON__?.subs?.inbox?.unsubscribe(); } catch(e){}
+  try { window.__CHAT_WS_SINGLETON__?.client && window.__CHAT_WS_SINGLETON__.client.disconnect(()=>{}); } catch(e){}
+  window.__CHAT_WS_SINGLETON__.subs = { room:null, read:null, inbox:null };
+  window.__CHAT_WS_SINGLETON__.client = null;
+  window.__CHAT_WS_SINGLETON__.connected = false;
+  window.__CHAT_WS_SINGLETON__.connecting = false;
 });
 
-// ===== 멤버 목록 모달 렌더러 =====
-// ===== 헤더: 멤버 수 갱신(+ 클릭 시 모달 열기) =====
-async function refreshMemberCount(roomId){
-	const $link  = $('#room-members-link');
-	const $count = $('#room-members-count');
-	const $word  = $('#room-members-word'); // 'Member(s)' 텍스트
-   if (!$link.length || !$count.length || !roomId) return;
+// ===== 멤버 목록 모달 & 헤더 멤버수 =====
 
-    $count.text('0');
-    $word.text('Members');
-    $link.css('cursor','pointer').attr('title','멤버 보기');
+// GROUP에서만 멤버수 표시/조회
+async function refreshMemberCount(roomId){
+  var $item = getAllListsEl().find('.dm-item[data-room-id="'+roomId+'"]').first();
+  var type  = String($item.data('room-type') || '').toUpperCase();
+  const isGroup = (type === 'GROUP'); // DM도 멤버 표시하므로 early return 제거
+
+  const $link  = $('#room-members-link');
+  const $count = $('#room-members-count');
+  const $word  = $('#room-members-word');
+  if (!$link.length || !$count.length || !roomId) return;
+
+  $count.text('0');
+  $word.text('Members');
+  $link.css('cursor','pointer').attr('title','멤버 보기');
+  
+    // 중복/탈퇴/봇 제거 유틸
+    function normalizeMembers(list){
+      const byId = new Map();
+      (list || []).forEach(u => {
+        const id = Number(u.userId ?? u.id ?? u.chatroomUserId ?? 0);
+        if (!id) return;
+        const status = String(u.status ?? u.membershipStatus ?? '').toUpperCase();
+        const left   = !!(u.leftAt || u.kickedAt || /LEFT|KICKED/.test(status));
+        const isBot  = !!(u.isBot || /bot|system/i.test(String(u.fullName||'')));
+        if (left || isBot) return;
+        if (!byId.has(id)) byId.set(id, u);   // 중복 제거
+      });
+      let arr = Array.from(byId.values());
+      // DM이면 혹시 서버가 잘못 3명 이상 주어도 2명으로 보정
+      if (!isGroup && arr.length > 2) arr = arr.slice(0, 2);
+      return arr;
+    }
 
   try{
-    const res  = await fetch('/api/rooms/' + roomId + '/members', { credentials: 'same-origin' });
-    const list = res.ok ? await res.json() : [];
-    const n    = Array.isArray(list) ? list.length : 0;
+    const res = await fetch('/api/rooms/' + roomId + '/members', { credentials: 'same-origin' });
+    if (res.status === 403) {
+      $link.off('click').css('cursor','default').removeAttr('title');
+      return;
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+	    const raw  = await res.json();
+	    const list = normalizeMembers(raw);
+	    const n    = list.length;
 
-    // 본인 포함 인원수
-	$count.text(n);
-	$word.text(n === 1 ? 'Member' : 'Members');
+    $count.text(n);
+    $word.text(n === 1 ? 'Member' : 'Members');
 
-    // 클릭하면 멤버 모달 오픈
-     $link.off('click').on('click', function(e){
+    $link.off('click').on('click', function(e){
       e.preventDefault();
       renderMembers(list);
       const el = document.getElementById('membersModal');
@@ -768,13 +861,11 @@ async function refreshMemberCount(roomId){
     });
   }catch(e){
     console.error('refreshMemberCount error:', e);
-	$count.text('0');
-	$word.text('Members');
+    $count.text('0');
+    $word.text('Members');
   }
 }
 
-
-// 멤버 목록 렌더
 function renderMembers(list){
   var ctx = window.CONTEXT_PATH || '';
   var html = (list || []).map(function(u){
@@ -794,7 +885,7 @@ function renderMembers(list){
   $('#membersList').html(html || '<li class="list-group-item text-muted">멤버 없음</li>');
 }
 
-// “멤버 목록 보기” 클릭 → API 호출 → 모달
+// “멤버 목록 보기” 버튼(별도 UI)에서도 GROUP일 때만 동작
 $(document).on('click', '#action-show-members', async function(e){
   e.preventDefault();
 
@@ -803,6 +894,10 @@ $(document).on('click', '#action-show-members', async function(e){
              : (document.getElementById('chat-meta')?.dataset.roomId || null);
   if (!roomId){ alert('열린 채팅방이 없습니다.'); return; }
 
+  var $item = getAllListsEl().find('.dm-item[data-room-id="'+roomId+'"]').first();
+  var type  = String($item.data('room-type') || '').toUpperCase();
+  if (type !== 'GROUP') return;
+
   try{
     var res = await fetch('/api/rooms/' + roomId + '/members', { credentials: 'same-origin' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -810,15 +905,11 @@ $(document).on('click', '#action-show-members', async function(e){
     renderMembers(list);
 
     var el = document.getElementById('membersModal');
-    var inst = (window.bootstrap && bootstrap.Modal) ? bootstrap.Modal.getOrCreateInstance(el)
-                                                    : null;
+    var inst = (window.bootstrap && bootstrap.Modal) ? bootstrap.Modal.getOrCreateInstance(el) : null;
     if (inst) inst.show();
   }catch(err){
     console.error('멤버 로딩 실패:', err);
     alert('멤버 목록을 불러오지 못했습니다.');
   }
 });
-
-
-
 

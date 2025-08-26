@@ -74,10 +74,12 @@ public class ChatroomService {
 	    chatroomUserMapper.upsertActive(room.getChatroomId(), targetUserId);
 
 	    // 새 방 생성 인박스 이벤트 (좌측 목록 즉시 갱신 트리거)
-	    chatService.publishRoomCreated(
-	        room.getChatroomId(),
-	        java.util.Arrays.asList(meUserId, targetUserId)
-	    );
+	    if (affected == 1) {
+	        chatService.publishRoomCreated(
+	            room.getChatroomId(),
+	            java.util.Arrays.asList(meUserId, targetUserId)
+	        );
+	    }
 
 	    // 이미 있었는지 플래그 (INSERT=1, 나머지(UPDATE/변경없음)=true)
 	    ChatroomDto dto = toDto(room);

@@ -8,13 +8,34 @@
 	<c:if test="${not empty sessionScope.loginUser}">
         <script>
             const role = '<c:out value="${sessionScope.loginUser.role}" />';
+            const role = '<c:out value="${sessionScope.loginUser.role}" />';
             console.log('User role from session:', role);
         </script>
     </c:if>
 <title>Insert title here</title>
+<style>
+/* 날씨 카드 크게 보이게 */
+#weather-body.weather-lg .icon   { width: 96px; height: 96px; }
+#weather-body.weather-lg .temp   { font-size: 2.5rem; font-weight: 700; line-height: 1; }
+#weather-body.weather-lg .city   { font-size: 1.1rem; font-weight: 600; }
+#weather-body.weather-lg .desc   { font-size: 1.05rem; margin-top: .25rem; }
+#weather-body.weather-lg .meta   { font-size: .95rem;  color: #6c757d; margin-top: .25rem; }
+
+/* 넓은 화면에서는 더 크게 */
+@media (min-width: 992px) {
+  #weather-body.weather-lg .icon { width: 112px; height: 112px; }
+/* 온도 숫자만 폰트 교체 + 여유 라인하이트 */
+#weather-body.weather-lg .temp {
+  font-family: 'Noto Sans KR', Arial, 'Apple SD Gothic Neo', system-ui, sans-serif !important;
+  font-weight: 700;
+  font-size: 3rem;
+  line-height: 1.28;
+  padding-top: 4px;
+}
+</style>
 </head>
 <body>
-	
+	<input type="hidden" id="event-login-user" value="${sessionScope.loginUser.userId}" />
 <div>
     <jsp:include page ="../views/nav/header.jsp"></jsp:include>
 </div>
@@ -140,51 +161,32 @@
                             
                             <div class="col-xl-4">
                                 <div class="card">
+                                    <div class="card-body" id="home-agenda-card">
+
+                                          <div class="d-flex align-items-center justify-content-between">
+										      <h4 class="card-title mb-0">이번 달 일정</h4>
+										      <!-- 필요 없으면 이 링크는 지워도 됩니다 -->
+										      <a href="/calendar" class="small text-muted">전체 보기</a>
+										    </div>
+										
+										    <!-- 목록이 채워질 자리 -->
+										    <div id="home-agenda-rows"></div>
+
+                                    </div> <!-- end card-body-->
+                                </div> <!-- end card-->
+                            
+                                <div class="card">
                                     <div class="card-body">
-                                        <div class="float-end">
-                                            <div class="dropdown">
-                                                <a class="dropdown-toggle text-reset" href="#" id="dropdownMenuButton1"
-                                                    data-bs-toggle="dropdown" aria-haspopup="true"
-                                                    aria-expanded="false">
-                                                    <span class="fw-semibold">Sort By:</span> <span class="text-muted">Yearly<i class="mdi mdi-chevron-down ms-1"></i></span>
-                                                </a>
-
-                                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                                                    <a class="dropdown-item" href="#">Monthly</a>
-                                                    <a class="dropdown-item" href="#">Yearly</a>
-                                                    <a class="dropdown-item" href="#">Weekly</a>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <h4 class="card-title mb-4">공지사항</h4>
-
 
                                         <div class="row align-items-center g-0 mt-3">
                                             <div class="col-sm-3">
                                                 <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-primary me-2"></i> Desktops </p>
                                             </div>
-
-                                            <div class="col-sm-9">
-                                                <div class="progress mt-1" style="height: 6px;">
-                                                    <div class="progress-bar progress-bar bg-primary" role="progressbar"
-                                                        style="width: 52%" aria-valuenow="52" aria-valuemin="0"
-                                                        aria-valuemax="52">
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div> <!-- end row-->
                                   <div class="row align-items-center g-0 mt-3">
                                             <div class="col-sm-3">
                                                 <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-info me-2"></i> iPhones </p>
-                                            </div>
-                                            <div class="col-sm-9">
-                                                <div class="progress mt-1" style="height: 6px;">
-                                                    <div class="progress-bar progress-bar bg-info" role="progressbar"
-                                                        style="width: 45%" aria-valuenow="45" aria-valuemin="0"
-                                                        aria-valuemax="45">
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div> <!-- end row-->
 
@@ -192,46 +194,30 @@
                                             <div class="col-sm-3">
                                                 <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-success me-2"></i> Android </p>
                                             </div>
-                                            <div class="col-sm-9">
-                                                <div class="progress mt-1" style="height: 6px;">
-                                                    <div class="progress-bar progress-bar bg-success" role="progressbar"
-                                                        style="width: 48%" aria-valuenow="48" aria-valuemin="0"
-                                                        aria-valuemax="48">
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div> <!-- end row-->
-
-                                        <div class="row align-items-center g-0 mt-3">
+                                        
+                                         <div class="row align-items-center g-0 mt-3">
                                             <div class="col-sm-3">
-                                                <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-warning me-2"></i> Tablets </p>
-                                            </div>
-                                            <div class="col-sm-9">
-                                                <div class="progress mt-1" style="height: 6px;">
-                                                    <div class="progress-bar progress-bar bg-warning" role="progressbar"
-                                                        style="width: 78%" aria-valuenow="78" aria-valuemin="0"
-                                                        aria-valuemax="78">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div> <!-- end row-->
-
-                                        <div class="row align-items-center g-0 mt-3">
-                                            <div class="col-sm-3">
-                                                <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-purple me-2"></i> Cables </p>
-                                            </div>
-                                            <div class="col-sm-9">
-                                                <div class="progress mt-1" style="height: 6px;">
-                                                    <div class="progress-bar progress-bar bg-purple" role="progressbar"
-                                                        style="width: 63%" aria-valuenow="63" aria-valuemin="0"
-                                                        aria-valuemax="63">
-                                                    </div>
-                                                </div>
+                                                <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-success me-2"></i> Android </p>
                                             </div>
                                         </div> <!-- end row-->
 
                                     </div> <!-- end card-body-->
                                 </div> <!-- end card-->
+                                
+                                    <div class="card">
+                                    <div class="card-body">
+                                        <div class="float-end">
+                                        <input id="weather-city" class="form-control form-control-sm" style="max-width: 160px;" placeholder="도시 (예: Seoul)">
+                                        </div>
+                                        <h4 class="card-title mb-4">날씨</h4>
+									  <div class="card-body" id="weather-body">
+									    <div class="text-muted">불러오는 중...</div>
+									  </div>
+
+                                    </div> <!-- end card-body-->
+                                </div> <!-- end card-->
+                                
                             </div> <!-- end Col -->
                         </div> <!-- end row-->
                         
@@ -244,8 +230,11 @@
 <div>
     <jsp:include page ="../views/nav/footer.jsp"></jsp:include>
 </div>
-</body>
 <div>
     <jsp:include page ="../views/nav/javascript.jsp"></jsp:include>
 </div>
+</body>
+<script src="${pageContext.request.contextPath}/resources/libs/fullcalendar/index.global.min.js"></script>
+<script src="<c:url value='/resources/js/pages/weather.init.js'/>?v=2"></script>
+<script src="${pageContext.request.contextPath}/resources/js/pages/home.init.js"></script>
 </html>

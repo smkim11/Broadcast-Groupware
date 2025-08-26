@@ -4878,3 +4878,15 @@ div.table-responsive > div.dataTables_wrapper > div.row > div[class^=col-]:last-
 .pricing-box .plan-features li {
   padding: 7px 0px;
 }
+/* 홈 일정 카드 안의 배지 가로폭 넓히기 */
+#home-agenda-rows .badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px !important;   /* ← 80~120px 사이로 취향대로 조정 */
+  padding: .4rem .75rem;
+  white-space: nowrap; /* 줄바꿈 방지 */
+}
+#home-agenda-rows .agenda-row:first-child{ margin-top: .25rem; }
+#home-agenda-rows .agenda-row + .agenda-row{ margin-top: .75rem; }
+#home-agenda-card{ min-height:200px; } /* JS에서 한 번 더 고정함 */
