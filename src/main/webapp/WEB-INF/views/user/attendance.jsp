@@ -39,6 +39,7 @@
                 <div class="col-12">
                     <div class="page-title-box d-flex align-items-center justify-content-between">
                         <h4 class="mb-0">근태</h4>
+                        <input type="hidden" name="loginUser" id="loginUser" value="${loginUser}">
                     </div>
                 </div>
             </div>
@@ -51,10 +52,30 @@
                          <div class="row">
                              <div class="col-6">
                                  <div>
-                                     <button class="btn btn-outline-primary" id="in">출근</button>
-                                     <button class="btn btn-outline-primary" id="out">퇴근</button>
-                                     <button class="btn btn-outline-primary" id="outside">외근</button>
-                                     <button class="btn btn-outline-primary" id="inside">복귀</button>
+                                 <c:choose>
+                                 	<c:when test="${attendance.attendanceIn == null}">
+                                 		<button class="btn btn-outline-primary" id="in">출근</button>
+                                 		<button class="btn btn-outline-primary" id="outside">외근</button>
+                                 	</c:when>
+                                 	<c:when test="${attendance.attendanceIn == null and attendance.attendanceOutside != null and attendance.attendanceOut == null}">
+                                 		<button class="btn btn-outline-primary" id="out">퇴근</button>
+                                 		<button class="btn btn-outline-primary" id="inside">복귀</button>
+                                 	</c:when>
+                                 	<c:when test="${attendance.attendanceIn != null and attendance.attendanceOutside == null and attendance.attendanceOut == null}">
+                                 		<button class="btn btn-outline-primary" id="out">퇴근</button>
+                                 		<button class="btn btn-outline-primary" id="outside">외근</button>
+                                 	</c:when>
+                                 	<c:when test="${attendance.attendanceIn != null and attendance.attendanceOutside != null 
+                                 					and attendance.attendanceOut == null and attendance.attendanceInside == null}">
+                                 		<button class="btn btn-outline-primary" id="out">퇴근</button>
+                                 		<button class="btn btn-outline-primary" id="inside">복귀</button>
+                                 	</c:when>
+                                 	<c:when test="${attendance.attendanceOut != null}">
+                                 	</c:when>
+                                 	<c:when test="${attendance.attendanceInside != null and attendance.attendanceInside != null}">
+                                 		<button class="btn btn-outline-primary" id="out">퇴근</button>
+                                 	</c:when>
+                                 </c:choose>
                                  </div>
                              </div>
                              <div class="col-6">
@@ -110,6 +131,7 @@
     <jsp:include page ="../nav/javascript.jsp"></jsp:include>
 </div>
 <script>
+	const loginUser = document.getElementById("loginUser").value;
     // 실시간 시계 1초마다 실행
 	var clockDate = document.getElementById("date");
 	var clockTime = document.getElementById("time");
@@ -133,9 +155,138 @@
             (minutes < 10 ? "0" + minutes : minutes) + ":" +
             (seconds < 10 ? "0" + seconds : seconds);
     }
-
     clock();
     setInterval(clock, 1000); // 1초마다 실행
+
+	var btnIn = document.getElementById("in");
+    var btnOut = document.getElementById("out");
+    var btnOutside = document.getElementById("outside");
+    var btnInside = document.getElementById("inside");
+    
+    // 출근 기록 (출근버튼이 있을때만 실행가능)
+    if(btnIn){
+    	btnIn.addEventListener('click',()=>{
+        	fetch("/insertAttendanceIn", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({userId:loginUser})
+        	}).then((res) => {
+        		if(res.ok){
+        			Swal.fire({
+        		        title: "출근하였습니다.",
+        		        icon: "success",
+        				confirmButtonText: "확인",
+        		        confirmButtonColor: "#34c38f"
+        		    }).then((result)=>{ // 확인 누르면 페이지 새로고침
+        		    	if(result.isConfirmed){
+        		    		location.reload();
+        		    	}
+        		    });
+        		}else{
+        			Swal.fire({
+        	            title: "오류",
+        	            icon: "error",
+        				confirmButtonText: "확인",
+        				confirmButtonColor: "#34c38f"
+        	        });
+        		}
+        	});
+        });
+    }
+    
+    // 퇴근 기록(퇴근버튼이 있을때만 실행가능)
+    if(btnOut){
+    	btnOut.addEventListener('click',()=>{
+        	fetch("/updateAttendanceOut", {
+                method: "PATCH",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({userId:loginUser})
+        	}).then((res) => {
+        		if(res.ok){
+        			Swal.fire({
+        		        title: "퇴근하였습니다.",
+        		        icon: "success",
+        				confirmButtonText: "확인",
+        		        confirmButtonColor: "#34c38f"
+        		    }).then((result)=>{ // 확인 누르면 페이지 새로고침
+        		    	if(result.isConfirmed){
+        		    		location.reload();
+        		    	}
+        		    });
+        		}else{
+        			Swal.fire({
+        	            title: "오류",
+        	            icon: "error",
+        				confirmButtonText: "확인",
+        				confirmButtonColor: "#34c38f"
+        	        });
+        		}
+        	});
+        });
+    }
+    
+    // 외근 기록(외근버튼이 있을때만 가능)
+    if(btnOutside){
+    	btnOutside.addEventListener('click',()=>{
+        	fetch("/updateAttendanceOutside", {
+                method: "PATCH",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({userId:loginUser})
+        	}).then((res) => {
+        		if(res.ok){
+        			Swal.fire({
+        		        title: "외근.",
+        		        icon: "success",
+        				confirmButtonText: "확인",
+        		        confirmButtonColor: "#34c38f"
+        		    }).then((result)=>{ // 확인 누르면 페이지 새로고침
+        		    	if(result.isConfirmed){
+        		    		location.reload();
+        		    	}
+        		    });
+        		}else{
+        			Swal.fire({
+        	            title: "오류",
+        	            icon: "error",
+        				confirmButtonText: "확인",
+        				confirmButtonColor: "#34c38f"
+        	        });
+        		}
+        	});
+        });
+    }
+    
+    // 외근복귀 기록(복귀버튼이 있을때만 가능)
+    if(btnInside){
+    	btnInside.addEventListener('click',()=>{
+        	fetch("/updateAttendanceInside", {
+                method: "PATCH",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({userId:loginUser})
+        	}).then((res) => {
+        		if(res.ok){
+        			Swal.fire({
+        		        title: "외근복귀하였습니다.",
+        		        icon: "success",
+        				confirmButtonText: "확인",
+        		        confirmButtonColor: "#34c38f"
+        		    }).then((result)=>{ // 확인 누르면 페이지 새로고침
+        		    	if(result.isConfirmed){
+        		    		location.reload();
+        		    	}
+        		    });
+        		}else{
+        			Swal.fire({
+        	            title: "오류",
+        	            icon: "error",
+        				confirmButtonText: "확인",
+        				confirmButtonColor: "#34c38f"
+        	        });
+        		}
+        	});
+        });
+    }
+    
 </script>
 <!-- plugin js -->
 <script src="${pageContext.request.contextPath}/resources/libs/moment/min/moment.min.js"></script>
