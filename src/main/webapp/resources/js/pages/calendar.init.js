@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function(){
         n.classList.remove("was-validated"),
         n.reset(),
         o = null,
-        t.innerText = "일정생성", // 모달 제목 변경
+        t.innerText = "일정등록", // 모달 제목 변경
         newEventData = e;
     }
 
@@ -331,7 +331,7 @@ document.addEventListener("DOMContentLoaded", function(){
 		    }).then((res) => {
 				if(res.ok){
 					Swal.fire({
-				        title: "생성되었습니다.",
+				        title: "등록되었습니다.",
 				        icon: "success",
 						confirmButtonText: "확인",
 				        confirmButtonColor: "#34c38f"
@@ -340,7 +340,7 @@ document.addEventListener("DOMContentLoaded", function(){
 		            s.push(d);
 				}else{
 					Swal.fire({
-	                    title: "생성을 실패했습니다.",
+	                    title: "등록을 실패했습니다.",
 	                    icon: "error",
 						confirmButtonText: "확인",
 						confirmButtonColor: "#34c38f"

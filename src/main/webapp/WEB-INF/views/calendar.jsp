@@ -63,7 +63,7 @@
 												    </div>
 												
 												    <button class="btn btn-outline-primary" id="btn-new-event">
-												        <i class="mdi mdi-plus-circle-outline"></i> 일정생성
+												        <i class="mdi mdi-plus-circle-outline"></i> 일정등록
 												    </button>
 												</div>
 
@@ -159,7 +159,7 @@
                                                         <div class="col-6 text-end">
                                                             <button type="button" class="btn btn-outline-secondary waves-effect" data-bs-dismiss="modal">닫기</button>
                                                             <button type="submit" class="btn btn-outline-success waves-effect waves-light" id="edit-event-btn">수정</button>
-                                                            <button type="submit" class="btn btn-outline-success waves-effect waves-light" id="btn-save-event">저장</button>
+                                                            <button type="submit" class="btn btn-outline-success waves-effect waves-light" id="btn-save-event">등록</button>
                                                         </div>
                                                     </div>
                                                 </form>
