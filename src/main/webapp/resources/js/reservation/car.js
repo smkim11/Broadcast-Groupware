@@ -559,7 +559,7 @@
 		    // 비활성 or 활성화
 		    carToggle.addEventListener("submit", function(e) {
 				e.preventDefault();
-				console.log($(this).serialize());
+				//console.log($(this).serialize());
 				
 				$.ajax({
 				    url: "/api/car/carToggle",
@@ -627,7 +627,7 @@
 		    // 비활성화 폼에서 선택한 차량 가져오기
 		    $('#toggleVehicleSelect').change(function() {
 		        var selectedId = $(this).val();
-		        console.log('선택한 차량 ID (이슈등록 폼):', selectedId);
+		        //console.log('선택한 차량 ID (이슈등록 폼):', selectedId);
 		        $('#carToggle input[name="vehicleId"]').val(selectedId); 
 		    });
 
