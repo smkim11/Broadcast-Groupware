@@ -225,7 +225,7 @@
 					}
 				}
 
-				// 3) 예약 구간   ← ★ 선택 구간 뒤로 이동해서 빨강이 파랑을 덮음
+				// 3) 예약 구간 
 				periods.forEach((p, index) => {
 
 					const startStr = p.reservationStart || p.start;
@@ -434,9 +434,9 @@
 		    
 		    drawCharts();
 	
-		    console.log("차량 타입:", vehicleType);
-		    console.log("대여일시:", startDateTime);
-		    console.log("반납일시:", endDateTime);
+		    //console.log("차량 타입:", vehicleType);
+		    //console.log("대여일시:", startDateTime);
+		    //console.log("반납일시:", endDateTime);
 		});
 		
 		// 모달
@@ -502,16 +502,30 @@
 		            type: "post",
 		            data: $(this).serialize(),
 		            success: function(response) {
-		                alert("차량 등록 완료");
-		                modal.style.display = "none";
-		                location.reload();
+						Swal.fire({
+				            title: "차량 등록 완료",
+				            icon: "success",
+				            confirmButtonText: "확인",
+				            confirmButtonColor: "#34c38f"
+				        }).then(() => {
+				            modal.style.display = "none";
+				            location.reload();
+				        });
 		            },
 		            error: function(xhr, status, error) {
-		                alert("등록 실패: " + error);
+						Swal.fire({
+				            title: "등록 실패",
+				            text: error,
+				            icon: "error",
+				            confirmButtonText: "확인",
+				            confirmButtonColor: "#34c38f"
+				        });
 		            }
 		        });
 		    });
 		    
+			// 차량정보 수정
+			/*
 		    modifyCar.addEventListener("submit", function(e) {
 				e.preventDefault();
 				
@@ -520,15 +534,27 @@
 					type: "post",
 					data: $(this).serialize(),
 					success: function(response) {
-						alert("수정 완료");
-						modal.style.display = "none";
-						location.reload();
+						Swal.fire({
+					        title: "수정되었습니다",
+					        icon: "success",
+							confirmButtonText: "확인",
+					        confirmButtonColor: "#34c38f"
+					    }).then(() => {
+					            modal.style.display = "none";
+					            location.reload();
+					        });
 					},
 					error: function(xhr, status, error) {
-						alert("수정 실패: " + error);
+						Swal.fire({
+		                    title: "수정을 실패했습니다.",
+		                    icon: "error",
+							confirmButtonText: "확인",
+							confirmButtonColor: "#34c38f"
+		                });
 					}
 				});
 		    });
+			*/
 		    
 		    // 비활성 or 활성화
 		    carToggle.addEventListener("submit", function(e) {
@@ -546,9 +572,15 @@
 				        vehicleStatus: $('#toggleSwitch').is(':checked') ? "Y" : "N"
 				    },
 				    success: function(res){
-				        console.log("변경 완료");
-				        modal.style.display = "none";
-						location.reload();
+						Swal.fire({
+					        title: "수정되었습니다",
+					        icon: "success",
+							confirmButtonText: "확인",
+					        confirmButtonColor: "#34c38f"
+					    }).then(() => {
+					            modal.style.display = "none";
+					            location.reload();
+					        });
 				    }
 				});
 		    });
@@ -574,7 +606,7 @@
 	                         // 옵션 추가
 	                         select.append(
 	                             '<option value="' + vehicle.vehicleId + '">' 
-	                             + vehicle.vehicleNo + ' (' + statusText + ')' 
+	                             + vehicle.vehicleName + ' ' + vehicle.vehicleNo + ' (' + statusText + ')' 
 	                             + '</option>'
 	                         );
 	                     });
@@ -689,24 +721,55 @@
 						
 						// 예약 취소 이벤트
 						cancelBtn.addEventListener("click", async function(){
-							//console.log("취소 차량 예약 ID 확인:", c.vehicleReservationId);
+						    // 예약 취소 여부 확인
+						    const result = await Swal.fire({
+						        title: "예약을 취소하시겠습니까?",
+						        icon: "warning",
+						        showCancelButton: true,
+						        confirmButtonText: "예",
+						        cancelButtonText: "아니요",
+						        confirmButtonColor: "#34c38f",
+						        cancelButtonColor: "#f46a6a"
+						    });
 
-							if(!confirm("예약을 취소하시겠습니까?")) return;
-							
-							try {
-								const res = await fetch("/api/user/cancelMyReservation?vehicleReservation=" + c.vehicleReservationId, {
-									method: "post"
-								});
-								
-								if(!res.ok) throw new Error("서버 오류");
-								
-								alert("예약이 취소되었습니다.");
-								tr.remove(); // 예약내역 삭제
-							} catch (err) {
-								//console.error(err);
-								alert("예약 취소중 오류가 발생했습니다.");
-							}
+						    if(result.isConfirmed){
+						        try {
+						            const res = await fetch("/api/user/cancelMyReservation?vehicleReservation=" + c.vehicleReservationId, {
+						                method: "post"
+						            });
+
+						            if(!res.ok) throw new Error("서버 오류");
+
+						            await Swal.fire({
+						                title: "예약이 취소되었습니다.",
+						                icon: "success",
+						                confirmButtonText: "확인",
+						                confirmButtonColor: "#34c38f"
+						            })
+
+						            tr.remove();
+						        } catch (err) {
+						            Swal.fire({
+						                title: "예약 취소 중 오류가 발생했습니다.",
+						                text: err.message,
+						                icon: "error",
+						                confirmButtonText: "확인",
+						                confirmButtonColor: "#34c38f"
+						            });
+						        }
+						    } else if(result.dismiss === Swal.DismissReason.cancel){
+						        Swal.fire({
+						            title: "취소되었습니다.",
+						            icon: "info",
+						            confirmButtonText: "확인",
+						            confirmButtonColor: "#34c38f"
+						        }).then(() => {
+							            modal.style.display = "none";
+							            location.reload();
+							        });
+						    }
 						});
+
 						
 						// 버튼생성
 						tdCancel.appendChild(cancelBtn);
@@ -795,10 +858,10 @@
 					return;
 		        }
 		        
-		        console.log("userId:", userId);
-		        console.log("vehicleId:", vehicleId);
-		        console.log("start:", startDateTime);
-		        console.log("end:", endDateTime);		     
+		        //console.log("userId:", userId);
+		        //console.log("vehicleId:", vehicleId);
+		        //console.log("start:", startDateTime);
+		        //console.log("end:", endDateTime);		     
 		
 		        $.ajax({
 		            url: "/api/car/CarReservation",
@@ -810,14 +873,26 @@
 		                vehicleReservationStartTime: startDateTime,
 		                vehicleReservationEndTime: endDateTime
 		            }),
-		            success: function(res) {
-		                alert(res);
-		                // 예약 후 리스트 다시 로드
-		                location.reload();
+		            success: function(res) {						
+						Swal.fire({
+					        title: "예약되었습니다.",
+					        icon: "success",
+							confirmButtonText: "확인",
+					        confirmButtonColor: "#34c38f"
+					    }).then(() => {
+					            modal.style.display = "none";
+					            location.reload();
+					        });
+		              
 		            },
 		            error: function(err) {
 		                console.error("예약 실패", err);
-		                alert("예약에 실패했습니다.");
+						Swal.fire({
+		                    title: "등록을 실패했습니다.",
+		                    icon: "error",
+							confirmButtonText: "확인",
+							confirmButtonColor: "#34c38f"
+		                });
 		            }
 		        });
 		    }

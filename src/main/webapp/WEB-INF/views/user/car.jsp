@@ -5,7 +5,8 @@
 <head>
 <meta charset="UTF-8">
 <title>차량예약</title>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <!-- Flatpickr CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
@@ -555,7 +556,7 @@ box-sizing: border-box;
 			<!-- 모드 선택 -->
 			<select name="adminType" id="adminType">
 				<option value="등록">등록</option>
-				<option value="수정">수정</option>
+				<!-- <option value="수정">수정</option> -->
 				<option value="이슈등록">차량관리</option>
 			</select>
 			
@@ -666,4 +667,8 @@ box-sizing: border-box;
 
 </body>
 <script src="${pageContext.request.contextPath}/resources/js/reservation/car.js"></script>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
+<!-- parsleyjs -->
+<script src="${pageContext.request.contextPath}/resources/libs/parsleyjs/parsley.min.js"></script>
 </html>
