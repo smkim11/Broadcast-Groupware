@@ -5,11 +5,12 @@ document.addEventListener("DOMContentLoaded", function() {
         timeZone: "local",
         editable: false,
         initialView: "dayGridMonth",
+		aspectRatio: 1.8,
         themeSystem: "bootstrap",
         headerToolbar: {
-            left: "prev,next",
+            left: "prev,next today",
             center: "title",
-            right: "today"
+            right: "dayGridMonth,dayGridWeek,timeGridDay,listMonth"
         },
 		locale: "ko",
 		buttonText: {
@@ -19,8 +20,10 @@ document.addEventListener("DOMContentLoaded", function() {
 		  day: '일'
 		},
         events: [
+			/*
             { title: "All Day Event", start: new Date() },
             { title: "Meeting", start: new Date(), className: "bg-success" }
+			*/
         ]
     });
 
