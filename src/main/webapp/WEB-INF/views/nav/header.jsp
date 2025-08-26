@@ -38,7 +38,7 @@
                     <div class="d-flex">
                         <!-- LOGO -->
                         <div class="navbar-brand-box">
-                            <a href="index.html" class="logo logo-dark">
+                            <a href="/home" class="logo logo-dark">
                                 <span class="logo-sm">
                                     <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
                                 </span>
@@ -47,12 +47,12 @@
                                 </span>
                             </a>
 
-                            <a href="index.html" class="logo logo-light">
+                            <a href="/home" class="logo logo-light">
                                 <span class="logo-sm">
                                     <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
                                 </span>
                                 <span class="logo-lg">
-                                    <img src="${pageContext.request.contextPath}/resources/images/logo-light.png" alt="" height="20">
+                                    <img src="${pageContext.request.contextPath}/resources/images/logo-dark2.png" alt="" height="20">
                                 </span>
                             </a>
                         </div>
@@ -136,7 +136,7 @@
                                     <a href="javascript:void(0);" class="text-dark notification-item">
                                         <div class="d-flex align-items-start">
                                             <div class="flex-shrink-0 me-3">
-                                                <img src="${pageContext.request.contextPath}/resources/images/users/user.png" class="rounded-circle avatar-xs" alt="user-pic">
+                                                <img src="${pageContext.request.contextPath}/resources/images/users/avatar-default.png" class="rounded-circle avatar-xs" alt="user-pic">
                                             </div>
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-1">James Lemire</h6>
@@ -169,7 +169,7 @@
                                     <a href="javascript:void(0);" class="text-dark notification-item">
                                         <div class="d-flex align-items-start">
                                             <div class="flex-shrink-0 me-3">
-                                                <img src="${pageContext.request.contextPath}/resources/images/users/user.png" class="rounded-circle avatar-xs" alt="user-pic">
+                                                <img src="${pageContext.request.contextPath}/resources/images/users/avatar-default.png" class="rounded-circle avatar-xs" alt="user-pic">
                                             </div>
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-1">Salena Layfield</h6>
@@ -240,16 +240,16 @@
 
                 <!-- LOGO -->
                 <div class="navbar-brand-box">
-                    <a href="index.html" class="logo logo-dark">
+                    <a href="/home" class="logo logo-dark">
                         <span class="logo-sm">
                             <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
                         </span>
                         <span class="logo-lg">
-                            <img src="${pageContext.request.contextPath}/resources/images/logo-dark.png" alt="" height="20">
+                            <img src="${pageContext.request.contextPath}/resources/images/logo-dark2.png" alt="" height="60">
                         </span>
                     </a>
 
-                    <a href="index.html" class="logo logo-light">
+                    <a href="/home" class="logo logo-light">
                         <span class="logo-sm">
                             <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
                         </span>
