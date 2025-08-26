@@ -114,6 +114,26 @@
 		WHERE vehicle_reservation_id = #{vehicleReservationId}
 	</delete>
 	
+	<!-- 비활성화 차량중 오늘 날짜 기준 이슈날짜 종료 차량 조회 -->
+	<select id="StatusNList" resultType="int">
+		SELECT v.vehicle_id AS vehicleId
+		FROM vehicle v
+		INNER JOIN vehicle_use_reason vr
+		ON v.vehicle_id = vr.vehicle_id
+		WHERE v.vehicle_status = 'N' AND vr.vehicle_use_reason_end_date &lt; NOW()
+	</select>
+	
+	<!-- 이슈 종료 차량 상태값 변경 -->
+	<update id="modifyCarStatus" parameterType="list">
+	    UPDATE vehicle
+	    SET vehicle_status = 'Y'
+	    WHERE vehicle_id IN
+	    <foreach item="id" collection="list" open="(" separator="," close=")">
+	        #{id}
+	    </foreach>
+	</update>
+
+	
 	
 	
 	<!-- === 회의실 === -->

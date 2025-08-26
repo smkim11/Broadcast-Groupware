@@ -103,6 +103,14 @@ public class ReservationService {
 		return cancel > 0;
 	}
 	
+	@Transactional
+	public int modifyCarStatus() {
+		List<Integer> vehicleStatusNList = reservationMapper.StatusNList();
+		
+		return reservationMapper.modifyCarStatus(vehicleStatusNList);
+		
+	}
+	
 	// === 회의실 ===
 	// 관리자-회의실 등록
 	public boolean addMeetingRoom(Room room) {
@@ -159,6 +167,8 @@ public class ReservationService {
 		}
 		
 	}
+
+	
 
 	
 	

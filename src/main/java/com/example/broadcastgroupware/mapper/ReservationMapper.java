@@ -48,13 +48,19 @@ public interface ReservationMapper {
 
 	// 차량 예약 취소
 	int cancelReservation(int vehicleReservationId);
-
-	int addMeetingRoom(Room room);
+	
+	// 비활성화 차량중 오늘 날짜 기준 이슈날짜 종료 차량 조회
+	List<Integer> StatusNList();
+	
+	// 이슈 종료 차량 상태값 변경
+	int modifyCarStatus(List<Integer> vehicleStatusNList);
 
 	
 	// === 회의실 ===
 	// 관리자용 회의실 리스트
 	List<Room> meetingroomAdminList();
+	
+	int addMeetingRoom(Room room);
 
 
 	// 관리자-회의실 이슈등록
@@ -72,6 +78,8 @@ public interface ReservationMapper {
 	// 회의실 예약
 	void meetingroomReservation(@Param("reservations") List<MeetingroomReservationDto> reservations, 
 	                            @Param("userId") int userId);
+
+
 
 	
 }

@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 
-    // 2관리자 회의실 등록
+    // 관리자 회의실 등록
     const addForm = forms["등록"];
     if(addForm) {
         addForm.addEventListener("submit", function(e) {
@@ -194,9 +194,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		            };
 		        });
 
-                console.log("선택된 날짜:", selectedDate);
-                console.log("선택된 시간:", selectedTimes);
-                console.log("Ajax로 전송될 데이터:", $(this).serialize());
+                //console.log("선택된 날짜:", selectedDate);
+                //console.log("선택된 시간:", selectedTimes);
+                //console.log("Ajax로 전송될 데이터:", $(this).serialize());
 
                 $.ajax({
                     url: '/api/meetingroom/reservation',
