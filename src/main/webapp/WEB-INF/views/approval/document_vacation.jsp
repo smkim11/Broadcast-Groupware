@@ -32,9 +32,6 @@
 		    <!-- 본문 폼 -->
 		    <form id="vacationDocForm" method="post" action="${pageContext.request.contextPath}/approval/vacation">
 		        <input type="hidden" name="documentType" value="VACATION">
-		        
-		        <!-- 제출: 'N' / 임시저장: 'Y' -->
-    			<input type="hidden" id="saveFlag" name="approvalDocumentSave" value="N">
 		
 				<!-- 선택 결과(JSON) -->
 			    <input type="hidden" id="approvalLineJson" name="approvalLineJson" value="[]">
@@ -77,7 +74,7 @@
 		                        <tr>
 		                            <th class="bg-light text-center">제목</th>
 		                            <td colspan="3">
-		                                <input type="text" id="docTitle" name="title" class="form-control" placeholder="제목을 입력하세요">
+		                                <input type="text" id="docTitle" name="title" class="form-control" value="휴가 요청 건입니다.">
 		                            </td>
 		                        </tr>
 		                    </tbody>
@@ -216,8 +213,13 @@
     <jsp:include page ="../nav/footer.jsp"></jsp:include>
 </div>
 
+<div>
+    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
+</div>
+
 <script>
-    (function () {
+	// ===== 휴가 종류 선택에 따른 반차 시간 활성/비활성 =====
+	(function () {
     	const full = document.getElementById('vacTypeFull');
     	const half = document.getElementById('vacTypeHalf');
     	const am = document.getElementById('halfAm');
@@ -247,10 +249,11 @@
 
         full.addEventListener('change', sync);
         half.addEventListener('change', sync);
-        sync(); // 초기 상태 반영
+        sync();  // 초기 상태 반영
     })();
    
     
+	// ===== 휴가 문서 제출/임시저장/취소 처리 =====
     (function () {
         const form = document.getElementById('vacationDocForm');
         const btnSubmit = document.getElementById('btnSubmit');
@@ -265,7 +268,7 @@
         const hiddenRefs = document.getElementById('referenceLineJson');  // 서버 전송 대비 히든 JSON(참조선)
 
         
-		/* ==== 접힘 상세(본문) 렌더 ==== */
+		// === 접힘 상세(본문) 렌더 ===
         
         // 안전한 JSON 파서 (정상 JSON이면 객체/배열로 파싱)
         function safeParse(json, fallback) {
@@ -288,18 +291,18 @@
 	 	
 	    
 		// === 결재선 상세 렌더링 ===
-		function renderApvDetail()
+		function renderApvDetail() {}
 	    
 	    
 	 	// === 참조선 상세 렌더링 ===
-	 	function renderRefDetail()
+	 	function renderRefDetail() {}
 	    
 	    // 초기 렌더
 	    renderApvDetail();
 	    renderRefDetail();
         
 	    
-        // 상신/임시저장 공통 처리 (isDraft=true -> 임시저장, false -> 상신)
+	 	// ===== 문서 저장 (isDraft=true -> 임시저장, false -> 진행 중) =====
         function submitDocument(isDraft) {
             if (!form) return;
 
@@ -334,8 +337,7 @@
                 approvalLines: apvLines.map(function (it, idx) {
                     return {
                         userId: it.userId,
-                        approvalLineSequence: (it.approvalLineSequence || it.sequence || (idx + 1)),
-                        approvalLineStatus: '대기'
+                        approvalLineSequence: (it.approvalLineSequence || it.sequence || (idx + 1))
                     };
                 }),
                 referenceLines: refLines.map(function (it) {
@@ -400,7 +402,4 @@
 </script>
 
 </body>
-<div>
-    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
-</div>
 </html>

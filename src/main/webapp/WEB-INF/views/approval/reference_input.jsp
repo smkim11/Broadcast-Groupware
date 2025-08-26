@@ -84,6 +84,7 @@
 																	               id="t${team.id}"
 																	               data-type="TEAM"
 																	               data-id="${team.id}"
+																	               data-team-id="${team.id}"
 																	               data-name="${team.name}"
 																	               data-dept="${dept.name}"
 																	               data-team="${team.name}">
@@ -100,6 +101,7 @@
 																	                   id="u${user.id}"
 																	                   data-type="USER"
 																	                   data-id="${user.id}"
+																	                   data-team-id="${team.id}"
 																	                   data-name="${user.name}"
 																	                   data-rank="${user.userRank}"
 																	                   data-dept="${dept.name}"
@@ -160,13 +162,16 @@
 						                </tbody>
 						            </table>
 						        </div>
+						        <small class="text-muted d-block mt-1">※ 팀 참조는 최대 3팀까지만 가능합니다.</small>
+						        <small class="text-muted d-block mt-1">※ 개인 참조는 최대 10명까지만 가능합니다.</small>
+						        <small class="text-muted d-block mt-1">※ 참조 대상은 총 15개까지만 가능합니다.</small>
 						    </div>						    
 						</div>
 
                     <!-- 하단 버튼 -->
                     <div class="d-flex justify-content-end gap-2 mt-3">
-                        <button type="button" id="btnRefApply" class="btn btn-outline-success">적용</button>
                         <a href="javascript:history.back();" class="btn btn-outline-secondary">닫기</a>
+                        <button type="button" id="btnRefApply" class="btn btn-outline-success">적용</button>
                     </div>
                    
                 </div>
@@ -228,7 +233,7 @@
         const addBtn = document.getElementById('btnAdd');
         const removeBtn = document.getElementById('btnRemove');
         const resetBtn = document.getElementById('btnReset');
-        const applyBtn = document.getElementById('btnRefApply');  // id에 맞게 수정
+        const applyBtn = document.getElementById('btnRefApply');
 
         // 상한 값
         const MAX_TEAMS = 3;   // 최대 3팀
@@ -246,11 +251,35 @@
             return tblBody.querySelectorAll('tr').length;
         }
 
-        // 추가 버튼 상태 (총합 15개 선택 시 비활성화)
+        // 추가 버튼 상태 (총 15개 선택 시 비활성화)
         function updateAddBtnState() {
-            const count = countTotal();
-            addBtn.disabled = (count >= MAX_TOTAL);
+	      addBtn.disabled = (countTotal() >= MAX_TOTAL);
+	    }
+        
+    	// 팀 선택 시 소속 개인 체크박스 비활성화
+        function setTeamUsersDisabled(teamId, disabled) {
+            document.querySelectorAll('.user-chk[data-team-id="' + teamId + '"]').forEach(function(chk) {
+                if (disabled) chk.checked = false;
+                chk.disabled = disabled;
+                const label = chk.closest('li.form-check')?.querySelector('label');  // 라벨 흐리게
+                if (label) label.classList.toggle('text-muted', disabled);
+            });
         }
+
+    	// 해당 팀이 체크된 상태면 개인 선택 불가
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('team-chk')) {
+                const teamId = e.target.dataset.teamId;
+                setTeamUsersDisabled(teamId, e.target.checked);
+            }
+            if (e.target.classList.contains('user-chk')) {
+                const teamId = e.target.dataset.teamId;
+                const teamChk = document.querySelector('.team-chk[data-team-id="' + teamId + '"]');
+                if (teamChk && teamChk.checked) {
+                    e.target.checked = false;
+                }
+            }
+        });
         
         // 좌측에서 선택된 참조 대상들을 우측 테이블에 추가 (중복 방지 + 상한 제한)
         function addSelectedRefs() {
@@ -261,53 +290,79 @@
             let userCnt = countUsers();
             let totalCnt = countTotal();
 
-            let blockedByLimit = false;  // 상한 초과로 추가하지 못한 참조자 존재 여부
+            let totalAtLimit = false;  		// 상한 초과로 추가하지 못한 참조자 존재 여부
+            let userBlockedByTeam = false;  // 팀 선택 시 개인 추가 차단
+            let userAtLimit = false;  		// 개인 초과 여부
+            let teamAtLimit = false;       	// 팀 초과 여부
 
             for (const chk of checked) {
-                const type = chk.dataset.type;            // USER | TEAM
+                const type = chk.dataset.type;  // USER | TEAM
                 const id = chk.dataset.id;
                 const name = chk.dataset.name || '';
                 const rank = chk.dataset.rank || '';
                 const dept = chk.dataset.dept || '';
                 const team = chk.dataset.team || '';
+                const teamId = chk.dataset.teamId || '';
 
                 // 중복 확인: 이미 추가된 대상이면 패스
                 if (tblBody.querySelector('tr[data-type="' + type + '"][data-id="' + id + '"]')) {
                     chk.checked = false;
                     continue;
                 }
+                
+             	// 팀이 이미 선택된 경우 개인 선택 불가
+                if (type == 'USER' && teamId) {
+                    const existsTeamRow = tblBody.querySelector('tr[data-type="TEAM"][data-id="' + teamId + '"]');
+                    if (existsTeamRow) {
+                        chk.checked = false;
+                        if (!userBlockedByTeam) {
+                            alert('해당 팀이 참조로 추가되어 개인을 별도로 선택할 수 없습니다.');
+                            userBlockedByTeam = true;
+                        }
+                        continue;
+                    }
+                }
+             	
+             	// 팀 참조 추가 시 해당 팀 개인 참조 제거
+                if (type == 'TEAM' && teamId) {
+                    tblBody.querySelectorAll('tr[data-type="USER"][data-team-id="' + teamId + '"]').forEach(function(tr) {
+                        tr.remove();
+                        userCnt--;
+                        totalCnt--;
+                    });
+                }
 
                 // 총합 상한 체크
                 if (totalCnt >= MAX_TOTAL) {
-                    blockedByLimit = true;
+                	totalAtLimit = true;
                     chk.checked = false;
                     continue;
                 }
 
                 // 유형별 상한 체크
                 if (type == 'TEAM' && teamCnt >= MAX_TEAMS) {
-                    alert('팀 참조는 최대 ' + MAX_TEAMS + '팀까지만 가능합니다.');
+                	teamAtLimit = true;
                     chk.checked = false;
                     continue;
                 }
                 if (type == 'USER' && userCnt >= MAX_USERS) {
-                    alert('개인 참조는 최대 ' + MAX_USERS + '명까지만 가능합니다.');
+                	userAtLimit = true;
                     chk.checked = false;
                     continue;
                 }
-
+             
                 // 행 추가
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-type', type);
                 tr.setAttribute('data-id', id);
+                if (teamId) tr.setAttribute('data-team-id', teamId);
                 tr.innerHTML =
                     '<td class="text-center"><input type="checkbox" class="row-chk"></td>' +
                     '<td class="text-center">' + (type == 'USER' ? '개인' : '팀') + '</td>' +
-                    '<td class="text-start">' + (type == 'USER' ? name + (rank ? ' (' + rank + ')' : '') : name) + '</td>' +
-                    '<td class="text-start"><span class="small text-muted d-inline-block text-truncate" style="max-width: 220px;">' +
+                    '<td class="text-center">' + (type == 'USER' ? name + (rank ? ' (' + rank + ')' : '') : name) + '</td>' +
+                    '<td class="text-center"><span class="small text-muted d-inline-block text-truncate" style="max-width: 220px;">' +
                         (dept || '') + ((dept && team) ? ' / ' : '') + (team || '') +
                     '</span></td>';
-
                 tblBody.appendChild(tr);
 
                 // 카운트 증가
@@ -319,8 +374,14 @@
                 chk.checked = false;
             }
 
-            if (blockedByLimit) {
-                alert('참조 대상은 총합 ' + MAX_TOTAL + '개까지만 추가할 수 있습니다.');
+            if (teamAtLimit) {
+                alert('팀 참조는 최대 ' + MAX_TEAMS + '팀까지만 가능합니다.');
+            }
+            if (userAtLimit) {
+                alert('개인 참조는 최대 ' + MAX_USERS + '명까지만 가능합니다.');
+            }
+            if (totalAtLimit) {
+                alert('참조 대상은 총 ' + MAX_TOTAL + '개까지만 추가할 수 있습니다.');
             }
 
             updateAddBtnState();
@@ -338,6 +399,9 @@
         function resetAll() {
             tblBody.innerHTML = '';
             document.querySelectorAll('.ref-chk:checked').forEach(function(chk){ chk.checked = false; });
+            document.querySelectorAll('.team-chk').forEach(function(teamChk) {
+                setTeamUsersDisabled(teamChk.dataset.teamId, false);
+            });
             updateAddBtnState();
         }
 
@@ -359,6 +423,7 @@
                 return;
             }
 
+            
             // 최종 검증
             const teamCnt = countTeams();
             const userCnt = countUsers();
@@ -380,7 +445,7 @@
             // 선택된 행들을 전송/저장용 최소 데이터로 변환
             const list = Array.from(rows).map(function(tr, idx){
                 return {
-                    type: tr.getAttribute('data-type'),      // USER or TEAM
+                    type: tr.getAttribute('data-type'),      	   // USER or TEAM
                     id: parseInt(tr.getAttribute('data-id'), 10),  // userId or teamId
                     seq: idx + 1
                 };

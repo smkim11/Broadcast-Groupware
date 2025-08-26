@@ -29,6 +29,6 @@ public interface ApprovalMapper {
     List<ReferenceLine> selectReferenceLines(@Param("approvalDocumentId") int approvalDocumentId);
 
     // 문서 상태 변경
-    int updateDocumentSubmitted(@Param("approvalDocumentId") int approvalDocumentId);  // 제출 = 'N'
-    int updateDocumentDraft(@Param("approvalDocumentId") int approvalDocumentId);      // 임시저장 = 'Y'
+    int updateDocumentStatus(@Param("approvalDocumentId") int approvalDocumentId,
+            				@Param("status") String status);
 }

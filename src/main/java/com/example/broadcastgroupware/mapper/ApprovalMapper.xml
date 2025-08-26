@@ -14,10 +14,10 @@
             useGeneratedKeys="true" keyProperty="approvalDocumentId">
         INSERT INTO approval_document (
             user_id,approval_document_title, approval_document_content,
-            approval_document_save, create_date, update_date
+            approval_document_status, create_date, update_date
         ) VALUES (
             #{userId}, #{approvalDocumentTitle}, #{approvalDocumentContent},            
-            #{approvalDocumentSave}, NOW(), NOW()
+            #{approvalDocumentStatus}, NOW(), NOW()
         )
     </insert>
 
@@ -121,20 +121,25 @@
 	</select>
 	
 	
-	<!-- 제출: save = 'N' -->
-	<update id="updateDocumentSubmitted" parameterType="int">
+	<!-- 문서 상태 UPDATE -->
+	<update id="updateDocumentStatus" parameterType="map">
 	    UPDATE approval_document
-	    SET approval_document_save = 'N',
+	    SET approval_document_status = #{status},
 	        update_date = NOW()
 	    WHERE approval_document_id = #{approvalDocumentId}
 	</update>
 	
-	<!-- 임시저장: save = 'Y' -->
-	<update id="updateDocumentDraft" parameterType="int">
-	    UPDATE approval_document
-	    SET approval_document_save = 'Y',
-	        update_date = NOW()
+	<!-- 결재선 상태에 따른 문서 상태 -->
+	<select id="selectApprovalLineStatusCounts"
+	        parameterType="int"
+	        resultType="map">
+	    SELECT
+	        COUNT(*) AS totalCnt,
+	        SUM(CASE WHEN approval_line_status = '승인' THEN 1 ELSE 0 END) AS approvedCnt,
+	        SUM(CASE WHEN approval_line_status = '반려' THEN 1 ELSE 0 END) AS rejectedCnt,
+	        SUM(CASE WHEN approval_line_status = '대기' THEN 1 ELSE 0 END) AS pendingCnt
+	    FROM approval_line
 	    WHERE approval_document_id = #{approvalDocumentId}
-	</update>
+	</select>
 
 </mapper>

@@ -32,9 +32,6 @@
 		    <!-- 본문 폼 -->
 		    <form id="commonDocForm" method="post" action="${pageContext.request.contextPath}/approval/common">
 		        <input type="hidden" name="documentType" value="COMMON">
-		        
-		        <!-- 제출: 'N' / 임시저장: 'Y' -->
-    			<input type="hidden" id="saveFlag" name="approvalDocumentSave" value="N">
 		
 				<!-- 선택 결과(JSON) -->
 			    <input type="hidden" id="approvalLineJson" name="approvalLineJson" value="[]">
@@ -77,7 +74,7 @@
 			                    <tr>
 			                        <th class="bg-light text-center">제목</th>
 			                        <td colspan="3">
-			                            <input type="text" id="docTitle" name="approvalDocumentTitle" class="form-control" placeholder="제목을 입력하세요">
+			                            <input type="text" id="docTitle" name="approvalDocumentTitle" class="form-control" placeholder="OOO에 관한 보고서입니다.">
 			                        </td>
 			                    </tr>
 			                    <tr>
@@ -159,6 +156,10 @@
     <jsp:include page ="../nav/footer.jsp"></jsp:include>
 </div>
 
+<div>
+    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
+</div>
+
 <script>
     (function () {
         const form = document.getElementById('commonDocForm');
@@ -208,7 +209,7 @@
 	    renderRefDetail();
 
 	    
-        // 상신/임시저장 공통 처리 (isDraft=true -> 임시저장, false -> 상신)
+	 	// ===== 문서 저장 (isDraft=true -> 임시저장, false -> 진행 중) =====
         function submitDocument(isDraft) {
             if (!form) return;
 
@@ -217,9 +218,9 @@
             const contentEl = form.querySelector('[name="approvalDocumentContent"]');
             const userIdEl  = form.querySelector('[name="userId"]');
             
-            const title   = (titleEl ? titleEl.value : '').trim();
+            const title = (titleEl ? titleEl.value : '').trim();
             const content = (contentEl ? contentEl.value : '').trim();
-            const userId  = parseInt(userIdEl ? userIdEl.value : '0', 10) || 0;
+            const userId = parseInt(userIdEl ? userIdEl.value : '0', 10) || 0;
             
             const apvLines = getApprovalLines();
             const refLines = getReferenceLines();
@@ -232,8 +233,7 @@
                 approvalLines: apvLines.map(function (it, idx) {
                 	return {
                         userId: it.userId,
-                        approvalLineSequence: (it.approvalLineSequence || it.sequence || (idx + 1)),
-                        approvalLineStatus: '대기'
+                        approvalLineSequence: (it.approvalLineSequence || it.sequence || (idx + 1))
                     };
                 }),
                 referenceLines: refLines.map(function (it) {
@@ -291,7 +291,4 @@
 </script>
 
 </body>
-<div>
-    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
-</div>
 </html>

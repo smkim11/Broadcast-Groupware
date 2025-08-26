@@ -8,7 +8,7 @@ public class ApprovalDocument {
 	private int userId;
 	private String approvalDocumentTitle;
 	private String approvalDocumentContent;
-	private String approvalDocumentSave;  // 'Y','N'
+	private String approvalDocumentStatus;  // '임시저장','진행 중','승인','반려'
 	private String createDate;
 	private String updateDate;
 }

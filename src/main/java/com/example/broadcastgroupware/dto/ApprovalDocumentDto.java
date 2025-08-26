@@ -10,7 +10,7 @@ public class ApprovalDocumentDto {
     private Integer userId;
     private String approvalDocumentTitle;
     private String approvalDocumentContent;
-    private String approvalDocumentSave;  // 'Y' = 임시저장 | 'N' = 제출 (기본값)
+    private String approvalDocumentStatus;
     private String createDate;
     private String updateDate;
     

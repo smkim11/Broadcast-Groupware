@@ -143,13 +143,14 @@
 						            </table>
 						        </div>
 						        <small class="text-muted d-block mt-2">※ 순서는 ▲/▼ 버튼으로 조정합니다.</small>
+						        <small class="text-muted d-block mt-2">※ 결재선은 최대 3명까지 선택 가능합니다.</small>
 						    </div>						    
 						</div>
 
                     <!-- 하단 버튼 -->
                     <div class="d-flex justify-content-end gap-2 mt-3">
-                        <button type="button" id="btnApply" class="btn btn-outline-success">적용</button>
                         <a href="javascript:history.back();" class="btn btn-outline-secondary">닫기</a>
+                        <button type="button" id="btnApply" class="btn btn-outline-success">적용</button>
                     </div>
 
                 </div>
@@ -346,7 +347,7 @@
           	}
             
        	  	if (rows.length > MAX_APPROVERS) {
-       	       	alert('결재선은 최대 3명까지 가능합니다.');
+       	       	alert('결재선은 최대 3명까지 선택 가능합니다.');
        	      	return;
        	   	}
             	

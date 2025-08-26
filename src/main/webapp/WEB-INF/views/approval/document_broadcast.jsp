@@ -32,9 +32,6 @@
 		    <!-- 본문 폼 -->
 		    <form id="broadcastDocForm" method="post" action="${pageContext.request.contextPath}/approval/broadcast">
 		        <input type="hidden" name="documentType" value="BROADCAST">
-		        
-		        <!-- 제출: 'N' / 임시저장: 'Y' -->
-    			<input type="hidden" id="saveFlag" name="approvalDocumentSave" value="N">
 		
 				<!-- 선택 결과(JSON) -->
 			    <input type="hidden" id="approvalLineJson" name="approvalLineJson" value="[]">
@@ -77,7 +74,7 @@
 		                        <tr>
 		                            <th class="bg-light text-center">제목</th>
 		                            <td colspan="3">
-		                                <input type="text" id="docTitle" name="title" class="form-control" placeholder="제목을 입력하세요">
+		                                <input type="text" id="docTitle" name="title" class="form-control" value="방송 편성에 대한 요청 건입니다.">
 		                            </td>
 		                        </tr>
 		                    </tbody>
@@ -239,6 +236,10 @@
     <jsp:include page ="../nav/footer.jsp"></jsp:include>
 </div>
 
+<div>
+    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
+</div>
+
 <script>
     (function () {
         const form = document.getElementById('broadcastDocForm');
@@ -288,7 +289,7 @@
 	    renderRefDetail();
         
 	    
-    	// 상신/임시저장 공통 처리 (isDraft=true -> 임시저장, false -> 상신)
+	 	// ===== 문서 저장 (isDraft=true -> 임시저장, false -> 진행 중) =====
         function submitDocument(isDraft) {
             if (!form) return;
 
@@ -324,8 +325,7 @@
                 approvalLines: apvLines.map(function (it, idx) {
                     return {
                         userId: it.userId,
-                        approvalLineSequence: (it.approvalLineSequence || it.sequence || (idx + 1)),
-                        approvalLineStatus: '대기'
+                        approvalLineSequence: (it.approvalLineSequence || it.sequence || (idx + 1))
                     };
                 }),
                 referenceLines: refLines.map(function (it) {
@@ -366,7 +366,7 @@
                         throw new Error(t || ('HTTP ' + resp.status));
                     });
                 }
-                return resp.json(); // 생성된 문서 ID
+                return resp.json();  // 생성된 문서 ID
             })
             .then(function (docId) {
                 console.log('방송 문서 저장 완료:', docId, isDraft ? '(임시저장)' : '(상신)');
@@ -392,7 +392,4 @@
 </script>
 
 </body>
-<div>
-    <jsp:include page ="../nav/javascript.jsp"></jsp:include>
-</div>
 </html>

@@ -28,14 +28,14 @@ public class ApprovalDocumentService {
     // 공통(일반) 문서 작성
     @Transactional
     public int createCommonDocument(ApprovalDocumentDto request, boolean draft) {
-        request.setApprovalDocumentSave(draft ? "Y" : "N");  // 버튼에 따라 저장 상태 확정
+    	request.setApprovalDocumentStatus(draft ? "임시저장" : "진행 중");  // 버튼에 따라 저장 상태 확정
         return saveDocumentWithLines(request);
     }
 
     // 휴가 문서 작성
     @Transactional
     public int createVacationDocument(ApprovalDocumentDto request, boolean draft) {
-    	request.setApprovalDocumentSave(draft ? "Y" : "N");
+    	request.setApprovalDocumentStatus(draft ? "임시저장" : "진행 중");
     	int docId = saveDocumentWithLines(request);
 
         VacationFormDto vacationFormRequest = request.getVacationForm();  // 휴가 문서일 때만 값 존재
@@ -50,7 +50,7 @@ public class ApprovalDocumentService {
     // 방송 문서 작성
     @Transactional
     public int createBroadcastDocument(ApprovalDocumentDto request, boolean draft) {
-    	request.setApprovalDocumentSave(draft ? "Y" : "N");
+    	request.setApprovalDocumentStatus(draft ? "임시저장" : "진행 중");
         int docId = saveDocumentWithLines(request);
 
         BroadcastFormDto broadcastFormRequest = request.getBroadcastForm();  // 방송 문서일 때만 값 존재
@@ -102,8 +102,8 @@ public class ApprovalDocumentService {
     
     private int saveDocumentWithLines(ApprovalDocumentDto request) {
         ApprovalDocument document = toEntity(request);
-        if (document.getApprovalDocumentSave() == null) {
-            document.setApprovalDocumentSave("N"); // 안전 보정
+        if (document.getApprovalDocumentStatus() == null || document.getApprovalDocumentStatus().isBlank()) {
+            document.setApprovalDocumentStatus("진행 중"); // 안전 보정: 명시 없으면 진행 중
         }
         approvalMapper.insertApprovalDocument(document);
         return document.getApprovalDocumentId();
@@ -184,7 +184,7 @@ public class ApprovalDocumentService {
         entity.setUserId(request.getUserId() == null ? 0 : request.getUserId());
         entity.setApprovalDocumentTitle(request.getApprovalDocumentTitle());
         entity.setApprovalDocumentContent(request.getApprovalDocumentContent());
-        entity.setApprovalDocumentSave(request.getApprovalDocumentSave());
+        entity.setApprovalDocumentStatus(request.getApprovalDocumentStatus());
         return entity;
     }
 
