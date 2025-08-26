@@ -13,6 +13,7 @@ import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.AddIssueToRoom;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
+import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
 
 @Mapper
@@ -68,5 +69,9 @@ public interface ReservationMapper {
 	// 회의실 예약 리스트
 	List<RoomReservation> meetingroomReservations(int roomId);
 
+	// 회의실 예약
+	void meetingroomReservation(@Param("reservations") List<MeetingroomReservationDto> reservations, 
+	                            @Param("userId") int userId);
 
+	
 }

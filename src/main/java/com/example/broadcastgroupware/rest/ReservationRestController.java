@@ -21,6 +21,7 @@ import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.AddIssueToRoom;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
+import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.dto.ReservationPeriod;
@@ -296,19 +297,23 @@ public class ReservationRestController {
 	
 	// 회의실 예약
 	@PostMapping("/meetingroom/reservation")
-	public String meetingroomReservation(@RequestBody List<RoomReservation> reservations, HttpSession session) {
+	public String meetingroomReservation(@RequestBody List<MeetingroomReservationDto> reservations, HttpSession session) {
 	    UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 	    int userId = loginUser.getUserId();
 
-	    for(RoomReservation r : reservations) {
-	        r.setUserId(userId);
+	    boolean success = reservationService.meetingroomReservation(reservations, userId);
+	    
+	    for(MeetingroomReservationDto r : reservations) {
 	        log.info("roomId: {}", r.getRoomId());
 	        log.info("roomReservationReason: {}", r.getRoomReservationReason());
 	        log.info("roomReservationStartTime: {}", r.getRoomReservationStartTime());
 	        log.info("roomReservationEndTime: {}", r.getRoomReservationEndTime());
 	    }
+	    if(!success) {
+			return "등록에 실패했습니다";
+		}
+		return "success";
 
-	    return "success";
 	}
 
 	

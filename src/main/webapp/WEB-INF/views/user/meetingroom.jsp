@@ -248,6 +248,49 @@ input:checked + .slider:before {
 	gap: 10px;
 }
 
+.fc-event {
+ color: #fff !important;
+ cursor: default !important;
+}
+.fc-event:hover {
+ opacity: 1 !important;
+ color: #fff !important;
+}
+
+/* 월뷰 각 날짜 셀 높이 고정 */
+.fc-daygrid-day {
+    height: 120px;      /* 원하는 높이로 조정 */
+    min-height: 120px;  /* 최소 높이 고정 */
+    max-height: 120px;  /* 최대 높이 고정 */
+    position: relative; /* 이벤트 위치 조정 용도 */
+    overflow: hidden;   /* 셀 내부 이벤트 넘침 처리 */
+}
+
+/* 셀 안 이벤트 영역 */
+.fc-daygrid-day-events {
+    max-height: 100%;   /* 셀 높이에 맞춤 */
+    overflow-y: auto;   /* 스크롤 가능 */
+}
+
+/* 이벤트 간격 조정 */
+.fc-daygrid-event {
+    margin-bottom: 2px;
+}
+
+
+
+/* 날짜 셀 이벤트 영역 */
+.fc-daygrid-day-events {
+    max-height: 70px;   /* 2건 정도만 보이도록 높이 제한 */
+    overflow-y: auto;   /* 스크롤 가능 */
+}
+
+/* 이벤트 간격 조정 */
+.fc-daygrid-event {
+    margin-bottom: 2px;
+}
+
+
 </style>
 <title>회의실</title>
 </head>
@@ -405,7 +448,7 @@ input:checked + .slider:before {
 		    
 			<p id="chooseDate" class="chooseDate">선택한 날짜:</p>
 			<div>
-				사유 : <input type="text" id="roomReservationReason" placeholder="예약 사유를 입력하세요.">
+				사유 : <input type="text" id="roomReservationReason" placeholder="회의 주제를 입력하세요.">
 			</div>
 				<div id="timeSlots" class="time-slots">
 					
@@ -413,7 +456,7 @@ input:checked + .slider:before {
 				
 				<div class="btn-group">
 					<button class="close" type="button">닫기</button>
-					<button type="submit">예약하기</button>
+					<button type="submit">예약</button>
 				</div>
 			</form>
 		</div>

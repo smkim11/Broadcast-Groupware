@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function() {
         var timeSlotsContainer = document.getElementById('timeSlots');
         for(var hour=0; hour<24; hour+=2){
             var start = hour.toString().padStart(2,'0') + ":00";
-            var end = (hour+2).toString().padStart(2,'0') + ":00";
+            var end = (hour+2).toString().padStart(2,'0') + ":50";
             var label = document.createElement('label');
             label.innerHTML = '<input type="checkbox" name="selectedTime" value="' + start + '-' + end + '"><span>' + start + ' ~ ' + end + '</span>';
             timeSlotsContainer.appendChild(label);
@@ -185,16 +185,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
 		        // 날짜 + 시간
 				var reservations = selectedTimes.map(function(timeRange){
-				            var times = timeRange.split("-");
-				            return {
-				                roomId: roomListSelect.value,
-				                roomReservationReason: reasonText.value.trim(),
-				                roomReservationStartTime: selectedDate + " " + times[0] + ":00",
-				                roomReservationEndTime: selectedDate + " " + times[1] + ":00"
-				            };
-				        });
-
-		        
+		            var times = timeRange.split("-");
+		            return {
+		                roomId: roomListSelect.value,
+		                roomReservationReason: reasonText.value.trim(),
+		                roomReservationStartTime: selectedDate + " " + times[0] + ":00",
+		                roomReservationEndTime: selectedDate + " " + times[1] + ":50"
+		            };
+		        });
 
                 console.log("선택된 날짜:", selectedDate);
                 console.log("선택된 시간:", selectedTimes);
@@ -235,10 +233,18 @@ document.addEventListener("DOMContentLoaded", function() {
                 center: "title",
                 right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth"
             },
+			buttonText: {
+						today: "오늘",
+						month: "월",
+						week: "주",
+						day: "일",
+						list: "목록"
+			},
             initialView: "dayGridMonth",
             editable: false,
             selectable: true,
             droppable: false,
+			dayMaxEvents: false,
             dateClick: function(info){
                 selectedDate = info.dateStr;
 
@@ -250,6 +256,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             },
             events: []
+			
+			
         });
         calendar.render();
     }
@@ -270,6 +278,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if(meetingroomList.length > 0){
                 select.val(meetingroomList[0].roomId).trigger("change");
             }
+			
         },
         error: function(err) {
             console.error('회의실 목록 불러오기 실패:', err);
@@ -291,6 +300,7 @@ document.addEventListener("DOMContentLoaded", function() {
             type: 'GET',
             data: { roomId: roomId },
             success: function(reservations) {
+				//console.log("예약데이터:", reservations);
                 calendar.removeAllEvents();
                 reservations.forEach(function(r){
                     calendar.addEvent({

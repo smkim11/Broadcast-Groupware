@@ -14,6 +14,7 @@ import com.example.broadcastgroupware.domain.VehicleReservation;
 import com.example.broadcastgroupware.dto.AddIssueToRoom;
 import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
+import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
@@ -147,5 +148,18 @@ public class ReservationService {
 		return reservationMapper.meetingroomReservations(roomId);
 	}
 
+	// 회의실 예약
+	public boolean meetingroomReservation(List<MeetingroomReservationDto> reservations, int userId) {
+		try {
+			reservationMapper.meetingroomReservation(reservations, userId);
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
+	        return false;
+		}
+		
+	}
+
+	
 	
 }

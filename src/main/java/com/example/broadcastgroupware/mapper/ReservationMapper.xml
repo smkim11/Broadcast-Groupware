@@ -159,4 +159,12 @@
 		ON r.room_id = rr.room_id
 		WHERE r.room_id = #{roomId}
 	</select>
+	
+	<insert id="meetingroomReservation">
+		INSERT INTO room_reservation(room_id, user_id, room_reservation_reason, room_reservation_start_time, room_reservation_end_time)
+		VALUES
+			<foreach collection="reservations" item="r" separator=",">
+				(#{r.roomId}, #{userId}, #{r.roomReservationReason}, #{r.roomReservationStartTime}, #{r.roomReservationEndTime})
+			</foreach>
+	</insert>
 </mapper>
