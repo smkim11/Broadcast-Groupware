@@ -1,5 +1,6 @@
 package com.example.broadcastgroupware.rest;
 
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,5 +24,29 @@ public class AttendanceRest {
 		UserSessionDto user = (UserSessionDto)session.getAttribute("loginUser");
 		attendance.setUserId(user.getUserId());
 		attendanceService.insertAttendanceIn(attendance);
+	}
+	
+	// 퇴근 기록
+	@PatchMapping("/updateAttendanceOut")
+	public void updateAttendanceOut(@RequestBody Attendance attendance, HttpSession session) {
+		UserSessionDto user = (UserSessionDto)session.getAttribute("loginUser");
+		attendance.setUserId(user.getUserId());
+		attendanceService.updateAttendanceOut(attendance);
+	}
+	
+	// 외근 기록
+	@PatchMapping("/updateAttendanceOutside")
+	public void updateAttendanceOutside(@RequestBody Attendance attendance, HttpSession session) {
+		UserSessionDto user = (UserSessionDto)session.getAttribute("loginUser");
+		attendance.setUserId(user.getUserId());
+		attendanceService.updateAttendanceOutside(attendance);
+	}
+
+	// 외근복귀 기록
+	@PatchMapping("/updateAttendanceInside")
+	public void updateAttendanceInside(@RequestBody Attendance attendance, HttpSession session) {
+		UserSessionDto user = (UserSessionDto)session.getAttribute("loginUser");
+		attendance.setUserId(user.getUserId());
+		attendanceService.updateAttendanceInside(attendance);
 	}
 }
