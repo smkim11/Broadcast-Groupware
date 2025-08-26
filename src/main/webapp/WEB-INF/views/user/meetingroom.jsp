@@ -435,6 +435,31 @@ input:checked + .slider:before {
 		</div>
 	</div>
 	
+	
+	<!-- 상세보기 모달 -->
+	<div id="detailReservation-modal" class="modal">
+		<div id="detail-modal">
+		<span class="close">&times;</span>
+			<h3>상세정보</h3>
+			
+			<table id="meetingroomReservationDetail" class="meetingroomDatail">
+				<thead>
+					<tr>
+						<th>사용일</th>
+						<th>사용 시간</th>
+						<th>회의 주제</th>
+						<th>예약자</th>
+						<th>예약 취소</th>
+					</tr>
+				</thead>	
+				
+				<tbody id="detailList">
+					
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
 	<!-- 날짜 클릭시 모달 => 예약 -->
 	<div id="reservationMeetingroom-modal" class="modal">
 		<div class="reservation-modal">

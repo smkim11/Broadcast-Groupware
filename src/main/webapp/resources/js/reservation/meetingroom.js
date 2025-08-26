@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-
 	// 관리자 모달 관련 변수
 	const adminModal = document.getElementById("management-modal"); // 
 	const btnOpenAdminModal = document.getElementById("management");
@@ -272,7 +271,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 				//console.log("선택된 날짜:", selectedDate);
 				//console.log("선택된 시간:", selectedTimes);
-				console.log("Ajax로 전송될 데이터:", $(this).serialize());
+				//console.log("Ajax로 전송될 데이터:", $(this).serialize());
 
 				$.ajax({
 					url: '/api/meetingroom/reservation',
@@ -331,21 +330,19 @@ document.addEventListener("DOMContentLoaded", function() {
 					return;
 				}
 
-				// ########## 수정된 부분 ##########
-				// 문자열 비교 대신 Date 객체를 생성하여 년/월/일을 직접 비교하는 방식으로 변경
+				// 문자열 비교 대신 날짜를 생성하여 yyyy-mm-dd을 직접 비교하는 방식으로 변경
 				const reservationsForDay = currentRoomReservations.filter(reservation => {
-					// 서버에서 받은 예약 시작 시간 문자열로 Date 객체를 생성합니다.
+					// 서버에서 받은 예약 시작 시간 문자열로 날짜 객체를 생성
 					const reservationDate = new Date(reservation.roomReservationStartTime);
-					// 캘린더에서 클릭한 날짜 문자열로 Date 객체를 생성합니다.
-					// 'T00:00:00'을 추가하여 시간대(timezone)에 따른 날짜 변경 오류를 방지합니다.
+					// 캘린더에서 클릭한 날짜 문자열로 날짜 객체를 생성
+					// 'T00:00:00'을 추가하여 시간대(timezone)에 따른 날짜 변경 오류를 방지
 					const clickedDate = new Date(selectedDate + 'T00:00:00');
 
-					// 두 Date 객체의 년, 월, 일이 모두 일치하는 경우에만 true를 반환합니다.
+					// 두 날짜 객체의 yyyy-mm-dd 모두 일치하는 경우에만 true를 반환
 					return reservationDate.getFullYear() === clickedDate.getFullYear() &&
 						   reservationDate.getMonth() === clickedDate.getMonth() &&
 						   reservationDate.getDate() === clickedDate.getDate();
 				});
-				// ########## 수정 종료 ##########
 
 				const timeSlotsContainer = document.getElementById('timeSlots');
 				const labels = timeSlotsContainer.querySelectorAll('label');
@@ -385,6 +382,42 @@ document.addEventListener("DOMContentLoaded", function() {
 					if(chooseDateP) chooseDateP.textContent = "선택한 날짜: " + selectedDate;
 				}
 			},
+			
+			// TODO: 예약 클릭시 상세보기 모달
+			eventClick: function(info){
+				var reservationId = info.event.id;
+				var reservation = currentRoomReservations.find(function(r){
+					return r.roomReservationId == reservationId;
+				});
+				if(!reservation) return;
+
+				var detailModal = document.getElementById("detailReservation-modal");
+				if(detailModal) detailModal.style.display = "flex";
+
+				var tbody = document.getElementById("detailList");
+				if(tbody){
+					tbody.innerHTML = "";
+					var tr = document.createElement("tr");
+					var useDate = reservation.roomReservationStartTime.split(" ")[0];
+					var useTime = reservation.roomReservationStartTime.split(" ")[1] + " ~ " + reservation.roomReservationEndTime.split(" ")[1];
+
+					tr.innerHTML = "<td>" + useDate + "</td>" +
+								   "<td>" + useTime + "</td>" +
+								   "<td>" + reservation.roomReservationReason + "</td>" +
+								   "<td>" + reservation.userName + '(' + reservation.userRank + ')' + "</td>" +
+								   "<td><button class='cancelBtn' data-id='" + reservation.roomReservationId + "'>취소</button></td>";
+
+					tbody.appendChild(tr);
+				}
+
+				var closeBtn = detailModal.querySelector(".close");
+				if(closeBtn){
+					closeBtn.onclick = function(){
+						detailModal.style.display = "none";
+					};
+				}
+			},
+			
 			events: []
 			
 			
