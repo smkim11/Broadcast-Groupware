@@ -288,29 +288,38 @@ document.addEventListener("DOMContentLoaded", function() {
 
 				// 사유
 				reasonInput.value = reasonText ? reasonText.value.trim() : "";
+				
+				// 현재시간
+				var now = new Date();
 
 				// 날짜 + 시간
-				var reservations = selectedTimes.map(function(timeRange){
-				    var times = timeRange.split("-"); 
+				var reservations = [];
+				for(var i=0; i<selectedTimes.length; i++){
+				            var times = selectedTimes[i].split("-"); 
 
-				    // startTime
-				    var startTime = selectedDate + " " + times[0] + ":00";
+				            var startTimeStr = selectedDate + " " + times[0] + ":00";
+				            var endDate = new Date(selectedDate + "T" + times[1] + ":00"); 
+				            endDate.setMinutes(endDate.getMinutes() - 10); 
+				            var hh = String(endDate.getHours()).padStart(2,'0');
+				            var mm = String(endDate.getMinutes()).padStart(2,'0');
+				            var endTimeStr = selectedDate + " " + hh + ":" + mm;
 
-				    // endTime을 Date로 만들어 10분 빼기
-				    var endParts = times[1].split(":"); 
-				    var endDate = new Date(selectedDate + "T" + times[1] + ":00"); 
-				    endDate.setMinutes(endDate.getMinutes() - 10); 
-				    var hh = String(endDate.getHours()).padStart(2,'0');
-				    var mm = String(endDate.getMinutes()).padStart(2,'0');
-				    var endTime = selectedDate + " " + hh + ":" + mm;
+				            // startTime을 Date 객체로 생성
+				            var startTime = new Date(selectedDate + "T" + times[0] + ":00");
 
-				    return {
-				        roomId: roomListSelect.value,
-				        roomReservationReason: reasonText.value.trim(),
-				        roomReservationStartTime: startTime,
-				        roomReservationEndTime: endTime
-				    };
-				});
+				            // 현재 시간보다 이전이면 경고 후 종료
+				            if(startTime < now){
+				                alert("현재 시간 이전은 예약할 수 없습니다: ");
+				                return; 
+				            }
+
+				            reservations.push({
+				                roomId: roomListSelect.value,
+				                roomReservationReason: reasonText.value.trim(),
+				                roomReservationStartTime: startTimeStr,
+				                roomReservationEndTime: endTimeStr
+				            });
+				        }
 
 				//console.log("선택된 날짜:", selectedDate);
 				//console.log("선택된 시간:", selectedTimes);
