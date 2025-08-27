@@ -1,9 +1,10 @@
 document.addEventListener("DOMContentLoaded", function() {
     var m = document.getElementById("calendar");
-
+	var e = window.attendaceEvents || [];
     var g = new FullCalendar.Calendar(m, {
         timeZone: "local",
         editable: false,
+		displayEventTime: false,
         initialView: "dayGridMonth",
 		aspectRatio: 1.8,
         themeSystem: "bootstrap",
@@ -19,12 +20,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		  week: '주',
 		  day: '일'
 		},
-        events: [
-			/*
-            { title: "All Day Event", start: new Date() },
-            { title: "Meeting", start: new Date(), className: "bg-success" }
-			*/
-        ]
+        events: e
     });
 
     g.render();

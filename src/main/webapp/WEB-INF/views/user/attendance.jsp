@@ -82,23 +82,19 @@
                                  <div class="card-group" style="margin-top:-70px;">
                                      <div class="card">
                      					<div class="card-body">
-                     						<div class="col-2">
-                     							총 휴가
-                     						</div>
+                 							총 근무일
+                    						<div>${totalWorkDay}</div>
                      					</div>
                      				</div>
                      				<div class="card">
                      					<div class="card-body">
-                     						<div class="col-2">
-                     							사용 휴가
-                     						</div>
+                     						이번달 근무시간
+                     						<div>${fn:substring(monthWorkHours,0,2)}시간 ${fn:substring(monthWorkHours,3,5)}분</div>
                    						</div>
                						</div>
                 					<div class="card">
                      					<div class="card-body">
-                     						<div class="col-2">
-                     							잔여 휴가
-                     						</div>
+                     						잔여 휴가
                      					</div>
                      				</div>
                                  </div>
@@ -132,6 +128,27 @@
 </div>
 <script>
 	const loginUser = document.getElementById("loginUser").value;
+	window.attendaceEvents = [
+	    <c:forEach var="list" items="${attendanceList}" varStatus="loop">
+	    
+	        {
+				// 출근시간과 퇴근시간을 분단위 까지만 보이도록 설정
+	            title: "출근 ${fn:substring(list.attendanceIn,0,5)} ~ ${fn:substring(list.attendanceOut,0,5)}",
+	            // fullcalendar에서 start와 end는 (yyyy-MM-dd'T'HH:mm:ss)형식으로 넣어줘야 한다
+	            start: "${list.attendanceDate}T${list.attendanceIn}",
+	            end: "${list.attendanceDate}T${list.attendanceOut}",
+	            className: "bg-info"
+	        },
+	        {
+				// 외근출발 시간과 복귀시간을 분단위 까지만 보이도록 설정
+	            title: "외근 ${fn:substring(list.attendanceOutside,0,5)} ~ ${fn:substring(list.attendanceInside,0,5)}",
+	            // fullcalendar에서 start와 end는 (yyyy-MM-dd'T'HH:mm:ss)형식으로 넣어줘야 한다
+	            start: "${list.attendanceDate}T${list.attendanceOutside}",
+	            end: "${list.attendanceDate}T${list.attendanceInside}",
+	            className: "bg-success"
+	        }<c:if test="${!loop.last}">,</c:if>
+	    </c:forEach>
+	];
     // 실시간 시계 1초마다 실행
 	var clockDate = document.getElementById("date");
 	var clockTime = document.getElementById("time");
