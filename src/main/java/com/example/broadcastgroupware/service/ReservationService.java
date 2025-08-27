@@ -105,6 +105,7 @@ public class ReservationService {
 		return cancel > 0;
 	}
 	
+	// 이슈기간 종료 차량 활성화
 	@Transactional
 	public int modifyCarStatus() {
 		List<Integer> vehicleStatusNList = reservationMapper.StatusNList();
@@ -221,7 +222,14 @@ public class ReservationService {
 		return reservationMapper.myCuttingroomReservation(userId);
 	}
 
-
+	// 이슈기간 종료 회의실, 편집실 활성화
+	@Transactional
+	public int modifyRoomStatus() {
+		List<Integer> roomStatusNList = reservationMapper.RoomStatusNList();
+		
+		return reservationMapper.modifyRoomStatusToY(roomStatusNList);	
+	}
+	
 
 	
 	

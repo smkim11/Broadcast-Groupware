@@ -264,4 +264,23 @@
 		ON rr.user_id = u.user_id
 		WHERE u.user_id = #{userId} AND r.room_type = '편집실' AND rr.room_reservation_start_time &gt; NOW()
 	</select>
+	
+	<!-- 비활성화 차량중 오늘 날짜 기준 이슈날짜 종료 차량 조회 -->
+	<select id="RoomStatusNList" resultType="int">
+		SELECT r.room_id AS roomId, ur.room_use_reason_end_date AS roomUseReasonEndDate
+		FROM room r
+		INNER JOIN room_use_reason ur
+		ON r.room_id = ur.room_id
+		WHERE r.room_status = 'N' AND ur.room_use_reason_end_date &lt; NOW()
+	</select>
+	
+	<!-- 이슈 종료 차량 상태값 변경 -->
+	<update id="modifyRoomStatusToY" parameterType="list">
+	    UPDATE room
+	    SET room_status = 'Y'
+	    WHERE room_id IN
+	    <foreach item="id" collection="list" open="(" separator="," close=")">
+	        #{id}
+	    </foreach>
+	</update>
 </mapper>

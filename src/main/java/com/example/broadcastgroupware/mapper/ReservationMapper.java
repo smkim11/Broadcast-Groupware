@@ -53,7 +53,6 @@ public interface ReservationMapper {
 	
 	// 비활성화 차량중 오늘 날짜 기준 이슈날짜 종료 차량 조회
 	List<Integer> StatusNList();
-	
 	// 이슈 종료 차량 상태값 변경
 	int modifyCarStatus(List<Integer> vehicleStatusNList);
 
@@ -111,6 +110,10 @@ public interface ReservationMapper {
 
 	// 내 편집시 예약 조회
 	List<MyReservationRoom> myCuttingroomReservation(int userId);
+
+	// 이슈기간 종료 회의실, 편집실 활성화
+	List<Integer> RoomStatusNList();
+	int modifyRoomStatusToY(List<Integer> roomStatusNList);
 
 
 

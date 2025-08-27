@@ -16,10 +16,16 @@ public class ReservationSchedule {
         this.reservationService = reservationService;
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 * * * *")
     public void modifyCarStatus() {
         int count = reservationService.modifyCarStatus();
         log.info("차량 활성화 건수: {}", count);
+    }
+    
+    @Scheduled(cron = "0 0 0/2 * * *")
+    public void modifyRoomStatus() {
+        int count = reservationService.modifyRoomStatus();
+        log.info("회의실 및 편집실 활성화 건수: {}", count);
     }
 }
 
