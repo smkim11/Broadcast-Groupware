@@ -692,7 +692,8 @@ document.addEventListener("DOMContentLoaded", function() {
 	                                       "<td>" + useDate + "</td>" +
 	                                       "<td>" + useTime + "</td>" +
 	                                       "<td>" + reservation.roomReservationReason + "</td>" +
-	                                       "<td><button class='cancelBtn' data-id='" + reservation.roomReservationId + "' style='background:red;color:white;'>취소</button></td>";
+										   "<td><button class='cancelBtn' style='border: none; background-color: red; color: white;' data-id='" 
+										   + reservation.roomReservationId + "'>취소</button></td>";
 
 	                        tbody.appendChild(tr);
 	                    });

@@ -60,16 +60,6 @@
 	flex-direction: column;
 }
 
-/* 닫기 버튼 항상 우측 정렬 */
-.modal .close {
-    padding: 6px 12px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    margin: 5px;
-    transition: 0.3s;
-}
-
 /* 모달 제목 */
 .modal-content h3,
 #detail-modal h3,
@@ -80,49 +70,66 @@
 	color: blue;
 }
 
-
-/* 테이블 스타일 */
-.meetingroomDatail {
+/* 테이블 스타일 - th/td 구분 선 강화 */
+.meetingroomDatail, 
+.myReservation {
 	width: 100%;
 	border-collapse: collapse;
 	margin-bottom: 15px;
 }
 
 .meetingroomDatail th, 
-.meetingroomDatail td {
-	border: 1px solid #ddd;
+.meetingroomDatail td,
+.myReservation th,
+.myReservation td {
+	border: 1px solid #bbb;
 	padding: 8px 10px;
 	text-align: center;
 }
 
-.meetingroomDatail th {
+.meetingroomDatail th,
+.myReservation th {
 	background-color: #f8f8f8;
 	font-weight: bold;
 }
 
-/* 모달 버튼 그룹 */
 .modal .btn-group {
 	display: flex;
-	width: 100%;
-	margin-top: 15px;
-	gap: 10px; 
+	justify-content: flex-end; /* 오른쪽 정렬 */
+	gap: 10px;                 /* 버튼 간격 */
 }
 
-
-/* 취소 버튼: 빨강색, 왼쪽 정렬 */
-.modal .btn-group button.cancel {
-	background-color: #e74c3c; /* 빨강색 */
+/* 공통 버튼 */
+.modal .btn-group button {
+	padding: 10px 0;           /* 상하 패딩 통일 */
+	font-size: 14px;
+	border-radius: 4px;
+	border: none;
+	cursor: pointer;
 	color: white;
-	margin-right: auto; /* 왼쪽 정렬 */
+	box-sizing: border-box;
+	width: 100px;              /* 버튼 너비 고정 */
+	text-align: center;
 }
 
-/* 나머지 버튼: 초록색, 오른쪽 정렬 */
-.modal .btn-group button[type="submit"],
-.modal .btn-group button:not(.cancel) {
+/* 닫기 버튼 */
+.modal .btn-group .close {
 	background-color: #28a745;
-	color: white;
-	margin-left: auto; /* 오른쪽 정렬 */
 }
+
+/* 예약 버튼 */
+.modal .btn-group .reservationBtn {
+	background-color: #28a745;
+}
+
+/* 취소 버튼 */
+.modal .btn-group button.cancel {
+	background-color: #e74c3c; 
+	color: white;
+	box-shadow: none;
+}
+
+
 
 /* 폼 섹션 */
 .form-section {
@@ -381,7 +388,7 @@ input:checked + .slider:before {
     <!-- 관리자 모달 -->
 	<div id="management-modal" class="modal">
 		<div class="modal-content">
-			<span class="close" style="text-align: right;">&times;</span>
+			<span class="close" style="text-align: right; background-color: white;">&times;</span>
 			<h3>회의실 관리</h3>
 	
 			<!-- 모드 선택 -->
@@ -443,7 +450,7 @@ input:checked + .slider:before {
 	<!-- 상세보기 모달 -->
 	<div id="detailReservation-modal" class="modal">
 		<div id="detail-modal">
-		<span class="close" style="text-align: right;">&times;</span>
+		<span class="close" style="text-align: right; background-color: white;">&times;</span>
 			<h3>상세정보</h3>
 			
 			<table id="meetingroomReservationDetail" class="meetingroomDatail">
@@ -464,7 +471,7 @@ input:checked + .slider:before {
 					<c:if test="${loginUser.role eq 'admin'}">
 						<button type="submit" class="cancel" style="background-color: red;">취소</button>
 					</c:if>
-					<button class="close" type="button">닫기</button>
+					<button class="close" type="button" style="">닫기</button>
 				</div>
 		</div>
 	</div>
@@ -472,7 +479,7 @@ input:checked + .slider:before {
 	<!-- 본인 예약내역 모달 -->
 	<div id="myReservation-modal" class="modal">
 		<div class="modal-content">
-		<span class="close" style="text-align: right;">&times;</span>
+		<span class="close" style="text-align: right; background-color: white;">&times;</span>
 			<h3>예약 내역</h3>
 			
 			<table id="myReservationDetail" class="myReservation">
@@ -500,7 +507,7 @@ input:checked + .slider:before {
 	<!-- 날짜 클릭시 모달 => 예약 -->
 	<div id="reservationMeetingroom-modal" class="modal">
 		<div class="reservation-modal">
-			<span class="close" style="text-align: right;">&times;</span>
+			<span class="close" style="text-align: right; background-color: white;">&times;</span>
 			<h3>회의실 예약</h3>
 			<form id="reservationMeetingroom">
 			<input type="hidden" id="reservationRoomId" name="roomId">
@@ -518,7 +525,7 @@ input:checked + .slider:before {
 				
 				<div class="btn-group">
 					<button class="close" type="button">닫기</button>
-					<button type="submit">예약</button>
+					<button type="submit" class="reservationBtn">예약</button>
 				</div>
 			</form>
 		</div>
