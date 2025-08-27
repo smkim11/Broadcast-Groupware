@@ -14210,3 +14210,11 @@ a {
   -webkit-transform: translateY(-50%);
           transform: translateY(-50%);
 }
+
+/* 제목 옆 보조 라벨(7일 기준) */
+.title-inline-note{
+  font-size: .50rem;         /* 더 작게 */
+  color: #6c757d;            /* 옅은 회색 */
+  line-height: 1;            /* 세로 중앙정렬 느낌 */
+  font-weight: 500;
+}

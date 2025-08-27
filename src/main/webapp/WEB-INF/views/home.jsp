@@ -13,77 +13,8 @@
     </c:if>
 <title>Insert title here</title>
 <style>
-/* 날씨 카드 크게 보이게 */
-#weather-body.weather-lg .icon   { width: 96px; height: 96px; }
-#weather-body.weather-lg .city   { font-size: 1.1rem; font-weight: 600; }
-#weather-body.weather-lg .desc   { font-size: 1.05rem; margin-top: .25rem; }
-#weather-body.weather-lg .meta   { font-size: .95rem;  color: #6c757d; margin-top: .25rem; }
 
-/* 온도 숫자만 폰트 교체 + 여유 라인하이트 */
-#weather-body.weather-lg .temp {
-  font-family: 'Noto Sans KR', Arial, 'Apple SD Gothic Neo', system-ui, sans-serif !important;
-  font-weight: 700;
-  font-size: 3rem;
-  line-height: 1.05;
-  padding-top: 0px;
-}
 
-/* ============ 공통 ============ */
-#koj-chat-fab, #koj-chat-panel { z-index: 2147483647; }
-/* 떠있는 버튼: 원형 + 회색 */
-#koj-chat-fab{
-  position: fixed; right: 20px; bottom: 20px;
-  width: 80px; height: 80px;               /* 정사각형 → 원형 기준 */
-  border-radius: 50%;                       /* 원형 만들기 */
-  background: #6c757d;                      /* 회색(secondary) */
-  color: #fff;                              /* 아이콘 색(흰색) */
-  border: 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,.18);
-  z-index: 2147483647;                      /* 다른 요소 위로 */
-}
-#koj-chat-fab .mdi{ font-size: 26px; line-height: 1; } /* 아이콘 크기 */
-#koj-chat-fab:hover{ background:#5c636a; }             /* 살짝 진한 회색 */
-#koj-chat-panel{
-  position: fixed; right: 20px; bottom: 80px; width: 360px; max-width: calc(100% - 40px);
-  background:#fff; border-radius: 0px; box-shadow: 0 16px 40px rgba(0,0,0,.2);
-  display: flex; flex-direction: column; overflow: hidden;
-  border:1px solid #e9ecef;
-}
-#koj-chat-panel.hide{ display:none; }
-
-.chat-head{
-  height: 48px; display:flex; align-items:center; justify-content:space-between;
-  padding:0 12px; background:#f8f9fa; border-bottom:1px solid #e9ecef;
-}
-#koj-chat-close{ border:none; background:transparent; font-size:18px; cursor:pointer; }
-
-.chat-log{
-  height: 360px; overflow:auto; padding: 12px; background:#fafafa;
-}
-.chat-input{
-  display:flex; gap:6px; padding: 10px; border-top:1px solid #e9ecef; background:#fff;
-}
-.chat-input input{ flex:1; padding:8px 10px; border:1px solid #dee2e6; border-radius:8px; }
-.chat-input button{ padding:8px 12px; border:none; background:#0d6efd; color:#fff; border-radius:8px; cursor:pointer; }
-
-/* ============ 말풍선 ============ */
-.row{ display:flex; margin: 6px 0; }
-.row.user{ justify-content: flex-end; }
-.row.bot{  justify-content: flex-start; }
-
-.bubble{
-  max-width: 75%;
-  padding: 8px 10px; border-radius: 14px;
-  background:#e9ecef; color:#111; line-height:1.25;
-  word-break: break-word; white-space: pre-wrap;
-}
-.row.user .bubble{ background:#0d6efd; color:#fff; }
-.time{ align-self: flex-end; font-size:11px; color:#868e96; margin: 0 6px; min-width: 58px; }
-
-/* 하이퍼링크 리스트가 들어오는 경우 보기 좋게 */
-.bubble ul{ padding-left:18px; margin: 6px 0 0; }
-.bubble a{ color:inherit; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -136,64 +67,79 @@
                  </div>
                  <!-- end col-->
                  
-                 <div class="col-md-6 col-xl-3">
-                     <div class="card">
-                         <div class="card-body">
-                             <div class="float-end mt-2">
-                                 <div id="total-revenue-chart" data-colors='["--bs-primary"]'></div>
-                             </div>
-                             <div>
-                                 <h4 class="mb-1 mt-1">휴가관리</h4>
-                                 <p class="text-muted mb-0">Total Revenue</p>
-                             </div>
-                             <p class="text-muted mt-3 mb-0"><span class="text-success me-1"><i class="mdi mdi-arrow-up-bold me-1"></i>2.65%</span> since last week
-                             </p>
-                              </p>
-                             <p class="text-muted mt-3 mb-0"><span class="text-success me-1"><i class="mdi mdi-arrow-up-bold me-1"></i>2.65%</span> since last week
-                             </p>
-                         </div>
-                     </div>
-                 </div> 
+<div class="col-md-6 col-xl-3">
+  <div class="card" id="card-vac">
+    <div class="card-body">
+      <!-- 제목 + 연차 기준 뱃지 + 전체보기(오른쪽) -->
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+         <h4 class="card-title mb-1">휴가</h4>
+          <span id="vac-year-badge" class="badge bg-light text-body border ms-2">—</span>
+        </div>
+      </div>
+
+      <!-- 내용 : 칩 2개 + 타일 1개 -->
+      <div class="d-flex align-items-stretch gap-2 mt-2" id="vac-rows">
+        <div class="vac-chip flex-fill text-center" id="vac-total" role="button" data-href="/vacation/summary">
+          <div class="vac-chip-label">전체</div>
+          <div class="vac-chip-value">0</div>
+        </div>
+        <div class="vac-chip flex-fill text-center" id="vac-remaining" role="button" data-href="/vacation/summary">
+          <div class="vac-chip-label">잔여</div>
+          <div class="vac-chip-value">0</div>
+        </div>
+        <div class="vac-tile flex-fill text-center" id="vac-approval" role="button" data-href="/vacation/approvals">
+          <i class="mdi mdi-file-check-outline vac-tile-icon" aria-hidden="true"></i>
+          <div class="vac-tile-label">결재</div>
+          <div class="vac-tile-value">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
                  <!-- end col-->
                  
                  <div class="col-md-6 col-xl-3">
                      <div class="card">
                          <div class="card-body">
-                             <div class="float-end mt-2">
-                                 <div id="total-revenue-chart" data-colors='["--bs-primary"]'></div>
-                             </div>
-                             <div>
-                                 <h4 class="mb-1 mt-1">문서관리</h4>
-                                 <p class="text-muted mb-0">Total Revenue</p>
-                             </div>
-                             <p class="text-muted mt-3 mb-0"><span class="text-success me-1"><i class="mdi mdi-arrow-up-bold me-1"></i>2.65%</span> since last week
-                             </p>
-                              </p>
-                             <p class="text-muted mt-3 mb-0"><span class="text-success me-1"><i class="mdi mdi-arrow-up-bold me-1"></i>2.65%</span> since last week
-                             </p>
+                             <div class="d-flex align-items-center mb-2">
+					      		<h4 class="card-title mb-1">문서</h4>
+					    			<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
+					    			 <a href="/reservations" class="small text-muted ms-auto">전체 보기</a>
+							</div>
+							 <div id="doc-rows" class="doc-rows mt-2" role="list" aria-label="문서 상태별 개수"></div>
                          </div>
                      </div>
                  </div> 
                  <!-- end col-->
                  
-                 <div class="col-md-6 col-xl-3">
-                     <div class="card">
-                         <div class="card-body">
-                             <div class="float-end mt-2">
-                                 <div id="total-revenue-chart" data-colors='["--bs-primary"]'></div>
-                             </div>
-                             <div>
-                                 <h4 class="mb-1 mt-1">예약현황</h4>
-                                 <p class="text-muted mb-0">Total Revenue</p>
-                             </div>
-                             <p class="text-muted mt-3 mb-0"><span class="text-success me-1"><i class="mdi mdi-arrow-up-bold me-1"></i>2.65%</span> since last week
-                             </p>
-                              </p>
-                             <p class="text-muted mt-3 mb-0"><span class="text-success me-1"><i class="mdi mdi-arrow-up-bold me-1"></i>2.65%</span> since last week
-                             </p>
-                         </div>
-                     </div>
-                 </div> 
+					   <div class="col-md-6 col-xl-3">
+					  <div class="card" id="card-resv">
+					    <div class="card-body">
+					    <div class="d-flex align-items-center mb-2">
+					      <h4 class="card-title mb-1">예약</h4>
+					    	<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
+						</div>
+					
+					      <!-- ▽ 도넛 3개가 가로로 나란히 -->
+					     <div class="row text-center g-2" id="resv-donuts">
+					  <div class="col-4">
+					    <div id="donut-meeting" class="resv-donut"></div>
+					    <div class="small text-muted mt-1">회의실</div>
+					  </div>
+					  <div class="col-4">
+					    <div id="donut-edit" class="resv-donut"></div>
+					    <div class="small text-muted mt-1">편집실</div>
+					  </div>
+					  <div class="col-4">
+					    <div id="donut-vehicle" class="resv-donut"></div>
+					    <div class="small text-muted mt-1">차량</div>
+					  </div>
+					</div>
+					
+					    </div>
+					  </div>
+					</div>
                  <!-- end col-->
                </div>
                <!--  상단 4개카드 닫기 -->
@@ -227,7 +173,7 @@
                                     <div class="card-body" id="home-agenda-card">
 
                                           <div class="d-flex align-items-center justify-content-between">
-										      <h4 class="mb-1 mt-1">일정</h4>
+										      <h4 class="card-title mb-1">일정</h4>
 										      <!-- 필요 없으면 이 링크는 지워도 됩니다 -->
 										      <a href="/calendar" class="small text-muted">전체 보기</a>
 										    </div>
@@ -239,34 +185,19 @@
                                 </div> <!-- end card-->
                             
                                 <div class="card">
-                                    <div class="card-body">
-                                        <h4 class="card-title mb-4">공지사항</h4>
-
-                                        <div class="row align-items-center g-0 mt-3">
-                                            <div class="col-sm-3">
-                                                <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-primary me-2"></i> Desktops </p>
-                                            </div>
-                                        </div> <!-- end row-->
-                                  <div class="row align-items-center g-0 mt-3">
-                                            <div class="col-sm-3">
-                                                <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-info me-2"></i> iPhones </p>
-                                            </div>
-                                        </div> <!-- end row-->
-
-                                        <div class="row align-items-center g-0 mt-3">
-                                            <div class="col-sm-3">
-                                                <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-success me-2"></i> Android </p>
-                                            </div>
-                                        </div> <!-- end row-->
-                                        
-                                         <div class="row align-items-center g-0 mt-3">
-                                            <div class="col-sm-3">
-                                                <p class="text-truncate mt-1 mb-0"><i class="mdi mdi-circle-medium text-success me-2"></i> Android </p>
-                                            </div>
-                                        </div> <!-- end row-->
-
-                                    </div> <!-- end card-body-->
-                                </div> <!-- end card-->
+								  <div class="card-body" id="home-notice-card">
+								    <div class="d-flex align-items-center justify-content-between">
+								      <h4 class="mb-1 mt-1">공지사항</h4>
+								      <a href="/board/notice" class="small text-muted">전체 보기</a>
+								    </div>
+								
+								    <!-- 공지 리스트가 채워질 자리 -->
+								    <div id="home-notice-rows" class="notice-rows mt-2" role="list" aria-label="공지 목록"></div>
+								
+								    <!-- 더보기(페이지네이션용, 필요 없으면 숨겨둠) -->
+								    <button id="home-notice-more" class="btn btn-sm btn-light w-100 mt-2 d-none">더보기</button>
+								  </div>
+								</div>
                                 
                                     <div class="card">
                                     <div class="card-body">
@@ -320,8 +251,10 @@
     <jsp:include page ="../views/nav/javascript.jsp"></jsp:include>
 </div>
 </body>
+<script src="${pageContext.request.contextPath}/resources/libs/apexcharts/apexcharts.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/fullcalendar/index.global.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/pages/weather.init.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/pages/home.init.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/pages/chatbot.init.js"></script>
+<script src="${pageContext.request.contextPath}/resources/js/pages/notice.init.js"></script>
 </html>
