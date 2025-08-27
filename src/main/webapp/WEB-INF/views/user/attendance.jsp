@@ -8,13 +8,6 @@
 <link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <meta charset="UTF-8">
 <style>
-	/* 템플릿에서 제공하는 에러메세지만 사용  */
-	.was-validated .form-control:valid,
-	.form-control.is-valid {
-	  border-color: #dee2e6 !important;
-	  background-image: none !important;
-	  box-shadow: none !important;
-	}
 	/* 글자색 흰색으로 */
 	.fc-event {
     color: #fff !important;
@@ -88,8 +81,8 @@
                      				</div>
                      				<div class="card">
                      					<div class="card-body">
-                     						이번달 근무시간
-                     						<div>${fn:substring(monthWorkHours,0,2)}시간 ${fn:substring(monthWorkHours,3,5)}분</div>
+                     						이번주 근무시간
+                     						<div>${fn:substring(weekWorkHours,0,2)}시간 ${fn:substring(weekWorkHours,3,5)}분</div>
                    						</div>
                						</div>
                 					<div class="card">

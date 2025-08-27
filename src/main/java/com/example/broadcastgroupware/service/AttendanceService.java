@@ -27,9 +27,9 @@ public class AttendanceService {
 		return attendanceMapper.selectAttendanceList(userId);
 	}
 	
-	// 이번달 근무시간
-	public String selectMonthWorkHours(int userId) {
-		return attendanceMapper.selectMonthWorkHours(userId);
+	// 이번주 근무시간
+	public String selectWeekWorkHours(int userId) {
+		return attendanceMapper.selectWeekWorkHours(userId);
 	}
 	
 	// 입사후 총 근무일

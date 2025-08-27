@@ -15,11 +15,11 @@
 		FROM attendance WHERE user_id=#{userId}
 	</select>
 	
-	<!--이번달 근무시간-->
-	<select id="selectMonthWorkHours" resultType="string">
+	<!--이번주 근무시간-->
+	<select id="selectWeekWorkHours" resultType="string">
 		SELECT sec_to_time(sum(timestampdiff(second,attendance_in,attendance_out)) OVER()) monthWorkHours 
 		FROM attendance         
-		WHERE year(attendance_date) = year(NOW()) and month(attendance_date) = month(NOW()) AND user_id = #{userId}
+		WHERE year(attendance_date) = year(NOW()) and week(attendance_date) = week(NOW()) AND user_id = #{userId}
 		ORDER BY attendance_date DESC LIMIT 0,1
 	</select>
 	

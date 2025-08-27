@@ -13,8 +13,8 @@ public interface AttendanceMapper {
 	Attendance selectUserAttendance(int userId);
 	// 로그인한 직원의 근태기록 조회
 	List<HashMap<String,Object>> selectAttendanceList(int userId);
-	// 이번달 총 근무시간
-	String selectMonthWorkHours(int userId);
+	// 이번주 총 근무시간
+	String selectWeekWorkHours(int userId);
 	// 입사후 총 근무일
 	String selectTotalWorkDay(int userId);
 	// 출근 기록

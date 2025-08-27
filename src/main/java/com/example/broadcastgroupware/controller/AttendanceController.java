@@ -28,7 +28,7 @@ public class AttendanceController {
 			System.out.println(attendance);
 		}
 		System.out.println(attendanceService.selectAttendanceList(user.getUserId()));
-		model.addAttribute("monthWorkHours",attendanceService.selectMonthWorkHours(user.getUserId()));
+		model.addAttribute("weekWorkHours",attendanceService.selectWeekWorkHours(user.getUserId()));
 		model.addAttribute("totalWorkDay",attendanceService.selectTotalWorkDay(user.getUserId()));
 		model.addAttribute("attendanceList",attendanceService.selectAttendanceList(user.getUserId()));
 		model.addAttribute("loginUser",user.getUserId());
