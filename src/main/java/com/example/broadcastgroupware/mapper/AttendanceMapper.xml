@@ -29,6 +29,33 @@
 			timestampdiff(day,user_join_date,NOW())%365,'일') FROM user WHERE user_id=#{userId}
 	</select>
 	
+	<!--직책별 팀,부서,전체 근태-->
+	<select id="selectAttendanceListByRank" resultType="map" parameterType="com.example.broadcastgroupware.dto.AttendanceListDto">
+		SELECT d.department_name departmentName, t.team_name teamName, u.full_name fullName, u.user_rank userRank,
+			(SELECT sec_to_time(sum(timestampdiff(second,attendance_in,attendance_out)) OVER()) monthWorkHours FROM attendance         
+		WHERE year(attendance_date) = year(NOW()) and month(attendance_date) = month(NOW()) AND user_id = u.user_id
+		ORDER BY attendance_date DESC LIMIT 0,1) monthWorkHour
+		FROM user u 
+		INNER JOIN deployment_history dh ON u.user_id = dh.user_id
+		INNER JOIN team t ON t.team_id = dh.team_id
+		INNER JOIN department d ON d.department_id = t.department_id
+		<choose>
+			<when test="role == 'admin' or userRank == '국장'">
+				
+			</when>
+			<when test="role != 'admin' and userRank == '팀장'">
+				WHERE dh.team_id=
+					(SELECT team_id FROM deployment_history WHERE user_id=#{userId} ORDER BY create_date desc LIMIT 0,1)
+			</when>
+			<when test="role != 'admin' and userRank == '부서장'">
+				WHERE d.department_id=(SELECT d.department_id FROM department d 
+					INNER JOIN team t ON d.department_id = t.department_id 
+					INNER JOIN deployment_history dh ON dh.team_id = t.team_id
+				WHERE dh.user_id=#{userId} ORDER BY dh.create_date desc LIMIT 0,1)
+			</when>
+		</choose>
+	</select>
+	
 	<!--출근기록-->
 	<insert id="insertAttendanceIn" parameterType="com.example.broadcastgroupware.domain.Attendance">
 		INSERT INTO attendance(user_id, attendance_in) VALUES(#{userId},now());

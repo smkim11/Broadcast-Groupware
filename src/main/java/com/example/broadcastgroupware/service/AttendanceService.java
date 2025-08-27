@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.broadcastgroupware.domain.Attendance;
+import com.example.broadcastgroupware.dto.AttendanceListDto;
 import com.example.broadcastgroupware.mapper.AttendanceMapper;
 
 @Service
@@ -20,6 +21,11 @@ public class AttendanceService {
 	// 오늘날짜로 본인 근태기록 조회
 	public Attendance selectUserAttendance(int userId) {
 		return attendanceMapper.selectUserAttendance(userId);
+	}
+	
+	// 직책별 팀,부서,전체 근태조회
+	public List<HashMap<String,Object>> selectAttendanceListByRank(AttendanceListDto attendanceListDto){
+		return attendanceMapper.selectAttendanceListByRank(attendanceListDto);
 	}
 	
 	// 로그인한 사용자의 근태기록 조회
