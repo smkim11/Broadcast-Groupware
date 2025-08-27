@@ -12,6 +12,7 @@ public class PageDto {
 	private String type;
 	private String startDateTime;
 	private String endDateTime;
+	private String searchType;
 	
 	// 검색 없는 페이징
 	public PageDto(int currentPage, int rowPerPage, int totalPage){
@@ -29,6 +30,16 @@ public class PageDto {
 		this.searchWord = searchWord;
 		this.beginRow = (currentPage-1)*rowPerPage;
 	}
+	
+	// 검색 + 필터 있는 페이징
+		public PageDto(int currentPage, int rowPerPage, int totalPage, String searchWord, String searchType){
+	 		this.rowPerPage = rowPerPage;
+			this.currentPage = currentPage;
+			this.totalPage = totalPage;
+			this.searchWord = searchWord;
+			this.searchType = searchType;
+			this.beginRow = (currentPage-1)*rowPerPage;
+		}
 	
 	// 마지막 페이지
 	public int getLastPage() {

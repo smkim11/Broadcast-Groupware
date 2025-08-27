@@ -227,6 +227,10 @@ public class ReservationService {
 	public int modifyRoomStatus() {
 		List<Integer> roomStatusNList = reservationMapper.RoomStatusNList();
 		
+		if (roomStatusNList == null || roomStatusNList.isEmpty()) {
+			return 0; 
+		}
+		
 		return reservationMapper.modifyRoomStatusToY(roomStatusNList);	
 	}
 	
