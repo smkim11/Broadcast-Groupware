@@ -180,7 +180,7 @@
 				        <div id="collapseLines" class="accordion-collapse collapse" aria-labelledby="headingLines" data-bs-parent="#lineAccordion">
 				            <div class="accordion-body">
 				                <div class="row g-3">
-				                    <!-- 왼쪽: 결재선 -->
+				                    <!-- 좌측: 결재선 -->
 				                    <div class="col-6">
 				                        <div class="card h-100">
 				                            <div class="card-header bg-light py-2">
@@ -190,8 +190,9 @@
 				                                <table class="table table-sm table-bordered mb-0">
 				                                    <thead class="table-light">
 				                                        <tr>
-				                                            <th style="width:60px;" class="text-center">순서</th>
-				                                            <th style="width:120px;" class="text-center">결재자</th>
+				                                            <th style="width:20px;" class="text-center">차수</th>
+				                                            <th style="width:50px;" class="text-center">결재자</th>
+				                                            <th style="width:30px;" class="text-center">소속</th>
 				                                        </tr>
 				                                    </thead>
 				                                    <tbody id="applinePreviewBody"><!-- JS-RENDER: 결재선 목록 동적 삽입 --></tbody>
@@ -200,7 +201,7 @@
 				                        </div>
 				                    </div>
 				
-				                    <!-- 오른쪽: 참조선 -->
+				                    <!-- 우측: 참조선 -->
 				                    <div class="col-6">
 				                        <div class="card h-100">
 				                            <div class="card-header bg-light py-2 d-flex align-items-center">
@@ -248,19 +249,27 @@
         const btnCancel = document.getElementById('btnCancel');
         const base = '${pageContext.request.contextPath}';  // JSP EL로 컨텍스트 경로 주입
         
-     	// 결재선/참조선 상세 영역 / 폼 히든 필드
+     	// 결재선/참조선 페이지로 이동할 땐 플로우 유지
+	    const linkApv = document.querySelector('a[href$="/approval/line/input"]');
+	    const linkRef = document.querySelector('a[href$="/approval/reference/input"]');
+	    [linkApv, linkRef].forEach(a => a && a.addEventListener('click', () => {
+	        sessionStorage.setItem('flowKeep', '1');
+	    }));
+        
+	 	// 결재선 / 참조선 미리보기 영역 및 폼 히든 필드
         const apvTbody = document.getElementById('applinePreviewBody');   // 결재선 표 tbody (JS로 채움)
         const refWrap = document.getElementById('reflinesPreview');		  // 참조선 배지 영역 (JS로 채움)
         const hiddenLines = document.getElementById('approvalLineJson');  // 서버 전송 대비 히든 JSON(결재선)
         const hiddenRefs = document.getElementById('referenceLineJson');  // 서버 전송 대비 히든 JSON(참조선)
 
-        
-		/* ==== 접힘 상세(본문) 렌더 ==== */
-        
-        // 안전한 JSON 파서 (정상 JSON이면 객체/배열로 파싱)
-        function safeParse(json, fallback) {
-	        try { return JSON.parse(json); } catch (e) { return fallback; }
+     	// JSON 파서 (깨지면 fallback)
+		function safeParse(json, fb){
+		    if (typeof json !== 'string' || !json.trim()) return fb;
+		    try { return JSON.parse(json); } catch { return fb; }
 	    }
+        
+        
+		// ===== 결제선 / 참조선 렌더 =====
         
      	// 결재선(JSON 문자열) 배열로 변환
 	    function getApprovalLines() {
@@ -274,22 +283,116 @@
 	        return safeParse(raw, []);
 	    }
 	 	
-	 	// 사람 이름 표시 유틸	    
+	 	// 결재자 이름/직급/부서/팀 표시
+	    function formatUserDisplay(u){
+	    	var name = (u.name || u.userName || '');
+	        var rank = u.userRank ? ' (' + u.userRank + ')' : '';
+	        var deptTeamArr = [];
+	        if (u.dept) deptTeamArr.push(u.dept);
+	        if (u.team) deptTeamArr.push(u.team);
+	        var deptTeam = deptTeamArr.join(' / ');
+	        return name + rank + (deptTeam ? ' - ' + deptTeam : '');
+	    }
 	 	
+	 	// 결재선 렌더
+	    function renderApvDetail(){
+	        if (!apvTbody) return;
+	        const arr = getApprovalLines();
+	        apvTbody.innerHTML = '';
+	        arr
+	     		// sequence 기준 정렬
+	          	.sort((a,b) => (a.approvalLineSequence || a.sequence || 999) - (b.approvalLineSequence || b.sequence || 999))
+	            .forEach((it, idx) => {
+	                const tr = document.createElement('tr');
+		            tr.innerHTML =
+	            	    '<td class="text-center">' +
+	            	        (it.approvalLineSequence || it.sequence || (idx + 1)) +
+	            	    '</td>' +
+	            	    '<td class="text-center">' +
+	            	        ( (it.name || it.userName || '') + (it.userRank ? ' (' + it.userRank + ')' : '') ) +
+	            	    '</td>' +
+	            	    '<td class="text-center">' +
+	            	        ( [it.dept, it.team].filter(Boolean).join(' / ') || '-' ) +
+	            	    '</td>';
+	            	    
+	            	apvTbody.appendChild(tr);
+	          });
+	    }
+	
+	    // 참조선 렌더 (DB에는 개인으로 저장)
+	    function renderRefDetail(){
+	        if (!refWrap) return;
+	        const arr = getReferenceLines();
+	        refWrap.innerHTML = '';
+	        
+	        arr.forEach(it=>{
+	            const badge = document.createElement('span');
+	            badge.className = 'badge bg-light fs-6 px-5 py-2';
+	            if (it.teamId != null && it.userId == null){
+	                badge.textContent = '👥 팀: ' + (it.name || '팀') + (it.dept ? ' (' + it.dept + ')' : '');
+	            } else {
+	                badge.textContent = '👤 ' + (formatUserDisplay(it) || ('ID: ' + (it.userId == null ? '' : it.userId)));
+	            }
+	
+	            refWrap.appendChild(badge);
+	        });
+	    }
 	    
-		// === 결재선 상세 렌더링 ===
-		function renderApvDetail()
+	    // 값의 유무에 따라 결재선/참조선 영역 접힘/펼침 상태 동기화
+	    function expandLinesIfHasData() {
+		    try {
+		        const hasApv = getApprovalLines().length > 0;
+		        const hasRef = getReferenceLines().length > 0;
+		        const hasAny = hasApv || hasRef;
+		
+		        const collapseEl = document.getElementById('collapseLines');
+		        if (!collapseEl) return;
+		
+		        // API로 show/hide (Bootstrap 5)
+		        const inst = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+		        hasAny ? inst.show() : inst.hide();
+		    } catch (e) {
+		        console.warn('expandLinesIfHasData error', e);
+		    }
+		}
+	    
+	 	// 초기 렌더 (필요한 요소가 있을 때만 호출)
+	    function syncLinesPreview() {
+	    	// sessionStorage -> 히든 필드 주입
+	        try {
+	            if (hiddenLines) hiddenLines.value = sessionStorage.getItem('approvalLines') || '[]';
+	            if (hiddenRefs)  hiddenRefs.value  = sessionStorage.getItem('referenceLines') || '[]';
+	        } catch (e) {}
+	
+	        try { renderApvDetail(); } catch (e) {}		  // 차수/결재자/소속 테이블 갱신
+	        try { renderRefDetail(); } catch (e) {}		  // 참조선 배지 리스트 갱신
+	        try { expandLinesIfHasData(); } catch (e) {}  // 접힘/펼침 상태 동기화
+	    }
+	    
+	    syncLinesPreview();  // 최초 1회: 페이지 로드 직후 동기화
+	    
+	 	// 새로고침 없이도 최신 반영
+	    window.addEventListener('pageshow', syncLinesPreview);
+	    window.addEventListener('focus', syncLinesPreview);
+	    document.addEventListener('visibilitychange', function () {
+	        if (!document.hidden) syncLinesPreview();
+	    });
+	    
+	    // 페이지 이탈 시 선택값 초기화
+	    window.addEventListener('pagehide', () => {
+	    	// 결재선/참조선 페이지로 이동하는 경우 값 유지
+	        const keep = sessionStorage.getItem('flowKeep') == '1';
+	        // 다음 이동을 위해 항상 플래그 초기화
+	        sessionStorage.setItem('flowKeep', '0');
+	        if (keep) return;  // 유지 플로우면 정리 생략
+
+	     	// 유지 플로우가 아니면 임시 선택값 제거
+	        sessionStorage.removeItem('approvalLines');
+	        sessionStorage.removeItem('referenceLines');
+	    });
 	    
 	    
-	 	// === 참조선 상세 렌더링 ===
-	 	function renderRefDetail()
-	    
-	    // 초기 렌더
-	    renderApvDetail();
-	    renderRefDetail();
-        
-	    
-	 	// ===== 문서 저장 (isDraft=true -> 임시저장, false -> 진행 중) =====
+	 	// ===== 문서 저장 (상신/임시저장) =====
         function submitDocument(isDraft) {
             if (!form) return;
 
@@ -302,8 +405,6 @@
             const content = (contentEl ? contentEl.value : '').trim();
             const userId = parseInt(userIdEl ? userIdEl.value : '0', 10) || 0;
             
-            const apvLines = getApprovalLines();
-            const refLines = getReferenceLines();
 
             // 방송 폼 필드
             const programName = (form.querySelector('[name="programName"]') || {}).value || '';
@@ -317,7 +418,17 @@
             const dayNodes = form.querySelectorAll('input[name="broadcastDays"]:checked');
             const days = Array.prototype.map.call(dayNodes, function (n) { return n.value; });
             
-            // 전송 DTO
+
+         	// 결재선 / 참조선
+            const apvLines = getApprovalLines();
+            const refLines = getReferenceLines();
+            
+         	// 폼 fallback 대비해서 히든필드도 항상 최신화
+	        if (hiddenLines) hiddenLines.value = JSON.stringify(apvLines);
+	        if (hiddenRefs) hiddenRefs.value = JSON.stringify(refLines);
+            
+	        
+	     	// 서버 전송 DTO
             const dto = {
                 userId: userId,
                 approvalDocumentTitle: title,
@@ -343,14 +454,15 @@
                 }
             };
 
-            // 헤더 (필수: JSON)
+            // 요청 헤더 (필수: JSON)
             const headers = { 'Content-Type': 'application/json' };
           
-            // 요청 중 버튼 잠금
+         	// 요청 중 버튼 잠금 (중복 클릭 방지)
             if (btnSubmit) btnSubmit.disabled = true;
             if (btnDraft) btnDraft.disabled = true;
             if (btnCancel) btnCancel.disabled = true;
 
+         	// 서버 전송
             fetch(base + '/approval/broadcast?draft=' + (isDraft ? 'true' : 'false'), {
                 method: 'POST',
                 headers: headers,
@@ -366,12 +478,18 @@
                         throw new Error(t || ('HTTP ' + resp.status));
                     });
                 }
-                return resp.json();  // 생성된 문서 ID
+                return resp.json();  // 생성된 문서 ID 반환
             })
             .then(function (docId) {
                 console.log('방송 문서 저장 완료:', docId, isDraft ? '(임시저장)' : '(상신)');
+                
+             	// 저장 후 선택값 초기화
+	            sessionStorage.removeItem('approvalLines');
+	            sessionStorage.removeItem('referenceLines');
+	            
             	// 저장 후 문서 유형 선택 화면으로 이동
                 window.location.href = base + '/approval/document/main';
+                alert('저장 중 오류가 발생했습니다.\n' + (e && e.message ? e.message : e));
             })
             .catch(function (e) {
                 console.error('방송 문서 저장 오류:', e);
@@ -387,7 +505,13 @@
         // 이벤트 바인딩
         if (btnSubmit) btnSubmit.addEventListener('click', function () { submitDocument(false); });
         if (btnDraft) btnDraft .addEventListener('click', function () { submitDocument(true); });
-        if (btnCancel) btnCancel.addEventListener('click', function () { history.back(); });  // 뒤로가기
+
+	    if (btnCancel) btnCancel.addEventListener('click', function () {
+	        // 취소 시 선택값 초기화
+	        sessionStorage.removeItem('approvalLines');
+	        sessionStorage.removeItem('referenceLines');
+	        history.back();  // 뒤로가기
+	    });
     })();
 </script>
 

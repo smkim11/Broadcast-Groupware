@@ -27,6 +27,7 @@ public interface ApprovalMapper {
     // 참조선
     int insertReferenceLines(@Param("refs") List<ReferenceLine> refs);
     List<ReferenceLine> selectReferenceLines(@Param("approvalDocumentId") int approvalDocumentId);
+    List<Integer> selectUserIdsByTeamIds(@Param("teamIds") List<Integer> teamIds);
 
     // 문서 상태 변경
     int updateDocumentStatus(@Param("approvalDocumentId") int approvalDocumentId,

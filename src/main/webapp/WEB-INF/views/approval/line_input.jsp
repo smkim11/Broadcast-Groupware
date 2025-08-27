@@ -149,7 +149,7 @@
 
                     <!-- 하단 버튼 -->
                     <div class="d-flex justify-content-end gap-2 mt-3">
-                        <a href="javascript:history.back();" class="btn btn-outline-secondary">닫기</a>
+                        <a href="#" id="btnClose" class="btn btn-outline-secondary">닫기</a>
                         <button type="button" id="btnApply" class="btn btn-outline-success">적용</button>
                     </div>
 
@@ -209,8 +209,14 @@
         const removeBtn = document.getElementById('btnRemove');
         const resetBtn = document.getElementById('btnReset');
         const applyBtn = document.getElementById('btnApply');
+        const closeBtn = document.getElementById('btnClose');
+        
         const MAX_APPROVERS = 3;  // 최대 3명
+        
+        // 해당 페이지에서 벗어나면 초기화 (기본값)
+        sessionStorage.setItem('flowKeep', '0');
 
+        
      	// 현재 표시 순서대로 결재 순서 재할당
         function refreshOrder() {
             const rows = tblBody.querySelectorAll('tr');
@@ -222,6 +228,74 @@
             const count = tblBody.querySelectorAll('tr').length;
             addBtn.disabled = (count >= MAX_APPROVERS);
         }
+     	
+     	
+     	// 공통: 우측 표에 행 추가
+        function appendRow(uid, name, pos, dept, team) {
+            if (tblBody.querySelector('tr[data-user-id="' + uid + '"]')) return;  // 중복 방지
+            
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-user-id', uid);
+            tr.setAttribute('data-user-name', name || '');
+            tr.setAttribute('data-user-pos',  pos  || '');
+            tr.setAttribute('data-user-dept', dept || '');
+            tr.setAttribute('data-user-team', team || '');
+            
+            tr.innerHTML =
+                '<td class="text-center"><input type="checkbox" class="row-chk"></td>' +
+                '<td class="text-center seq"></td>' +
+                '<td class="text-center">결재</td>' +
+                '<td>' + (name || '') + (pos ? ' <span class="text-muted">(' + pos + ')</span>' : '') + '</td>' +
+                '<td class="text-center">' +
+                    '<span class="small text-muted d-inline-block text-truncate" style="max-width: 220px;">' +
+                        (dept || '') + ' / ' + (team || '') +
+                    '</span>' +
+                '</td>' +
+                '<td class="text-center">' +
+                    '<div class="btn-group btn-group-sm" role="group">' +
+                        '<button type="button" class="btn btn-outline-primary btn-up" style="font-size:0.53rem;">▲</button>' +
+                        '<button type="button" class="btn btn-outline-primary btn-down" style="font-size:0.55rem;">▼</button>' +
+                    '</div>' +
+                '</td>';
+                
+            tblBody.appendChild(tr);
+            refreshOrder();
+            updateAddBtnState();  // 인원 제한 버튼 상태 즉시 반영
+        }
+        
+        // 복원: sessionStorage -> 우측표 & 좌측 체크박스
+        function restoreFromStorage() {
+            const saved = JSON.parse(sessionStorage.getItem('approvalLines') || '[]');
+
+            if (!Array.isArray(saved) || saved.length === 0) {
+                updateAddBtnState();
+                return;
+            }
+
+            const sliced = saved
+	            .slice()  // 원본 보존
+	            .sort((a, b) => (a.approvalLineSequence || 999) - (b.approvalLineSequence || 999))
+	            .slice(0, MAX_APPROVERS);
+	
+	        sliced.forEach(it => {
+	            const uid  = it.userId;
+	            const name = it.name || '';
+	            const pos  = it.userRank || '';
+	            const dept = it.dept || '';
+	            const team = it.team || '';
+	
+	            // 좌측 체크박스 체크
+	            const leftChk = document.querySelector('.user-chk[data-user-id="' + uid + '"]');
+	            if (leftChk) leftChk.checked = true;
+	
+	            // 우측 표 행 추가
+	            appendRow(uid, name, pos, dept, team);
+	        });
+	        
+	        refreshOrder();
+	        updateAddBtnState();
+	    }
+        
      	
      	// 좌측에서 선택된 사용자들을 우측 테이블에 추가 (중복 방지 + 3명 제한)
         function addSelectedUsers() {
@@ -256,32 +330,13 @@
 
              	// 최대 인원 미만일 때만 추가
                 if (added < remaining) {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-user-id', uid);
-	                tr.innerHTML =
-	                    '<td class="text-center"><input type="checkbox" class="row-chk"></td>' +
-	                    '<td class="text-center seq"></td>' +
-	                    '<td class="text-center">결재</td>' +
-	                    '<td>' + name + ' <span class="text-muted">(' + pos + ')</span></td>' +
-	                    '<td class="text-center">' +
-		                    '<span class="small text-muted d-inline-block text-truncate" style="max-width: 220px;">' +
-		                      dept + ' / ' + team +
-		                    '</span>' +
-	                  	'</td>' +
-	                    '<td class="text-center">' +
-	                        '<div class="btn-group btn-group-sm" role="group">' +
-	                            '<button type="button" class="btn btn-outline-primary btn-up" style="font-size:0.53rem;">▲</button>' +
-	                            '<button type="button" class="btn btn-outline-primary btn-down" style="font-size:0.55rem;">▼</button>' +
-	                        '</div>' +
-	                    '</td>';
-                    
-	                tblBody.appendChild(tr);
+                	appendRow(uid, name, pos, dept, team);
                     added++;
                 } else {
-                	blockedByLimit = true;  // 정원 초과로 추가 누락(중복 제외)
+                    blockedByLimit = true;  // 정원 초과로 추가 누락(중복 제외)
                 }
 
-             	// 좌측 체크 해제
+                // 좌측 체크 해제
                 chk.checked = false;
             }
             
@@ -296,11 +351,20 @@
      	
      	// 체크된 결재자 행 삭제
         function removeSelectedRows() {
-        	tblBody.querySelectorAll('input.row-chk:checked')
-	            .forEach(chk => chk.closest('tr').remove());
+            const rows = Array.from(tblBody.querySelectorAll('input.row-chk:checked'))
+            .map(chk => chk.closest('tr'));
+
+	        rows.forEach(tr => {
+	            const uid = tr.getAttribute('data-user-id');
+	            // 좌측 체크박스도 해제
+	            const leftChk = document.querySelector('.user-chk[data-user-id="' + uid + '"]');
+	            if (leftChk) leftChk.checked = false;
+	            tr.remove();
+        	});
+
 	        refreshOrder();
 	        updateAddBtnState();
-        }
+	    }
 
         // 결재자 전체 초기화
         function resetAll() {
@@ -336,6 +400,7 @@
             }
         });
 
+        
      	// 선택한 결재선 저장 후 이전 페이지로 이동
         function applySelection() {
         	// 현재 테이블의 모든 행 수집
@@ -351,14 +416,19 @@
        	      	return;
        	   	}
             	
-       		// 선택된 행들을 전송/저장용 최소 데이터로 변환
+       		// 선택된 행들을 전송/저장용 데이터로 변환
             const list = Array.from(rows).map((tr, idx) => ({
             	userId: parseInt(tr.getAttribute('data-user-id'), 10),  // 선택 사용자 ID
-		        approvalLineSequence: idx + 1							// 현재 행의 순서 (1부터 시작)
+		        approvalLineSequence: idx + 1,							// 현재 행의 순서 (1부터 시작)
+		        name: tr.getAttribute('data-user-name') || '',
+		        userRank: tr.getAttribute('data-user-pos') || '',
+		        dept: tr.getAttribute('data-user-dept') || '',
+		        team: tr.getAttribute('data-user-team') || ''
 		    }));
             
-            // 다음 화면에서 읽을 수 있도록 localStorage에 저장
-            localStorage.setItem('approvalLines', JSON.stringify(list));
+         	// 작성 페이지에서 읽을 sessionStorage에 저장
+           	sessionStorage.setItem('approvalLines', JSON.stringify(list));
+    		sessionStorage.setItem('flowKeep', '1');  // 작성 페이지로 돌아갈 경우 유지
             
          	// 뒤로가기
             history.back();
@@ -369,7 +439,26 @@
         removeBtn.addEventListener('click', removeSelectedRows);
         resetBtn.addEventListener('click', resetAll);
         applyBtn.addEventListener('click', applySelection);
-        updateAddBtnState();  // 초기 로드 시 추가 버튼 상태 초기화
+
+		closeBtn.addEventListener('click', function (e) {
+		    e.preventDefault();
+		    sessionStorage.setItem('flowKeep', '1');  // 작성 페이지로 돌아갈 경우 유지
+		    history.back();  // 뒤로가기
+		});
+        
+		// 작성 페이지로 돌아가는 경우가 아니면 선택값 초기화
+        window.addEventListener('pagehide', () => {
+            const keep = sessionStorage.getItem('flowKeep') == '1';
+            sessionStorage.setItem('flowKeep', '0');
+            if (keep) return;  // 작성 페이지로 복귀 -> 유지
+
+            // 플로우 이탈 -> 초기화
+            sessionStorage.removeItem('approvalLines');
+            sessionStorage.removeItem('referenceLines');
+        });
+        
+     	// sessionStorage 값 복원
+        restoreFromStorage();
     })();
 </script>
 
