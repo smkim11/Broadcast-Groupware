@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
 
 	// 관리자 모달 관련 변수
-	const adminModal = document.getElementById("management-modal"); // 
+	const adminModal = document.getElementById("management-modal");
 	const btnOpenAdminModal = document.getElementById("management");
 	const adminTypeSelect = adminModal ? adminModal.querySelector("#adminType") : null;
 	const closeBtns = adminModal ? adminModal.querySelectorAll(".close") : [];
@@ -168,12 +168,13 @@ document.addEventListener("DOMContentLoaded", function() {
 			const toggleSwitch = document.getElementById("toggleSwitch");
 			let roomStatusInput = issueForm.querySelector('input[name="roomStatus"]');
 			if(!roomStatusInput) {
-				roomStatusInput = document.createElement("input");
-				roomStatusInput.type = "hidden";
-				roomStatusInput.name = "roomStatus";
-				issueForm.appendChild(roomStatusInput);
+			    roomStatusInput = document.createElement("input");
+			    roomStatusInput.type = "hidden";
+			    roomStatusInput.name = "roomStatus";
+			    issueForm.appendChild(roomStatusInput);
 			}
 			roomStatusInput.value = toggleSwitch.checked ? 'Y' : 'N';
+
 
 			const dateRange = document.getElementById("rentalPeriod").value.split(" ~ ");
 			const startTimeVal = document.getElementById("startTime").value;
@@ -208,11 +209,12 @@ document.addEventListener("DOMContentLoaded", function() {
 	if(reservationModal){
 		var timeSlotsContainer = document.getElementById('timeSlots');
 		for(var hour=0; hour<24; hour+=2){
-			var start = hour.toString().padStart(2,'0') + ":00";
-			var end = (hour+2).toString().padStart(2,'0') + ":50";
-			var label = document.createElement('label');
-			label.innerHTML = '<input type="checkbox" name="selectedTime" value="' + start + '-' + end + '"><span>' + start + ' ~ ' + end + '</span>';
-			timeSlotsContainer.appendChild(label);
+		    var start = hour.toString().padStart(2,'0') + ":00";
+		    var endHour = hour + 1;
+		    var end = endHour.toString().padStart(2,'0') + ":50";
+		    var label = document.createElement('label');
+		    label.innerHTML = '<input type="checkbox" name="selectedTime" value="' + start + '-' + end + '"><span>' + start + ' ~ ' + end + '</span>';
+		    timeSlotsContainer.appendChild(label);
 		}
 
 		// 예약 모달 닫기 버튼
@@ -260,13 +262,25 @@ document.addEventListener("DOMContentLoaded", function() {
 
 				// 날짜 + 시간
 				var reservations = selectedTimes.map(function(timeRange){
-					var times = timeRange.split("-");
-					return {
-						roomId: roomListSelect.value,
-						roomReservationReason: reasonText.value.trim(),
-						roomReservationStartTime: selectedDate + " " + times[0] + ":00",
-						roomReservationEndTime: selectedDate + " " + times[1] + ":50"
-					};
+				    var times = timeRange.split("-"); 
+
+				    // startTime
+				    var startTime = selectedDate + " " + times[0] + ":00";
+
+				    // endTime을 Date로 만들어 10분 빼기
+				    var endParts = times[1].split(":"); 
+				    var endDate = new Date(selectedDate + "T" + times[1] + ":00"); 
+				    endDate.setMinutes(endDate.getMinutes() - 10); 
+				    var hh = String(endDate.getHours()).padStart(2,'0');
+				    var mm = String(endDate.getMinutes()).padStart(2,'0');
+				    var endTime = selectedDate + " " + hh + ":" + mm;
+
+				    return {
+				        roomId: roomListSelect.value,
+				        roomReservationReason: reasonText.value.trim(),
+				        roomReservationStartTime: startTime,
+				        roomReservationEndTime: endTime
+				    };
 				});
 
 				//console.log("선택된 날짜:", selectedDate);
@@ -354,7 +368,11 @@ document.addEventListener("DOMContentLoaded", function() {
 					const parts = timeValue.split('-');
 					
 					const slotStart = new Date(selectedDate + 'T' + parts[0] + ':00');
-					const slotEnd = new Date(selectedDate + 'T' + parts[1] + ':50');
+					const tempEnd = new Date(selectedDate + 'T' + parts[1] + ':00');
+					
+					tempEnd.setMinutes(tempEnd.getMinutes() - 10);
+					
+					const slotEnd = tempEnd;
 
 					checkbox.disabled = false;
 					checkbox.checked = false;
@@ -383,42 +401,117 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 			},
 			
-			// TODO: 예약 클릭시 상세보기 모달
+			// 예약 클릭시 상세보기 모달
 			eventClick: function(info){
 				var reservationId = info.event.id;
-				var reservation = currentRoomReservations.find(function(r){
-					return r.roomReservationId == reservationId;
+				//console.log("선택된 예약 ID:", reservationId);
+
+				reservationDetail(reservationId, function(reservation) {
+					if(!reservation) return;
+	
+					var detailModal = document.getElementById("detailReservation-modal");
+					if(detailModal) detailModal.style.display = "flex";
+	
+					var tbody = document.getElementById("detailList");
+					if(tbody){
+					    tbody.innerHTML = "";
+					    var tr = document.createElement("tr");
+
+					    // 날짜
+					    var useDate = reservation.roomReservationStartTime.split(" ")[0];
+
+					    // 시간
+					    var startTime = reservation.roomReservationStartTime.split(" ")[1].split(":").slice(0,2).join(":");
+					    var endTime = reservation.roomReservationEndTime.split(" ")[1].split(":").slice(0,2).join(":");
+					    var useTime = startTime + " ~ " + endTime;
+
+					    tr.innerHTML = "<td>" + useDate + "</td>" +
+					                   "<td>" + useTime + "</td>" +
+					                   "<td>" + reservation.roomReservationReason + "</td>" +
+					                   "<td>" + reservation.userName + '(' + reservation.userRank + ')' + "</td>";
+
+					    tbody.appendChild(tr);
+					}
+					
+					var cancelBtn = detailModal.querySelector(".cancel");
+					cancelBtn.addEventListener("click", async function(){
+					    // 예약 취소 여부 확인
+					    const result = await Swal.fire({
+					        title: "예약을 취소하시겠습니까?",
+					        icon: "warning",
+					        showCancelButton: true,
+					        confirmButtonText: "예",
+					        cancelButtonText: "아니요",
+					        confirmButtonColor: "#34c38f",
+					        cancelButtonColor: "#f46a6a"
+					    });
+	
+					    if(result.isConfirmed){
+					        try {
+					            const res = await fetch("/api/room/cancel?reservationId=" + reservationId, {
+					                method: "post"
+					            });
+	
+					            if(!res.ok) throw new Error("서버 오류");
+	
+					            await Swal.fire({
+					                title: "예약이 취소되었습니다.",
+					                icon: "success",
+					                confirmButtonText: "확인",
+					                confirmButtonColor: "#34c38f",
+					            })
+									tr.remove();
+
+					        } catch (err) {
+					            Swal.fire({
+					                title: "예약 취소 중 오류가 발생했습니다.",
+					                text: err.message,
+					                icon: "error",
+					                confirmButtonText: "확인",
+					                confirmButtonColor: "#34c38f"
+					            });
+					        }
+					    } else if(result.dismiss === Swal.DismissReason.cancel){
+					        Swal.fire({
+					            title: "취소되었습니다.",
+					            icon: "info",
+					            confirmButtonText: "확인",
+					            confirmButtonColor: "#34c38f"
+					        }).then(() => {
+						            detailModal.style.display = "none";
+						            location.reload();
+						        });
+					    }
+					});
+
+	
+					var closeBtns = detailModal.querySelectorAll(".close, .closeBtn");
+					closeBtns.forEach(function(btn){
+			            btn.addEventListener("click", function(){
+			                detailModal.style.display = "none";
+							location.reload();
+			            });
+			        });
+					
+					// 모달 외부 클릭 시 닫기
+			        window.addEventListener("click", function outsideClickHandler(e){
+			            if(e.target === detailModal){
+			                detailModal.style.display = "none";
+			                window.removeEventListener("click", outsideClickHandler);
+			            }
+			        });
 				});
-				if(!reservation) return;
-
-				var detailModal = document.getElementById("detailReservation-modal");
-				if(detailModal) detailModal.style.display = "flex";
-
-				var tbody = document.getElementById("detailList");
-				if(tbody){
-					tbody.innerHTML = "";
-					var tr = document.createElement("tr");
-					var useDate = reservation.roomReservationStartTime.split(" ")[0];
-					var useTime = reservation.roomReservationStartTime.split(" ")[1] + " ~ " + reservation.roomReservationEndTime.split(" ")[1];
-
-					tr.innerHTML = "<td>" + useDate + "</td>" +
-								   "<td>" + useTime + "</td>" +
-								   "<td>" + reservation.roomReservationReason + "</td>" +
-								   "<td>" + reservation.userName + '(' + reservation.userRank + ')' + "</td>" +
-								   "<td><button class='cancelBtn' data-id='" + reservation.roomReservationId + "'>취소</button></td>";
-
-					tbody.appendChild(tr);
-				}
-
-				var closeBtn = detailModal.querySelector(".close");
-				if(closeBtn){
-					closeBtn.onclick = function(){
-						detailModal.style.display = "none";
-					};
-				}
 			},
 			
-			events: []
+			events: currentRoomReservations.map(function(r){
+				return {
+					id: r.roomReservationId,            
+					title: r.roomReservationReason,
+					start: r.roomReservationStartTime,
+					end: r.roomReservationEndTime
+				};
+				
+			})
 			
 			
 		});
@@ -475,6 +568,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				
 				calendar.removeAllEvents();
 				currentRoomReservations.forEach(function(r){
+				//console.log("캘린더에 추가할 이벤트:", r);
 					calendar.addEvent({
 						id: r.roomReservationId,
 						title: r.roomReservationReason,
@@ -490,4 +584,20 @@ document.addEventListener("DOMContentLoaded", function() {
 			}
 		});
 	});
+	
+	// 상세페이지 호출
+	function reservationDetail(reservationId, callback) {
+		$.ajax({
+			url: "/api/room/detail",
+			method: "GET",
+			data: { roomReservationId: reservationId},
+			success: function(res) {
+				callback(res);
+			},
+			error: function(err) {
+				currentRoomReservations = [];
+				console.error("예약내역 불러오기 실패:", err);
+			}
+		});
+	}
 });

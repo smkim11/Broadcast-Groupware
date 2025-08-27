@@ -25,6 +25,7 @@ import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.dto.ReservationPeriod;
+import com.example.broadcastgroupware.dto.RoomDetailDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ReservationService;
 
@@ -320,6 +321,25 @@ public class ReservationRestController {
 	    return success ? "success" : "등록에 실패했습니다";
 	}
 
-
+	// 예약내역 상세보기
+	@GetMapping("/room/detail")
+	public RoomDetailDto roomDetail(@RequestParam("roomReservationId") int reservationId) {
+		return reservationService.roomDetail(reservationId);
+	}
+	
+	// 예약 취소
+	@PostMapping("/room/cancel")
+	public String roomCancel(@RequestParam int reservationId) {
+		
+		// log.info("reservationId: {}", reservationId);
+		
+		int result = reservationService.roomCancel(reservationId);
+		
+		if(result > 0) {
+	        return "success";
+	    } else {
+	        return "fail";
+	    }
+	}
 	
 }

@@ -168,14 +168,15 @@
 	<select id="meetingroomList" parameterType="com.example.broadcastgroupware.domain.Room">
 		SELECT room_id AS roomId, room_name AS roomName, room_location AS roomLocation 
 		FROM room
+		WHERE room_status = 'Y'
 		ORDER BY room_id
 	</select>
 	
-	<!-- 회의실 예약 조회 -->
+	<!-- 회의실별 예약 조회 -->
 	<select id="meetingroomReservations">
 		SELECT rr.room_id AS roomId, rr.room_reservation_reason AS roomReservationReason,
 				rr.room_reservation_start_time AS roomReservationStartTime, rr.room_reservation_end_time AS roomReservationEndTime,
-				r.room_name AS roomName, r.room_location AS roomLocation, rr.room_reservation_id AS roomServationId
+				r.room_name AS roomName, r.room_location AS roomLocation, rr.room_reservation_id AS roomReservationId
 		FROM room r
 		INNER JOIN room_reservation rr
 		ON r.room_id = rr.room_id
@@ -199,4 +200,18 @@
 	    </foreach>
 	</insert>
 
+	<!-- 예약내역 상세보기 -->
+	<select id="roomDetail" resultType="com.example.broadcastgroupware.dto.RoomDetailDto">
+		SELECT rr.room_reservation_start_time AS roomReservationStartTime, rr.room_reservation_end_time AS roomReservationEndTime,
+				rr.room_reservation_reason AS roomReservationReason, u.full_name AS userName, u.user_rank AS userRank
+		FROM room_reservation rr
+		INNER JOIN user u
+		ON rr.user_id = u.user_id
+		WHERE room_reservation_id = #{reservationId}
+	</select>
+	
+	<!-- 예약 취소 -->
+	<delete id="roomCancel" parameterType="int">
+		DELETE FROM room_reservation WHERE room_reservation_id = #{roomCancel}
+	</delete>
 </mapper>

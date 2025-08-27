@@ -15,6 +15,7 @@ import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
+import com.example.broadcastgroupware.dto.RoomDetailDto;
 
 @Mapper
 public interface ReservationMapper {
@@ -82,6 +83,12 @@ public interface ReservationMapper {
 	// 회의실 예약
 	void meetingroomReservation(@Param("reservations") List<MeetingroomReservationDto> reservations,
 	                            @Param("userId") int userId);
+
+	// 예약 상세보기
+	RoomDetailDto roomDetail(int reservationId);
+
+	// 예약 취소
+	int roomCancel(int reservationId);
 
 
 

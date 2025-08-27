@@ -17,6 +17,7 @@ import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
 import com.example.broadcastgroupware.dto.PageDto;
+import com.example.broadcastgroupware.dto.RoomDetailDto;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -177,6 +178,16 @@ public class ReservationService {
 	    // 중복 없으면 복수건 삽입
 	    reservationMapper.meetingroomReservation(reservations, userId);
 	    return true;
+	}
+
+	// 예약내역 상세보기
+	public RoomDetailDto roomDetail(int reservationId) {
+		return reservationMapper.roomDetail(reservationId);
+	}
+
+	// 예약 취소
+	public int roomCancel(int reservationId) {
+		return reservationMapper.roomCancel(reservationId);
 	}
 
 

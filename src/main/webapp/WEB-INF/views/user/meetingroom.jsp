@@ -26,45 +26,100 @@
   box-shadow: none !important;
 }
 
-/* 모달 배경 */
+/* 모달 전체 배경 */
 .modal {
+	display: none; /* 기본은 안 보이게 */
 	position: fixed;
-	top: 0;
+	z-index: 9999;
 	left: 0;
+	top: 0;
 	width: 100%;
 	height: 100%;
-	background: rgba(0, 0, 0, 0.5);
-	display: none; /* JS에서 열고 닫기 */
-	justify-content: center;
+	overflow: auto;
+	background-color: rgba(0,0,0,0.5); /* 반투명 검은 배경 */
 	align-items: center;
-	z-index: 1000;
+	justify-content: center;
 }
 
-/* 모달 박스 */
-.modal-content {
+/* 모달 콘텐츠 */
+#detail-modal {
 	background: #fff;
-	width: 200px;
-	max-width: 90%;
-	padding: 30px 25px;
-	border-radius: 12px;
-	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+	padding: 20px;
+	border-radius: 10px;
+	width: 600px; /* 가로 크기 */
+	max-width: 90%; /* 작은 화면에서는 화면에 맞춤 */
+	box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 	position: relative;
-	box-sizing: border-box;
-	animation: fadeIn 0.3s ease;
+	animation: fadeIn 0.3s ease-in-out;
 }
 
-/* 닫기(X) 버튼 */
-.modal-content .close {
+/* 닫기 버튼 (우측 상단) */
+#detail-modal .close {
 	position: absolute;
-	top: 12px;
 	right: 15px;
-	font-size: 22px;
+	top: 10px;
+	font-size: 20px;
 	font-weight: bold;
-	color: #777;
+	color: #333;
 	cursor: pointer;
-	background: none;
-	border: none;
 }
+
+/* 제목 */
+#detail-modal h3 {
+	margin-top: 0;
+	margin-bottom: 15px;
+	font-size: 20px;
+	text-align: center;
+	border-bottom: 2px solid #eee;
+	padding-bottom: 8px;
+}
+
+/* 테이블 스타일 */
+.meetingroomDatail {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 15px;
+}
+
+.meetingroomDatail th, 
+.meetingroomDatail td {
+	border: 1px solid #ddd;
+	padding: 8px 10px;
+	text-align: center;
+}
+
+.meetingroomDatail th {
+	background-color: #f8f8f8;
+	font-weight: bold;
+}
+
+.btn-group {
+    display: flex;
+    width: 100%;
+    margin-top: 15px;
+}
+
+/* 왼쪽 버튼: submit */
+.btn-group button[type="submit"] {
+    background-color: #e74c3c;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* 오른쪽 버튼: close */
+.btn-group button.close {
+    background-color: #ccc;
+    color: #333;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: auto; /* ← 오른쪽 끝으로 밀기 */
+}
+
 
 /* 제목 */
 .modal-content h3 {
@@ -290,6 +345,37 @@ input:checked + .slider:before {
     margin-bottom: 2px;
 }
 
+/* 관리자 모달 크기 조정 */
+#management-modal .modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 500px;         /* 원하는 고정 너비 */
+    max-width: 90%;       /* 화면이 작을 때 90%까지 */
+    margin: 0 auto;       /* 화면 가운데 정렬 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    position: relative;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 모달 내부 폼 섹션 간격 줄이기 */
+#management-modal .form-section {
+    gap: 10px;
+}
+
+/* select와 input 너비 */
+#management-modal .form-section input,
+#management-modal .form-section select {
+    width: 100%;
+}
+
+/* 닫기 버튼 위치 조정 */
+#management-modal .close {
+    top: 10px;
+    right: 15px;
+}
+
+
 
 </style>
 <title>회의실</title>
@@ -416,7 +502,7 @@ input:checked + .slider:before {
 				<div class="toggle-container">
 					<span>비활성화</span>
 					<label class="switch">
-						<input type="checkbox" id="toggleSwitch" name="roomStatus">
+						<input type="checkbox" id="toggleSwitch">
 						<span class="slider round"></span>
 					</label>
 					<span>활성화</span>
@@ -449,7 +535,6 @@ input:checked + .slider:before {
 						<th>사용 시간</th>
 						<th>회의 주제</th>
 						<th>예약자</th>
-						<th>예약 취소</th>
 					</tr>
 				</thead>	
 				
@@ -457,6 +542,10 @@ input:checked + .slider:before {
 					
 				</tbody>
 			</table>
+				<div class="btn-group">
+					<button type="submit" class="cancel" style="background-color: red;">취소</button>
+					<button class="close" type="button">닫기</button>
+				</div>
 		</div>
 	</div>
 	
