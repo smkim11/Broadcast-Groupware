@@ -335,7 +335,11 @@ document.addEventListener("DOMContentLoaded", function(){
 				        icon: "success",
 						confirmButtonText: "확인",
 				        confirmButtonColor: "#34c38f"
-				    });
+			    	}).then((result)=>{ // 확인 누르면 페이지 새로고침
+        		    	if(result.isConfirmed){
+        		    		location.reload();
+        		    	}
+        		    });
 					g.addEvent(d),
 		            s.push(d);
 				}else{
