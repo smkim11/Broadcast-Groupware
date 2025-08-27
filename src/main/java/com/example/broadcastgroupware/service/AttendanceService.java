@@ -1,5 +1,8 @@
 package com.example.broadcastgroupware.service;
 
+import java.util.HashMap;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +22,21 @@ public class AttendanceService {
 		return attendanceMapper.selectUserAttendance(userId);
 	}
 	
+	// 로그인한 사용자의 근태기록 조회
+	public List<HashMap<String,Object>> selectAttendanceList(int userId){
+		return attendanceMapper.selectAttendanceList(userId);
+	}
+	
+	// 이번달 근무시간
+	public String selectMonthWorkHours(int userId) {
+		return attendanceMapper.selectMonthWorkHours(userId);
+	}
+	
+	// 입사후 총 근무일
+	public String selectTotalWorkDay(int userId) {
+		return attendanceMapper.selectTotalWorkDay(userId);
+	}
+		
 	// 출근 기록
 	public void insertAttendanceIn(Attendance attendance) {
 		attendanceMapper.insertAttendanceIn(attendance);
@@ -26,6 +44,11 @@ public class AttendanceService {
 	
 	// 퇴근 기록
 	public void updateAttendanceOut(Attendance attendance) {
+		// 외근하고 복귀를 안누르고 퇴근을 누르면 외근복귀에도 퇴근과 같은시간 저장
+		Attendance ad = attendanceMapper.selectUserAttendance(attendance.getUserId());
+		if(ad.getAttendanceOutside() != null && ad.getAttendanceInside() == null) {
+			attendanceMapper.updateAttendanceInside(attendance);
+		}
 		attendanceMapper.updateAttendanceOut(attendance);
 	}
 	
