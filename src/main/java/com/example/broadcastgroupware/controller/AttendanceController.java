@@ -5,6 +5,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.example.broadcastgroupware.domain.Attendance;
+import com.example.broadcastgroupware.dto.AttendanceListDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.AttendanceService;
 
@@ -33,5 +34,18 @@ public class AttendanceController {
 		model.addAttribute("attendanceList",attendanceService.selectAttendanceList(user.getUserId()));
 		model.addAttribute("loginUser",user.getUserId());
 	    return "user/attendance";  
+	}
+	
+	// 팀,부서,전체 근태
+	@GetMapping("/attendanceList")
+	public String attendanceList(Model model, HttpSession session) {
+		UserSessionDto user = (UserSessionDto)session.getAttribute("loginUser");
+		AttendanceListDto ald = new AttendanceListDto();
+		ald.setUserId(user.getUserId());
+		ald.setRole(user.getRole());
+		ald.setUserRank(user.getUserRank());
+		
+		model.addAttribute("list",attendanceService.selectAttendanceListByRank(ald));
+		return "user/attendanceList";
 	}
 }

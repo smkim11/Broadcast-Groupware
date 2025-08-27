@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.example.broadcastgroupware.domain.Attendance;
+import com.example.broadcastgroupware.dto.AttendanceListDto;
 
 @Mapper
 public interface AttendanceMapper {
@@ -17,6 +18,8 @@ public interface AttendanceMapper {
 	String selectWeekWorkHours(int userId);
 	// 입사후 총 근무일
 	String selectTotalWorkDay(int userId);
+	// 직책별 팀,부서,전체 근태
+	List<HashMap<String,Object>> selectAttendanceListByRank(AttendanceListDto attendanceListDto);
 	// 출근 기록
 	void insertAttendanceIn(Attendance attendance);
 	// 퇴근 기록
