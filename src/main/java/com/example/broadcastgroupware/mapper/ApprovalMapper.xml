@@ -19,7 +19,38 @@
             #{userId}, #{approvalDocumentTitle}, #{approvalDocumentContent},            
             #{approvalDocumentStatus}, NOW(), NOW()
         )
-    </insert>
+    </insert>  
+	
+	<!-- 문서 상태 UPDATE -->
+	<update id="updateDocumentStatus">
+	    UPDATE approval_document
+	    SET approval_document_status = #{status},
+	        update_date = NOW()
+	    WHERE approval_document_id = #{approvalDocumentId}
+	</update>
+	
+	<!-- 팀 ID 들로 소속 사용자 ID 조회 -->
+	<select id="selectUserIdsByTeamIds" resultType="int">
+	    SELECT DISTINCT u.user_id
+	    FROM `user` u
+	    JOIN (
+	        SELECT dh.user_id, dh.team_id
+	        FROM deployment_history dh
+	        JOIN (
+	            SELECT user_id, MAX(create_date) AS latest_date
+	            FROM deployment_history
+	            GROUP BY user_id
+	        ) latest
+	            ON latest.user_id = dh.user_id
+	            AND latest.latest_date = dh.create_date
+	    ) dh ON dh.user_id = u.user_id
+	    WHERE dh.team_id IN
+	    <foreach collection="teamIds" item="id" open="(" separator="," close=")">
+	        #{id}
+	    </foreach>
+	    AND u.user_resign_date IS NULL  <!-- 퇴사자 제외 -->
+	</select>
+
 
     <!-- 휴가 문서 폼 INSERT -->
     <insert id="insertVacationForm"
@@ -71,7 +102,7 @@
 
 
 	<!-- 결재선 INSERT -->
-	<insert id="insertApprovalLines" parameterType="java.util.List">
+	<insert id="insertApprovalLines">
 	    INSERT INTO approval_line (
 	        approval_document_id, user_id, approval_line_sequence,
 	        approval_line_status, approval_line_comment, create_date
@@ -85,7 +116,6 @@
 
 	<!-- 결재선 조회 -->
 	<select id="selectApprovalLines"
-	        parameterType="int"
 	        resultType="com.example.broadcastgroupware.domain.ApprovalLine">
 	    SELECT
 	        approval_line_id, approval_document_id, user_id,
@@ -95,39 +125,6 @@
 	    WHERE approval_document_id = #{approvalDocumentId}
 	    ORDER BY approval_line_sequence ASC
 	</select>
-	
-	<!-- 참조선 INSERT -->
-	<insert id="insertReferenceLines" parameterType="java.util.List">
-	    INSERT INTO reference_line (
-	        approval_document_id, user_id, create_date
-	    )
-	    VALUES
-	    <foreach collection="refs" item="r" separator=",">
-	        (#{r.approvalDocumentId}, #{r.userId}, NOW())
-	    </foreach>
-	</insert>
-	
-	<!-- 참조선 조회 -->
-	<select id="selectReferenceLines"
-	        parameterType="int"
-	        resultType="com.example.broadcastgroupware.domain.ReferenceLine">
-	    SELECT
-	        reference_line_id,
-	        approval_document_id,
-	        user_id, create_date
-	    FROM reference_line
-	    WHERE approval_document_id = #{approvalDocumentId}
-	    ORDER BY reference_line_id ASC
-	</select>
-	
-	
-	<!-- 문서 상태 UPDATE -->
-	<update id="updateDocumentStatus" parameterType="map">
-	    UPDATE approval_document
-	    SET approval_document_status = #{status},
-	        update_date = NOW()
-	    WHERE approval_document_id = #{approvalDocumentId}
-	</update>
 	
 	<!-- 결재선 상태에 따른 문서 상태 -->
 	<select id="selectApprovalLineStatusCounts"
@@ -140,6 +137,30 @@
 	        SUM(CASE WHEN approval_line_status = '대기' THEN 1 ELSE 0 END) AS pendingCnt
 	    FROM approval_line
 	    WHERE approval_document_id = #{approvalDocumentId}
+	</select>
+	
+	
+	<!-- 참조선 INSERT -->
+	<insert id="insertReferenceLines">
+	    INSERT INTO reference_line (
+	        approval_document_id, user_id, create_date
+	    )
+	    VALUES
+	    <foreach collection="refs" item="r" separator=",">
+	        (#{r.approvalDocumentId}, #{r.userId}, NOW())
+	    </foreach>
+	</insert>
+	
+	<!-- 참조선 조회 -->
+	<select id="selectReferenceLines"
+	        resultType="com.example.broadcastgroupware.domain.ReferenceLine">
+	    SELECT
+	        reference_line_id,
+	        approval_document_id,
+	        user_id, create_date
+	    FROM reference_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    ORDER BY reference_line_id ASC
 	</select>
 
 </mapper>

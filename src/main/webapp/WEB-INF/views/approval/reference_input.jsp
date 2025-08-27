@@ -162,15 +162,13 @@
 						                </tbody>
 						            </table>
 						        </div>
-						        <small class="text-muted d-block mt-1">※ 팀 참조는 최대 3팀까지만 가능합니다.</small>
-						        <small class="text-muted d-block mt-1">※ 개인 참조는 최대 10명까지만 가능합니다.</small>
-						        <small class="text-muted d-block mt-1">※ 참조 대상은 총 15개까지만 가능합니다.</small>
+						        <small class="text-muted d-block mt-1">※ 참조 대상은 팀 구성원을 포함해 총 50명까지 지정할 수 있습니다.</small>
 						    </div>						    
 						</div>
 
                     <!-- 하단 버튼 -->
                     <div class="d-flex justify-content-end gap-2 mt-3">
-                        <a href="javascript:history.back();" class="btn btn-outline-secondary">닫기</a>
+                        <a href="#" id="btnClose" class="btn btn-outline-secondary">닫기</a>
                         <button type="button" id="btnRefApply" class="btn btn-outline-success">적용</button>
                     </div>
                    
@@ -191,6 +189,16 @@
 
 <script>
 	(function () {
+        function safeParse(json, fb) {
+            if (typeof json !== 'string' || !json.trim()) return fb;
+            try { return JSON.parse(json); } catch { return fb; }
+        }
+
+        function getTeamSize(teamId) {
+            return document.querySelectorAll('.user-chk[data-team-id="' + teamId + '"]').length;
+        }
+        
+        
 	    // ===== 조직도(부서/팀) 접기/펼치기 =====
 	    function setCaret(el, expanded) {
 	        const caret = el.querySelector('.caret');
@@ -199,7 +207,7 @@
 	    }
 	
 	    // 초기 caret 상태 설정 (부서: 펼침, 팀: 접힘)
-	    document.querySelectorAll('a.org-toggle').forEach(function(a) {
+	    document.querySelectorAll('a.org-toggle').forEach(a => {
 	        const target = document.querySelector(a.getAttribute('href'));
 	        const expanded = target && target.classList.contains('show');
 	        setCaret(a, expanded);
@@ -209,9 +217,7 @@
 	    document.addEventListener('shown.bs.collapse', function (e) {
 	        const id = e.target.id;
 	        // aria-controls 또는 href로 해당 id를 가리키는 토글 앵커 선택
-	        const selector =
-	            'a.org-toggle[aria-controls="' + id + '"], ' +
-	            'a.org-toggle[href="#' + id + '"]';
+	        const selector = `a.org-toggle[aria-controls="${id}"], a.org-toggle[href="#${id}"]`;
 	        const toggle = document.querySelector(selector);
 	        if (!toggle) return;
 	        setCaret(toggle, true);
@@ -219,9 +225,7 @@
 	
 	    document.addEventListener('hidden.bs.collapse', function (e) {
 	        const id = e.target.id;
-	        const selector =
-	            'a.org-toggle[aria-controls="' + id + '"], ' +
-	            'a.org-toggle[href="#' + id + '"]';
+	        const selector = `a.org-toggle[aria-controls="${id}"], a.org-toggle[href="#${id}"]`;
 	        const toggle = document.querySelector(selector);
 	        if (!toggle) return;
 	        setCaret(toggle, false);
@@ -234,27 +238,28 @@
         const removeBtn = document.getElementById('btnRemove');
         const resetBtn = document.getElementById('btnReset');
         const applyBtn = document.getElementById('btnRefApply');
+        const closeBtn = document.getElementById('btnClose');
 
-        // 상한 값
-        const MAX_TEAMS = 3;   // 최대 3팀
-        const MAX_USERS = 10;  // 최대 10명
-        const MAX_TOTAL = 15;  // 총합 15 (팀+개인)
+        const MAX_TOTAL = 50;  // 총합 50 (팀+개인)
+        
+     	// 해당 페이지에서 벗어나면 초기화 (기본값)
+        sessionStorage.setItem('flowKeep', '0');
+        
+     	// 전개 기준 총 인원 (선택된 개인 + 선택된 팀의 구성원 수) 계산
+        function getExpandedTotalCount() {
+            const selectedUsers = tblBody.querySelectorAll('tr[data-type="USER"]').length;
+            let teamExpanded = 0;
+            tblBody.querySelectorAll('tr[data-type="TEAM"]').forEach(function (tr) {
+                const tid = tr.getAttribute('data-id');
+                teamExpanded += getTeamSize(tid);
+            });
+            return selectedUsers + teamExpanded;
+        }
 
-        // 현재 카운트
-        function countTeams() {
-            return tblBody.querySelectorAll('tr[data-type="TEAM"]').length;
-        }
-        function countUsers() {
-            return tblBody.querySelectorAll('tr[data-type="USER"]').length;
-        }
-        function countTotal() {
-            return tblBody.querySelectorAll('tr').length;
-        }
-
-        // 추가 버튼 상태 (총 15개 선택 시 비활성화)
+        // 추가 버튼 상태 (전개 후 총 인원 기준 50개 선택 시 비활성화)
         function updateAddBtnState() {
-	      addBtn.disabled = (countTotal() >= MAX_TOTAL);
-	    }
+		    addBtn.disabled = (getExpandedTotalCount() >= MAX_TOTAL);
+		}
         
     	// 팀 선택 시 소속 개인 체크박스 비활성화
         function setTeamUsersDisabled(teamId, disabled) {
@@ -280,20 +285,111 @@
                 }
             }
         });
+    	
+     	// 행 추가 (USER / TEAM 공용)
+        function appendRow(type, data) {
+            // 중복 방지
+            if (tblBody.querySelector('tr[data-type="' + type + '"][data-id="' + data.id + '"]')) return;
+
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-type', type);        // 'USER' or 'TEAM'
+            tr.setAttribute('data-id',   data.id);     // 숫자 ID
+            if (data.teamId != null) tr.setAttribute('data-team-id', data.teamId);
+            tr.setAttribute('data-name', data.name || '');
+
+            if (type == 'USER') {
+                tr.setAttribute('data-rank', data.rank || '');
+                tr.setAttribute('data-dept', data.dept || '');
+                tr.setAttribute('data-team', data.team || '');
+            } else { // TEAM
+                tr.setAttribute('data-dept', data.dept || '');
+            }
+
+            tr.innerHTML =
+                '<td class="text-center"><input type="checkbox" class="row-chk"></td>' +
+                '<td class="text-center">' + (type == 'USER' ? '개인' : '팀') + '</td>' +
+                '<td class="text-center">' + (type == 'USER'
+                    ? (data.name || '') + (data.rank ? ' (' + data.rank + ')' : '')
+                    : (data.name || '')
+                ) + '</td>' +
+                '<td class="text-center"><span class="small text-muted d-inline-block text-truncate" style="max-width: 220px;">' +
+                    (data.dept || '') + ((data.dept && data.team) ? ' / ' : '') + (data.team || '') +
+                '</span></td>';
+
+            tblBody.appendChild(tr);
+            updateAddBtnState();
+        }
+
+        // 복원: sessionStorage -> 우측 표 & 좌측 체크박스 복원
+        function restoreFromStorage() {
+        	const saved = safeParse(sessionStorage.getItem('referenceLines'), []);
+            if (!Array.isArray(saved) || saved.length == 0) {
+                updateAddBtnState();
+                return;
+            }
+            
+            const teams = saved.filter(it => it.teamId != null);
+            const users = saved.filter(it => it.userId != null);
+
+            // 팀 먼저 복원
+            teams.forEach(function (it) {
+                const teamId = String(it.teamId);
+                const leftTeam = document.querySelector('.team-chk[data-id="' + teamId + '"]');
+                if (leftTeam) {
+                    leftTeam.checked = true;
+                    setTeamUsersDisabled(teamId, true);  // 팀 체크 시 개인 비활성
+                }
+
+                appendRow('TEAM', {
+                    id: Number(teamId),
+                    name: it.name || '',
+                    dept: it.dept || '',
+                    teamId: Number(teamId)
+                });
+            });
+            
+            // 개인 복원 (팀이 이미 선택된 경우는 패스)
+            users.forEach(function (it) {
+            	const userId = String(it.userId);
+                const leftUser = document.querySelector('.user-chk[data-id="' + userId + '"]');
+                    
+             	// 소속 팀ID는 좌측 체크박스의 data-team-id에서 읽어 옴
+                const teamId = leftUser ? (leftUser.dataset.teamId || '') : '';
+                
+                // 팀이 이미 체크돼 있으면 개인은 비활성/해제
+                if (teamId && tblBody.querySelector('tr[data-type="TEAM"][data-id="' + teamId + '"]')) {
+	                if (leftUser) {
+	                    leftUser.checked = false;
+	                    leftUser.disabled = true;
+	                }
+	                return;
+             	}
+	
+                if (leftUser) leftUser.checked = true;
+
+                appendRow('USER', {
+                    id: Number(userId),
+                    name: it.name || '',
+                    rank: it.userRank || '',
+                    dept: it.dept || '',
+                    team: it.team || '',
+                    teamId: teamId ? Number(teamId) : undefined  // 삭제/제한용 (우측 tr에만 보관) | 저장(JSON) 제외
+                });
+            });
+
+            updateAddBtnState();
+        }
         
         // 좌측에서 선택된 참조 대상들을 우측 테이블에 추가 (중복 방지 + 상한 제한)
         function addSelectedRefs() {
             const checked = Array.from(document.querySelectorAll('.ref-chk:checked'));
             if (!checked.length) return;
+            
+            // 현재 전개 기준 총 인원
+            let baseExpanded = getExpandedTotalCount();
 
-            let teamCnt = countTeams();
-            let userCnt = countUsers();
-            let totalCnt = countTotal();
-
-            let totalAtLimit = false;  		// 상한 초과로 추가하지 못한 참조자 존재 여부
+            let totalAtLimit = false;  		// 전개 기준 상한 초과
             let userBlockedByTeam = false;  // 팀 선택 시 개인 추가 차단
-            let userAtLimit = false;  		// 개인 초과 여부
-            let teamAtLimit = false;       	// 팀 초과 여부
 
             for (const chk of checked) {
                 const type = chk.dataset.type;  // USER | TEAM
@@ -304,7 +400,7 @@
                 const team = chk.dataset.team || '';
                 const teamId = chk.dataset.teamId || '';
 
-                // 중복 확인: 이미 추가된 대상이면 패스
+                // 중복 확인: 이미 추가된 참조자면 패스
                 if (tblBody.querySelector('tr[data-type="' + type + '"][data-id="' + id + '"]')) {
                     chk.checked = false;
                     continue;
@@ -323,78 +419,90 @@
                     }
                 }
              	
-             	// 팀 참조 추가 시 해당 팀 개인 참조 제거
+             	// 전개 기준 상한 계산
+                let wouldBeExpanded = baseExpanded;
+             	
+                if (type == 'USER') {
+                    wouldBeExpanded = baseExpanded + 1;  // 개인 1명 추가
+                } else if (type == 'TEAM' && teamId) {
+                    // 팀 참조 추가 시 해당 팀 개인 참조 제거 -> 그 수만큼 제외 후 팀 전체 인원 추가
+                    const currentTeamUsersSelected =
+                        tblBody.querySelectorAll('tr[data-type="USER"][data-team-id="' + teamId + '"]').length;
+
+                    const teamSize = getTeamSize(teamId);
+                    wouldBeExpanded = baseExpanded - currentTeamUsersSelected + teamSize;
+                }
+
+                if (wouldBeExpanded > MAX_TOTAL) {
+                    totalAtLimit = true;
+                    chk.checked = false;
+                    continue;
+                }
+             	
+             	// 팀 추가 시 개인 제거 -> 좌측 체크 해제/비활성
                 if (type == 'TEAM' && teamId) {
-                    tblBody.querySelectorAll('tr[data-type="USER"][data-team-id="' + teamId + '"]').forEach(function(tr) {
-                        tr.remove();
-                        userCnt--;
-                        totalCnt--;
-                    });
-                }
+                    const currentTeamUsersSelected =
+                        tblBody.querySelectorAll('tr[data-type="USER"][data-team-id="' + teamId + '"]').length;
 
-                // 총합 상한 체크
-                if (totalCnt >= MAX_TOTAL) {
-                	totalAtLimit = true;
-                    chk.checked = false;
-                    continue;
-                }
+                    tblBody.querySelectorAll('tr[data-type="USER"][data-team-id="' + teamId + '"]').forEach(tr => tr.remove());
+                    document.querySelectorAll('.user-chk[data-team-id="' + teamId + '"]').forEach(chkUser => chkUser.checked = false);
+                    setTeamUsersDisabled(teamId, true);
 
-                // 유형별 상한 체크
-                if (type == 'TEAM' && teamCnt >= MAX_TEAMS) {
-                	teamAtLimit = true;
-                    chk.checked = false;
-                    continue;
-                }
-                if (type == 'USER' && userCnt >= MAX_USERS) {
-                	userAtLimit = true;
-                    chk.checked = false;
-                    continue;
+                    // base 업데이트
+                    baseExpanded -= currentTeamUsersSelected;
+                    baseExpanded += getTeamSize(teamId);
+                } else if (type == 'USER') {
+                    baseExpanded += 1;
                 }
              
                 // 행 추가
-                const tr = document.createElement('tr');
-                tr.setAttribute('data-type', type);
-                tr.setAttribute('data-id', id);
-                if (teamId) tr.setAttribute('data-team-id', teamId);
-                tr.innerHTML =
-                    '<td class="text-center"><input type="checkbox" class="row-chk"></td>' +
-                    '<td class="text-center">' + (type == 'USER' ? '개인' : '팀') + '</td>' +
-                    '<td class="text-center">' + (type == 'USER' ? name + (rank ? ' (' + rank + ')' : '') : name) + '</td>' +
-                    '<td class="text-center"><span class="small text-muted d-inline-block text-truncate" style="max-width: 220px;">' +
-                        (dept || '') + ((dept && team) ? ' / ' : '') + (team || '') +
-                    '</span></td>';
-                tblBody.appendChild(tr);
-
-                // 카운트 증가
-                if (type == 'TEAM') teamCnt++;
-                if (type == 'USER') userCnt++;
-                totalCnt++;
+                appendRow(type, {
+                    id: Number(id),
+                    name,
+                    rank,
+                    dept,
+                    team,
+                    teamId: teamId ? Number(teamId) : undefined
+                });
 
                 // 좌측 체크 해제
                 chk.checked = false;
             }
 
-            if (teamAtLimit) {
-                alert('팀 참조는 최대 ' + MAX_TEAMS + '팀까지만 가능합니다.');
-            }
-            if (userAtLimit) {
-                alert('개인 참조는 최대 ' + MAX_USERS + '명까지만 가능합니다.');
-            }
-            if (totalAtLimit) {
-                alert('참조 대상은 총 ' + MAX_TOTAL + '개까지만 추가할 수 있습니다.');
-            }
+            if (totalAtLimit) alert('참조 대상은 팀 구성원을 포함해 총 ' + MAX_TOTAL + '명을 초과할 수 없습니다.');
+
+            updateAddBtnState();
+        }
+        
+        
+        // 체크된 참조자 행 삭제
+        function removeSelectedRows() {
+            const rows = Array.from(tblBody.querySelectorAll('input.row-chk:checked'))
+                .map(chk => chk.closest('tr'));
+
+            rows.forEach(tr => {
+                const type = tr.getAttribute('data-type');
+                const id   = tr.getAttribute('data-id');
+                
+             	// 좌측 체크박스도 해제
+                if (type == 'TEAM') {
+                    const leftTeam = document.querySelector('.team-chk[data-id="' + id + '"]');
+                    if (leftTeam) {
+                        leftTeam.checked = false;
+                        setTeamUsersDisabled(id, false);  // 개인 다시 활성화
+                    }
+                } else {  // USER
+                    const leftUser = document.querySelector('.user-chk[data-id="' + id + '"]');
+                    if (leftUser) leftUser.checked = false;
+                }
+
+                tr.remove();
+            });
 
             updateAddBtnState();
         }
 
         
-        // 체크된 참조자 행 삭제
-        function removeSelectedRows() {
-            tblBody.querySelectorAll('input.row-chk:checked')
-                .forEach(function(chk){ chk.closest('tr').remove(); });
-            updateAddBtnState();
-        }
-
         // 참조자 전체 초기화
         function resetAll() {
             tblBody.innerHTML = '';
@@ -413,6 +521,7 @@
             tr.classList.toggle('table-active', e.target.checked);
         });
 
+        
         // 선택한 참조선 저장 후 이전 페이지로 이동
         function applySelection() {
             // 현재 테이블의 모든 행 수집
@@ -422,37 +531,43 @@
                 alert('참조 대상을 최소 1개 이상 선택해 주세요.');
                 return;
             }
-
             
             // 최종 검증
-            const teamCnt = countTeams();
-            const userCnt = countUsers();
-            const totalCnt = teamCnt + userCnt;
-
-            if (teamCnt > MAX_TEAMS) {
-                alert('팀 참조는 최대 ' + MAX_TEAMS + '팀까지만 가능합니다.');
-                return;
-            }
-            if (userCnt > MAX_USERS) {
-                alert('개인 참조는 최대 ' + MAX_USERS + '명까지만 가능합니다.');
-                return;
-            }
-            if (totalCnt > MAX_TOTAL) {
-                alert('참조 대상은 총합 ' + MAX_TOTAL + '개까지만 가능합니다.');
+            const expanded = getExpandedTotalCount();
+            if (expanded > MAX_TOTAL) {
+                alert('참조 대상은 팀 구성원을 포함해 총 ' + MAX_TOTAL + '명을 초과할 수 없습니다.');
                 return;
             }
                 
-            // 선택된 행들을 전송/저장용 최소 데이터로 변환
-            const list = Array.from(rows).map(function(tr, idx){
-                return {
-                    type: tr.getAttribute('data-type'),      	   // USER or TEAM
-                    id: parseInt(tr.getAttribute('data-id'), 10),  // userId or teamId
-                    seq: idx + 1
-                };
-            });
+            // 선택된 행들을 전송/저장용 데이터로 변환
+            const list = Array.from(rows).map(function(tr){
+		        const type = tr.getAttribute('data-type');  // USER or TEAM
+		        const id = parseInt(tr.getAttribute('data-id'), 10);
+		        const teamId = tr.getAttribute('data-team-id');
+		
+		        if (type == 'USER') {
+		        	return {
+                        userId: id,
+                        name: tr.getAttribute('data-name') || '',
+                        userRank: tr.getAttribute('data-rank') || '',
+                        dept: tr.getAttribute('data-dept') || '',
+                        team: tr.getAttribute('data-team') || ''
+                    };
+                }
+		        
+		        if (type == 'TEAM') {
+		            return {
+		                teamId: id,
+		                name: tr.getAttribute('data-name') || '',
+		                dept: tr.getAttribute('data-dept') || ''
+		            };
+		        }
+		        return null;  	 // 방어코드
+		    }).filter(Boolean);  // falsy(null/undefined/false/0/NaN/"") 제거
             
-            // 다음 화면에서 읽을 수 있도록 localStorage에 저장
-            localStorage.setItem('referenceLines', JSON.stringify(list));
+            // 작성 페이지에서 읽을 sessionStorage에 저장
+           	sessionStorage.setItem('referenceLines', JSON.stringify(list));
+    		sessionStorage.setItem('flowKeep', '1');  // 작성 페이지로 돌아갈 경우 유지
             
             // 뒤로가기
             history.back();
@@ -463,7 +578,26 @@
         removeBtn.addEventListener('click', removeSelectedRows);
         resetBtn.addEventListener('click', resetAll);
         applyBtn.addEventListener('click', applySelection);
-        updateAddBtnState();  // 초기 로드 시 추가 버튼 상태 초기화
+        
+        closeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            sessionStorage.setItem('flowKeep', '1');  // 작성 페이지로 돌아갈 경우 유지
+            history.back();  // 뒤로가기
+        });
+        
+     	// 작성 페이지로 돌아가는 경우가 아니면 선택값 초기화
+        window.addEventListener('pagehide', () => {
+            const keep = sessionStorage.getItem('flowKeep') == '1';
+            sessionStorage.setItem('flowKeep', '0');
+            if (keep) return;  // 작성 페이지 복귀 -> 유지
+
+            // 플로우 이탈 -> 초기화
+            sessionStorage.removeItem('approvalLines');
+            sessionStorage.removeItem('referenceLines');
+        });
+        
+        updateAddBtnState();   // 초기 로드 시 추가 버튼 상태 초기화
+        restoreFromStorage();  // sessionStorage 값 복원
     })();
 </script>
 

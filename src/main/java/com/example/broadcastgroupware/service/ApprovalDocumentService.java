@@ -1,5 +1,6 @@
 package com.example.broadcastgroupware.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -9,11 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.broadcastgroupware.domain.ApprovalDocument;
+import com.example.broadcastgroupware.domain.ApprovalLine;
 import com.example.broadcastgroupware.domain.BroadcastForm;
 import com.example.broadcastgroupware.domain.BroadcastWeekday;
+import com.example.broadcastgroupware.domain.ReferenceLine;
 import com.example.broadcastgroupware.domain.VacationForm;
 import com.example.broadcastgroupware.dto.ApprovalDocumentDto;
+import com.example.broadcastgroupware.dto.ApprovalLineDto;
 import com.example.broadcastgroupware.dto.BroadcastFormDto;
+import com.example.broadcastgroupware.dto.ReferenceLineDto;
 import com.example.broadcastgroupware.dto.VacationFormDto;
 import com.example.broadcastgroupware.mapper.ApprovalMapper;
 
@@ -99,84 +104,151 @@ public class ApprovalDocumentService {
         return bw;
     }
 
-    
-    private int saveDocumentWithLines(ApprovalDocumentDto request) {
-        ApprovalDocument document = toEntity(request);
-        if (document.getApprovalDocumentStatus() == null || document.getApprovalDocumentStatus().isBlank()) {
-            document.setApprovalDocumentStatus("진행 중"); // 안전 보정: 명시 없으면 진행 중
-        }
-        approvalMapper.insertApprovalDocument(document);
-        return document.getApprovalDocumentId();
-    }
 
-/*
     // 공통 로직: 문서 + 결재선 + 참조선 
     private int saveDocumentWithLines(ApprovalDocumentDto request) {
-        // 1) 문서 저장
-    	Integer existingId = request.getApprovalDocumentId();
-        int docId;
-        if (existingId != null && existingId > 0) {
-            docId = existingId;
-        } else {
-            ApprovalDocument document = toEntity(request);
-            // request.setApprovalDocumentSave(...)가 안 되어 있으면 기본값 보정
-            if (document.getApprovalDocumentSave() == null) {
-                document.setApprovalDocumentSave("N"); // 기본: 제출
-            }
-            approvalMapper.insertApprovalDocument(document);
-            docId = document.getApprovalDocumentId();
-            request.setApprovalDocumentId(docId);
+    	// 1) 문서 저장 준비: DTO → 엔터티
+        ApprovalDocument document = toEntity(request);
+        
+        // 상태값이 비어 오면 안전 보정
+        if (document.getApprovalDocumentStatus() == null || document.getApprovalDocumentStatus().isBlank()) {
+            document.setApprovalDocumentStatus("진행 중");  // 기본값
         }
+        
+        approvalMapper.insertApprovalDocument(document);  // 실제 문서 insert
+        int docId = document.getApprovalDocumentId();	  // 이후 결재선/참조선에 FK로 사용
 
-        // 2) 결재선 저장 (1명 ~ 3명, 순서 중복/범위 체크, 상태=대기)
-        List<ApprovalLineDto> approvalLineRequests = request.getApprovalLines();
-        if (approvalLineRequests != null && !approvalLineRequests.isEmpty()) {
-            List<ApprovalLine> approvalLineEntities = new ArrayList<>();
-            Set<Integer> usedSequences = new HashSet<>();
+        // 2) 결재선 저장: 첫 번째만 '대기', 나머지는 NULL
+        if (request.getApprovalLines() != null && !request.getApprovalLines().isEmpty()) {
+        	// 결재선 정렬 + 상한 제한
+            List<ApprovalLineDto> ordered = request.getApprovalLines().stream()
+                .filter(l -> l != null && l.getUserId() != null)
+                .sorted((a, b) -> Integer.compare(
+                    a.getApprovalLineSequence() != null ? a.getApprovalLineSequence() : Integer.MAX_VALUE,
+                    b.getApprovalLineSequence() != null ? b.getApprovalLineSequence() : Integer.MAX_VALUE
+                ))
+                .limit(3)  // 최대 3명
+                .toList();
 
-            for (ApprovalLineDto lineRequest : approvalLineRequests) {
-                if (lineRequest == null) continue;
-
-                Integer seq = lineRequest.getApprovalLineSequence();
-                if (seq == null || seq < 1 || seq > 3 || !usedSequences.add(seq)) {
-                    throw new IllegalArgumentException("Invalid approvalLineSequence: " + seq);
-                }
-
+            // 정렬된 DTO -> 엔터티로 변환
+            List<ApprovalLine> lines = new ArrayList<>();
+            for (int i = 0; i < ordered.size(); i++) {
+                ApprovalLineDto src = ordered.get(i);
                 ApprovalLine line = new ApprovalLine();
-                line.setApprovalDocumentId(docId);
-                line.setUserId(lineRequest.getUserId() == null ? 0 : lineRequest.getUserId());
-                line.setApprovalLineSequence(seq);
-                line.setApprovalLineStatus(ApprovalStatus.PENDING.getLabel());  // 결재선 생성 시 상태는 항상 "대기"로 초기화
-                line.setApprovalLineComment(lineRequest.getApprovalLineComment());
-                approvalLineEntities.add(line);
+                line.setApprovalDocumentId(docId);  // FK
+                line.setUserId(src.getUserId());
+                
+                // 시퀀스가 비어 있으면 1부터 순번 부여
+                line.setApprovalLineSequence(
+                    src.getApprovalLineSequence() != null ? src.getApprovalLineSequence() : (i + 1)
+                );
+                
+                // 첫 번째 결재자만 '대기', 나머지는 NULL (이후 순차적으로 상태 갱신)
+                line.setApprovalLineStatus(i == 0 ? "대기" : null);
+                line.setApprovalLineComment(src.getApprovalLineComment());
+                lines.add(line);
             }
-            if (!approvalLineEntities.isEmpty()) {
-                approvalMapper.insertApprovalLines(approvalLineEntities);
-            }
-        }
-
-        // 3) 참조선 저장 (userId 중복 제거)
-        List<ReferenceLineDto> referenceLineRequests = request.getReferenceLines();
-        if (referenceLineRequests != null && !referenceLineRequests.isEmpty()) {
-            List<ReferenceLine> referenceLineEntities = new ArrayList<>();
-            Set<Integer> seenReferenceUserIds = new HashSet<>();
-
-            for (ReferenceLineDto refRequest : referenceLineRequests) {
-                if (refRequest == null || refRequest.getUserId() == null) continue;
-                if (!seenReferenceUserIds.add(refRequest.getUserId())) continue;  // 중복 제거
-
-                ReferenceLine ref = new ReferenceLine();
-                ref.setApprovalDocumentId(docId);
-                ref.setUserId(refRequest.getUserId());
-                referenceLineEntities.add(ref);
-            }
-            if (!referenceLineEntities.isEmpty()) {
-                approvalMapper.insertReferenceLines(referenceLineEntities);
+            // 한 번에 insert
+            if (!lines.isEmpty()) {
+                approvalMapper.insertApprovalLines(lines);
             }
         }
+
+        // 3) 참조선 저장 (DB에 개인으로만 저장)
+        List<ReferenceLineDto> refs = request.getReferenceLines();   // userId 또는 teamId
+        List<Integer> extraTeamIds = request.getReferenceTeamIds();  // 팀 ID가 따로 오는 경우
+
+        boolean hasRefs = (refs != null && !refs.isEmpty()) || (extraTeamIds != null && !extraTeamIds.isEmpty());
+        if (hasRefs) {
+
+            // 3-1) 상한 사전검증: 팀/개인/총합 (중복 제거 후 계산)
+            long teamCount = 0L;
+            long userCount = 0L;
+
+            if (refs != null) {
+            	// 참조선 DTO에 포함된 팀/개인
+                teamCount += refs.stream().map(ReferenceLineDto::getTeamId).filter(Objects::nonNull).distinct().count();
+                userCount += refs.stream().map(ReferenceLineDto::getUserId).filter(Objects::nonNull).distinct().count();
+            }
+            if (extraTeamIds != null) {
+            	// 별도 팀 ID 리스트까지 포함
+                teamCount += extraTeamIds.stream().filter(Objects::nonNull).distinct().count();
+            }
+
+            final int MAX_TEAMS = 3;   // 팀 선택 최대 개수
+            final int MAX_USERS = 10;  // 개인 선택 최대 인원
+            final int MAX_TOTAL = 50;  // 팀+개인 선택 상한
+            
+            if (teamCount > MAX_TEAMS) throw new IllegalArgumentException("팀 참조는 최대 " + MAX_TEAMS + "팀입니다.");
+            if (userCount > MAX_USERS) throw new IllegalArgumentException("개인 참조는 최대 " + MAX_USERS + "명입니다.");
+            if (teamCount + userCount > MAX_TOTAL) throw new IllegalArgumentException("참조 대상은 총 " + MAX_TOTAL + "개입니다.");
+
+            
+            // 3-2) 팀 -> 개인(사용자) 전개
+            List<Integer> teamIds = new ArrayList<>();
+            
+            if (refs != null) {
+                teamIds.addAll(
+                    refs.stream()
+                        .map(ReferenceLineDto::getTeamId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet())
+                );
+            }
+            if (extraTeamIds != null) {
+                teamIds.addAll(
+                    extraTeamIds.stream()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet())
+                );
+            }
+            // 팀 ID들을 모두 모아 중복 제거
+            teamIds = teamIds.stream().distinct().toList();
+
+            
+            // 3-3) 개인 userId 집합 생성
+            Set<Integer> userIds = new java.util.LinkedHashSet<>();
+            
+            // 참조선 중 개인 항목만 추출해서 집합에 추가
+            if (refs != null) {
+                userIds.addAll(
+                    refs.stream()
+                        .map(ReferenceLineDto::getUserId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet())
+                );
+            }
+
+            // 팀이 선택된 경우: mapper로 팀에 속한 모든 개인 userId를 조회 후 추가
+            if (!teamIds.isEmpty()) {
+                List<Integer> fromTeams = approvalMapper.selectUserIdsByTeamIds(teamIds);
+                if (fromTeams != null) userIds.addAll(fromTeams);  // 자동으로 중복 제거 (Set)
+            }
+            
+            
+            // 3-4) 전개 결과 기준의 실제 인원 상한 검사
+            if (userIds.size() > MAX_TOTAL) {
+                throw new IllegalArgumentException("참조 대상은 총 " + MAX_TOTAL + "명까지 저장할 수 있습니다.");
+            }
+
+            
+            // 3-5) 최종 개인 단위로 insert
+            List<ReferenceLine> entities = userIds.stream().map(uid -> {
+                ReferenceLine rl = new ReferenceLine();
+                rl.setApprovalDocumentId(docId);  // FK
+                rl.setUserId(uid);
+                return rl;
+            }).toList();
+
+            if (!entities.isEmpty()) {
+                approvalMapper.insertReferenceLines(entities);
+            }
+        }
+        
+        // 최종적으로 생성된 문서 PK 반환
         return docId;
     }
-*/
+    
     
     // DTO -> 엔터티 매핑
     private ApprovalDocument toEntity(ApprovalDocumentDto request) {
