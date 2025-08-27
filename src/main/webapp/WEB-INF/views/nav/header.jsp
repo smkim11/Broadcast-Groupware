@@ -334,7 +334,7 @@
 								    </li>
 								    <c:if test="${loginUser.role eq 'admin'}">
 	   								    <li>
-									        <a href="/user/board">게시판 관리</a>
+									        <a href="/user/adminBoard">게시판 관리</a>
 									    </li>
 								    </c:if>
 								</ul>
