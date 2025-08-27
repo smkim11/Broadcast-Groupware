@@ -68,13 +68,25 @@ document.addEventListener("DOMContentLoaded", function() {
 				type: "POST",
 				data: $(this).serialize(),
 				success: function() {
-					alert("회의실 등록 완료");
-					if(adminModal) adminModal.style.display = "none"; 
-					location.reload();
+					Swal.fire({
+				        title: "등록되었습니다.",
+				        icon: "success",
+						confirmButtonText: "확인",
+				        confirmButtonColor: "#34c38f"
+				    }).then(() => {
+						if(adminModal) adminModal.style.display = "none"; 
+											location.reload();
+				        });
 				},
-				error: function(xhr, status, error) {
-					alert("등록 실패: " + error);
-				}
+				error: function(err) {
+	                console.error("등록 실패", err);
+					Swal.fire({
+	                    title: "등록을 실패했습니다.",
+	                    icon: "error",
+						confirmButtonText: "확인",
+						confirmButtonColor: "#34c38f"
+	                });
+	            }
 			});
 		});
 	}
@@ -192,13 +204,26 @@ document.addEventListener("DOMContentLoaded", function() {
 				type: "POST",
 				data: $(this).serialize(),
 				success: function(response){
-					alert("이슈등록 완료");
-					if(adminModal) adminModal.style.display = "none";
-					location.reload();
+					Swal.fire({
+				        title: "등록되었습니다.",
+				        icon: "success",
+						confirmButtonText: "확인",
+				        confirmButtonColor: "#34c38f"
+				    }).then(() => {
+						if(adminModal) {adminModal.style.display = "none";
+							}
+							location.reload();
+				        });
 				},
-				error: function(xhr, status, error){
-					alert("이슈등록 실패: " + error);
-				}
+				error: function(err) {
+	                console.error("등록 실패", err);
+					Swal.fire({
+	                    title: "등록을 실패했습니다.",
+	                    icon: "error",
+						confirmButtonText: "확인",
+						confirmButtonColor: "#34c38f"
+	                });
+	            }
 			});
 		});
 	}
@@ -239,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				if(selectedTimes.length === 0){
 					alert("시간을 선택해주세요.");
 					return;
-				}
+				} 
 
 				// hidden input 세팅
 				var roomIdInput = document.getElementById("reservationRoomId");
@@ -251,6 +276,10 @@ document.addEventListener("DOMContentLoaded", function() {
 				if(!roomIdInput || !reasonInput || !startInput || !endInput){
 					alert("예약용 hidden input이 없습니다.");
 					return;
+				} 
+				if(!reasonText || !reasonText.value.trim()) {
+				    alert("회의 주제를 입력해주세요.");
+				    return;
 				}
 
 				// 선택 회의실
@@ -293,13 +322,26 @@ document.addEventListener("DOMContentLoaded", function() {
 					contentType: 'application/json',
 					data: JSON.stringify(reservations),
 					success: function() {
-						alert('예약성공');
-						reservationModal.style.display = "none"; 
-						location.reload();
+						Swal.fire({
+					        title: "등록되었습니다.",
+					        icon: "success",
+							confirmButtonText: "확인",
+					        confirmButtonColor: "#34c38f"
+					    }).then(() => {
+							if(adminModal) {adminModal.style.display = "none";
+								}
+								location.reload();
+					        });
 					},
-					error: function(xhr, status, error){
-						alert("예약 실패: " + error);
-					}
+					error: function(err) {
+		                console.error("등록 실패", err);
+						Swal.fire({
+		                    title: "등록을 실패했습니다.",
+		                    icon: "error",
+							confirmButtonText: "확인",
+							confirmButtonColor: "#34c38f"
+		                });
+		            }
 				});
 
 				reservationForm.reset();
@@ -401,6 +443,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 			},
 			
+			
 			// 예약 클릭시 상세보기 모달
 			eventClick: function(info){
 				var reservationId = info.event.id;
@@ -432,74 +475,73 @@ document.addEventListener("DOMContentLoaded", function() {
 
 					    tbody.appendChild(tr);
 					}
-					
-					var cancelBtn = detailModal.querySelector(".cancel");
-					cancelBtn.addEventListener("click", async function(){
-					    // 예약 취소 여부 확인
-					    const result = await Swal.fire({
-					        title: "예약을 취소하시겠습니까?",
-					        icon: "warning",
-					        showCancelButton: true,
-					        confirmButtonText: "예",
-					        cancelButtonText: "아니요",
-					        confirmButtonColor: "#34c38f",
-					        cancelButtonColor: "#f46a6a"
-					    });
-	
-					    if(result.isConfirmed){
-					        try {
-					            const res = await fetch("/api/room/cancel?reservationId=" + reservationId, {
-					                method: "post"
-					            });
-	
-					            if(!res.ok) throw new Error("서버 오류");
-	
-					            await Swal.fire({
-					                title: "예약이 취소되었습니다.",
-					                icon: "success",
-					                confirmButtonText: "확인",
-					                confirmButtonColor: "#34c38f",
-					            })
-									tr.remove();
 
-					        } catch (err) {
-					            Swal.fire({
-					                title: "예약 취소 중 오류가 발생했습니다.",
-					                text: err.message,
-					                icon: "error",
-					                confirmButtonText: "확인",
-					                confirmButtonColor: "#34c38f"
-					            });
-					        }
-					    } else if(result.dismiss === Swal.DismissReason.cancel){
-					        Swal.fire({
-					            title: "취소되었습니다.",
-					            icon: "info",
-					            confirmButtonText: "확인",
-					            confirmButtonColor: "#34c38f"
-					        }).then(() => {
-						            detailModal.style.display = "none";
-						            location.reload();
-						        });
-					    }
+					var cancelBtn = detailModal.querySelector(".cancel");
+					if(cancelBtn) {
+						cancelBtn.addEventListener("click", async function(){
+						    // 예약 취소 여부 확인
+						    const result = await Swal.fire({
+						        title: "예약을 취소하시겠습니까?",
+						        icon: "warning",
+						        showCancelButton: true,
+						        confirmButtonText: "예",
+						        cancelButtonText: "아니요",
+						        confirmButtonColor: "#34c38f",
+						        cancelButtonColor: "#f46a6a"
+						    });
+		
+						    if(result.isConfirmed){
+						        try {
+						            const res = await fetch("/api/room/cancel?reservationId=" + reservationId, {
+						                method: "post"
+						            });
+		
+						            if(!res.ok) throw new Error("서버 오류");
+		
+						            await Swal.fire({
+						                title: "예약이 취소되었습니다.",
+						                icon: "success",
+						                confirmButtonText: "확인",
+						                confirmButtonColor: "#34c38f",
+						            })
+										tr.remove();
+	
+						        } catch (err) {
+						            Swal.fire({
+						                title: "예약 취소 중 오류가 발생했습니다.",
+						                text: err.message,
+						                icon: "error",
+						                confirmButtonText: "확인",
+						                confirmButtonColor: "#34c38f"
+						            });
+						        }
+						    } else if(result.dismiss === Swal.DismissReason.cancel){
+						        Swal.fire({
+						            title: "취소되었습니다.",
+						            icon: "info",
+						            confirmButtonText: "확인",
+						            confirmButtonColor: "#34c38f"
+						        }).then(() => {
+							            detailModal.style.display = "none";
+							            location.reload();
+							        });
+						    }
+						});
+					}
+	
+					// 닫기 버튼
+					var closeBtns = detailModal.querySelectorAll(".close");
+					closeBtns.forEach(function(btn){
+					    btn.onclick = function(){ 
+					        detailModal.style.display = "none"; 
+							location.reload();
+					    };
 					});
 
-	
-					var closeBtns = detailModal.querySelectorAll(".close, .closeBtn");
-					closeBtns.forEach(function(btn){
-			            btn.addEventListener("click", function(){
-			                detailModal.style.display = "none";
-							location.reload();
-			            });
-			        });
-					
-					// 모달 외부 클릭 시 닫기
-			        window.addEventListener("click", function outsideClickHandler(e){
-			            if(e.target === detailModal){
-			                detailModal.style.display = "none";
-			                window.removeEventListener("click", outsideClickHandler);
-			            }
-			        });
+					// 외부 클릭 시 닫기
+					window.onclick = function(e){
+					    if(e.target === detailModal) detailModal.style.display = "none";
+					};
 				});
 			},
 			
@@ -600,4 +642,139 @@ document.addEventListener("DOMContentLoaded", function() {
 			}
 		});
 	}
+	
+	// 내 예약 내역
+	var myReservation = document.getElementById("myReservationBtn"); // 버튼 id
+	var myReservationModal = document.getElementById("myReservation-modal");
+	//var reservationId = info.event.id;
+	//console.log("내 예약에서 삭제시 예약 번호: ", reservationId);
+
+	if(myReservation && myReservationModal){
+	    myReservation.addEventListener("click", function(){
+	        
+	        $.ajax({
+	            url: '/api/room/myReservation',
+	            method: 'GET',
+	            success: function(reservations){
+	                if(!reservations || reservations.length === 0){
+	                    alert("예약 내역이 없습니다.");
+	                    return;
+	                }
+
+	                var tbody = document.getElementById("myReservationList");
+	                if(tbody){
+	                    tbody.innerHTML = "";
+
+	                    reservations.forEach(function(reservation){
+	                        var tr = document.createElement("tr");
+
+	                        var useDate = reservation.roomReservationStartTime.split(" ")[0];
+	                        var startTime = reservation.roomReservationStartTime.split(" ")[1].slice(0,5);
+	                        var endTime = reservation.roomReservationEndTime.split(" ")[1].slice(0,5);
+	                        var useTime = startTime + " ~ " + endTime;
+							
+							//console.log("roomReservationId 확인:", reservation.roomReservationId);
+
+							tr.dataset.reservationId = reservation.roomReservationId;
+						    //console.log("dataset에 넣은 ID:", tr.dataset.reservationId);
+							
+	                        tr.innerHTML = "<td>" + reservation.roomName + "</td>" +
+	                                       "<td>" + reservation.roomLocation + "</td>" +
+	                                       "<td>" + useDate + "</td>" +
+	                                       "<td>" + useTime + "</td>" +
+	                                       "<td>" + reservation.roomReservationReason + "</td>" +
+	                                       "<td><button class='cancelBtn' data-id='" + reservation.roomReservationId + "' style='background:red;color:white;'>취소</button></td>";
+
+	                        tbody.appendChild(tr);
+	                    });
+
+	                    // 예약 취소 버튼 이벤트
+						var cancelBtns = tbody.querySelectorAll(".cancelBtn");
+						cancelBtns.forEach(function(btn){
+						    btn.addEventListener("click", async function(e){
+						        var tr = e.target.closest("tr"); 
+						        const reservationId = tr ? tr.dataset.reservationId : null;
+
+						        if(!reservationId){
+						            console.error("reservationId가 비어있습니다.", e.target, tr);
+						            alert("예약 ID를 가져올 수 없습니다.");
+						            return;
+						        }
+
+						        const result = await Swal.fire({
+						            title: "예약을 취소하시겠습니까?",
+						            icon: "warning",
+						            showCancelButton: true,
+						            confirmButtonText: "예",
+						            cancelButtonText: "아니요",
+						            confirmButtonColor: "#34c38f",
+						            cancelButtonColor: "#f46a6a"
+						        });
+
+						        if(result.isConfirmed){
+						            try {
+						                const res = await fetch("/api/room/cancel?reservationId=" + reservationId, {
+						                    method: "post"
+						                });
+
+						                if(!res.ok) throw new Error("서버 오류");
+
+						                await Swal.fire({
+						                    title: "예약이 취소되었습니다.",
+						                    icon: "success",
+						                    confirmButtonText: "확인",
+						                    confirmButtonColor: "#34c38f",
+						                });
+						                tr.remove();
+
+						            } catch (err) {
+						                Swal.fire({
+						                    title: "예약 취소 중 오류가 발생했습니다.",
+						                    text: err.message,
+						                    icon: "error",
+						                    confirmButtonText: "확인",
+						                    confirmButtonColor: "#34c38f"
+						                });
+						            }
+						        } else if(result.dismiss === Swal.DismissReason.cancel){
+						            Swal.fire({
+						                title: "취소되었습니다.",
+						                icon: "info",
+						                confirmButtonText: "확인",
+						                confirmButtonColor: "#34c38f"
+						            }).then(() => {
+						                myReservationModal.style.display = "none";
+						                location.reload();
+						            });
+						        }
+						    });
+						});
+
+	                }
+
+	                // 모달 열기
+	                myReservationModal.style.display = "flex";
+
+	                // 닫기 버튼
+	                var closeBtns = myReservationModal.querySelectorAll(".close");
+	                closeBtns.forEach(function(btn){
+	                    btn.onclick = function(){ 
+	                        myReservationModal.style.display = "none"; 
+							location.reload();
+	                    };
+	                });
+
+	                // 외부 클릭 시 닫기
+	                window.onclick = function(e){
+	                    if(e.target === myReservationModal) myReservationModal.style.display = "none";
+	                };
+	            },
+	            error: function(err){
+	                console.error("예약 내역 불러오기 실패", err);
+	                alert("예약 내역을 가져오는 중 오류가 발생했습니다.");
+	            }
+	        });
+	    });
+	}
+
 });

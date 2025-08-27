@@ -15,6 +15,7 @@ import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
+import com.example.broadcastgroupware.dto.MyReservationRoom;
 import com.example.broadcastgroupware.dto.RoomDetailDto;
 
 @Mapper
@@ -89,6 +90,9 @@ public interface ReservationMapper {
 
 	// 예약 취소
 	int roomCancel(int reservationId);
+
+	// 내 예약 조회
+	List<MyReservationRoom> myReservation(int userId);
 
 
 

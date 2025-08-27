@@ -23,6 +23,7 @@ import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
+import com.example.broadcastgroupware.dto.MyReservationRoom;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.dto.ReservationPeriod;
 import com.example.broadcastgroupware.dto.RoomDetailDto;
@@ -327,11 +328,21 @@ public class ReservationRestController {
 		return reservationService.roomDetail(reservationId);
 	}
 	
+	// 내 예약내역
+	@GetMapping("/room/myReservation")
+	public List<MyReservationRoom> myReservation(HttpSession session) {
+		
+		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+	    int userId = loginUser.getUserId();
+	    
+	    return reservationService.myReservation(userId);
+	}
+	
 	// 예약 취소
 	@PostMapping("/room/cancel")
 	public String roomCancel(@RequestParam int reservationId) {
 		
-		// log.info("reservationId: {}", reservationId);
+		log.info("reservationId: {}", reservationId);
 		
 		int result = reservationService.roomCancel(reservationId);
 		

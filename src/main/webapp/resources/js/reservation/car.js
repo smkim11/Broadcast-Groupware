@@ -197,7 +197,7 @@
 				ctx.fillRect(0, 15, canvas.width, 20);
 				drawTimeLabelLocal(0, canvasStart);
 
-				// 2) 선택 구간   ← ★ 위치를 예약보다 앞으로 이동
+				// 2) 선택 구간   
 				const startTimeValue = document.getElementById("startTime").value;
 				const endTimeValue = document.getElementById("endTime").value;
 

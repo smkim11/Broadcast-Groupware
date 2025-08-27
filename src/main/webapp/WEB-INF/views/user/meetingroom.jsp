@@ -26,53 +26,60 @@
   box-shadow: none !important;
 }
 
+/* 기존 CSS 유지, 모달만 수정됨 */
+
 /* 모달 전체 배경 */
 .modal {
-	display: none; /* 기본은 안 보이게 */
+	display: none; 
 	position: fixed;
-	z-index: 9999;
+	z-index: 1000;
 	left: 0;
 	top: 0;
 	width: 100%;
 	height: 100%;
-	overflow: auto;
-	background-color: rgba(0,0,0,0.5); /* 반투명 검은 배경 */
-	align-items: center;
+	background-color: rgba(0, 0, 0, 0.6);
 	justify-content: center;
+	align-items: center;
 }
 
-/* 모달 콘텐츠 */
-#detail-modal {
-	background: #fff;
-	padding: 20px;
-	border-radius: 10px;
-	width: 600px; /* 가로 크기 */
-	max-width: 90%; /* 작은 화면에서는 화면에 맞춤 */
-	box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-	position: relative;
-	animation: fadeIn 0.3s ease-in-out;
-}
-
-/* 닫기 버튼 (우측 상단) */
-#detail-modal .close {
-	position: absolute;
-	right: 15px;
-	top: 10px;
-	font-size: 20px;
-	font-weight: bold;
-	color: #333;
-	cursor: pointer;
-}
-
-/* 제목 */
-#detail-modal h3 {
-	margin-top: 0;
-	margin-bottom: 15px;
-	font-size: 20px;
+.modal-content,
+#detail-modal,
+.reservation-modal,
+#management-modal .modal-content,
+#myReservation-modal .modal-content {
+	background: white;
+	padding: 25px;
+	border-radius: 12px;
+	width: 90%;
+	max-width: 600px;   /* 모달 가로 최대값 */
 	text-align: center;
-	border-bottom: 2px solid #eee;
-	padding-bottom: 8px;
+	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+	position: relative;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
 }
+
+/* 닫기 버튼 항상 우측 정렬 */
+.modal .close {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+    transition: 0.3s;
+}
+
+/* 모달 제목 */
+.modal-content h3,
+#detail-modal h3,
+.reservation-modal h3,
+#management-modal .modal-content h3,
+#myReservation-modal .modal-content h3 {
+	margin-bottom: 15px;
+	color: blue;
+}
+
 
 /* 테이블 스타일 */
 .meetingroomDatail {
@@ -93,44 +100,31 @@
 	font-weight: bold;
 }
 
-.btn-group {
-    display: flex;
-    width: 100%;
-    margin-top: 15px;
-}
-
-/* 왼쪽 버튼: submit */
-.btn-group button[type="submit"] {
-    background-color: #e74c3c;
-    color: #fff;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-/* 오른쪽 버튼: close */
-.btn-group button.close {
-    background-color: #ccc;
-    color: #333;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-left: auto; /* ← 오른쪽 끝으로 밀기 */
+/* 모달 버튼 그룹 */
+.modal .btn-group {
+	display: flex;
+	width: 100%;
+	margin-top: 15px;
+	gap: 10px; 
 }
 
 
-/* 제목 */
-.modal-content h3 {
-	margin: 0 0 20px;
-	font-size: 20px;
-	font-weight: 600;
-	text-align: center;
-	color: #333;
+/* 취소 버튼: 빨강색, 왼쪽 정렬 */
+.modal .btn-group button.cancel {
+	background-color: #e74c3c; /* 빨강색 */
+	color: white;
+	margin-right: auto; /* 왼쪽 정렬 */
 }
 
-/* 폼 영역 */
+/* 나머지 버튼: 초록색, 오른쪽 정렬 */
+.modal .btn-group button[type="submit"],
+.modal .btn-group button:not(.cancel) {
+	background-color: #28a745;
+	color: white;
+	margin-left: auto; /* 오른쪽 정렬 */
+}
+
+/* 폼 섹션 */
 .form-section {
 	display: flex;
 	flex-direction: column;
@@ -138,16 +132,15 @@
 	margin-top: 15px;
 }
 
-/* label */
 .form-section label {
 	font-size: 14px;
 	font-weight: 500;
 	color: #444;
 }
 
-/* input, select */
 .form-section input,
-.form-section select {
+.form-section select,
+textarea {
 	padding: 10px;
 	font-size: 14px;
 	border: 1px solid #ccc;
@@ -158,49 +151,10 @@
 }
 
 .form-section input:focus,
-.form-section select:focus {
+.form-section select:focus,
+textarea:focus {
 	border-color: #007bff;
 	outline: none;
-}
-
-/.btn-group {
-	display: flex;
-	justify-content: flex-end; /* 오른쪽 정렬 */
-	gap: 10px;                 /* 버튼 간격 */
-	margin-top: 15px;
-}
-
-.btn-group button {
-	min-width: 80px;
-	padding: 8px 14px;
-	border-radius: 6px;
-	cursor: pointer;
-	border: none;
-	font-size: 14px;
-}
-
-.btn-group button.close {
-	background: #f1f1f1;
-	color: #333;
-}
-
-.btn-group button[type="submit"] {
-	background: #007bff;
-	color: #fff;
-}
-
-
-.btn-group button.close:hover {
-	background: #999;
-}
-
-.btn-group button[type="submit"] {
-	background: #007bff;
-	color: #fff;
-}
-
-.btn-group button[type="submit"]:hover {
-	background: #0056b3;
 }
 
 /* 토글 스위치 */
@@ -253,28 +207,10 @@ input:checked + .slider:before {
 /* 애니메이션 */
 @keyframes fadeIn {
 	from { opacity: 0; transform: scale(0.9); }
-	to   { opacity: 1; transform: scale(1); }
+	to { opacity: 1; transform: scale(1); }
 }
 
-/*예약 모달 css*/
-.modal {
-	display: none;
-	position: fixed;
-	top: 0; left: 0;
-	width: 100%; height: 100%;
-	background: rgba(0,0,0,0.5);
-	justify-content: center; align-items: center;
-	z-index: 1000;
-}
-
-.reservation-modal {
-	background: #fff;
-	padding: 20px;
-	border-radius: 8px;
-	width: 400px;
-	max-width: 90%;
-}
-
+/* 예약 모달 시간 슬롯 */
 .time-slots {
 	display: flex;
 	flex-wrap: wrap;
@@ -297,84 +233,66 @@ input:checked + .slider:before {
 	background: #007bff;
 	color: #fff;
 }
-.btn-group {
-	display: flex;
-	justify-content: flex-end;
-	gap: 10px;
-}
 
+/* FullCalendar 관련 스타일 */
 .fc-event {
- color: #fff !important;
- cursor: default !important;
+	color: #fff !important;
+	cursor: default !important;
 }
 .fc-event:hover {
- opacity: 1 !important;
- color: #fff !important;
+	opacity: 1 !important;
+	color: #fff !important;
 }
 
 /* 월뷰 각 날짜 셀 높이 고정 */
 .fc-daygrid-day {
-    height: 120px;      /* 원하는 높이로 조정 */
-    min-height: 120px;  /* 최소 높이 고정 */
-    max-height: 120px;  /* 최대 높이 고정 */
-    position: relative; /* 이벤트 위치 조정 용도 */
-    overflow: hidden;   /* 셀 내부 이벤트 넘침 처리 */
+	height: 120px;
+	min-height: 120px;
+	max-height: 120px;
+	position: relative;
+	overflow: hidden;
 }
 
 /* 셀 안 이벤트 영역 */
 .fc-daygrid-day-events {
-    max-height: 100%;   /* 셀 높이에 맞춤 */
-    overflow-y: auto;   /* 스크롤 가능 */
+	max-height: 70px;
+	overflow-y: auto;
 }
 
 /* 이벤트 간격 조정 */
 .fc-daygrid-event {
-    margin-bottom: 2px;
+	margin-bottom: 2px;
 }
 
-
-
-/* 날짜 셀 이벤트 영역 */
-.fc-daygrid-day-events {
-    max-height: 70px;   /* 2건 정도만 보이도록 높이 제한 */
-    overflow-y: auto;   /* 스크롤 가능 */
+/* select 기본 스타일 */
+#roomList {
+	padding: 6px 12px;
+	border-radius: 4px;
+	background-color: #f8f9fa;
+	cursor: pointer;
+	transition: 0.3s;
 }
 
-/* 이벤트 간격 조정 */
-.fc-daygrid-event {
-    margin-bottom: 2px;
+/* 예약/관리 버튼 공통 스타일 */
+#myReservationBtn,
+#management {
+	padding: 6px 12px;
+	border: 1px solid #1e7e34;
+	background-color: blue;
+	color: white;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: 0.3s;
 }
 
-/* 관리자 모달 크기 조정 */
-#management-modal .modal-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    width: 500px;         /* 원하는 고정 너비 */
-    max-width: 90%;       /* 화면이 작을 때 90%까지 */
-    margin: 0 auto;       /* 화면 가운데 정렬 */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    position: relative;
-    animation: fadeIn 0.3s ease-in-out;
+.d-flex {
+	display: flex;
+	align-items: center;
 }
 
-/* 모달 내부 폼 섹션 간격 줄이기 */
-#management-modal .form-section {
-    gap: 10px;
+.gap-3 {
+	gap: 1rem;
 }
-
-/* select와 input 너비 */
-#management-modal .form-section input,
-#management-modal .form-section select {
-    width: 100%;
-}
-
-/* 닫기 버튼 위치 조정 */
-#management-modal .close {
-    top: 10px;
-    right: 15px;
-}
-
 
 
 </style>
@@ -423,16 +341,16 @@ input:checked + .slider:before {
 												       		<option>-- 회의실 선택 --</option>
 												       	</select>
 												    </div>											
-												
-												    <button class="btn btn-outline-primary" id="">
-												         예약내역
-												    </button>
-												    <c:if test="${loginUser.role eq 'admin'}">
-														<button class="btn btn-outline-primary" id="management">
-															회의실 관리
-														</button>
-													</c:if>
-
+													<div class="button-group">
+													    <button class="myReservationBtn" id="myReservationBtn">
+													         예약내역
+													    </button>
+													    <c:if test="${loginUser.role eq 'admin'}">
+															<button class="btn btn-outline-primary" id="management">
+																회의실 관리
+															</button>
+														</c:if>
+													</div>
 												</div>
 
                                                 <div id="calendar"></div>
@@ -463,7 +381,7 @@ input:checked + .slider:before {
     <!-- 관리자 모달 -->
 	<div id="management-modal" class="modal">
 		<div class="modal-content">
-			<span class="close">&times;</span>
+			<span class="close" style="text-align: right;">&times;</span>
 			<h3>회의실 관리</h3>
 	
 			<!-- 모드 선택 -->
@@ -481,7 +399,7 @@ input:checked + .slider:before {
 				<input type="number" name="roomCapacity" placeholder="수용가능한 인원 수">
 				<div class="btn-group">
 					<button class="close" type="button">닫기</button>
-					<button type="submit">등록</button>
+					<button class="submit" type="submit">등록</button>
 				</div>
 			</form>
 	
@@ -525,7 +443,7 @@ input:checked + .slider:before {
 	<!-- 상세보기 모달 -->
 	<div id="detailReservation-modal" class="modal">
 		<div id="detail-modal">
-		<span class="close">&times;</span>
+		<span class="close" style="text-align: right;">&times;</span>
 			<h3>상세정보</h3>
 			
 			<table id="meetingroomReservationDetail" class="meetingroomDatail">
@@ -543,7 +461,37 @@ input:checked + .slider:before {
 				</tbody>
 			</table>
 				<div class="btn-group">
-					<button type="submit" class="cancel" style="background-color: red;">취소</button>
+					<c:if test="${loginUser.role eq 'admin'}">
+						<button type="submit" class="cancel" style="background-color: red;">취소</button>
+					</c:if>
+					<button class="close" type="button">닫기</button>
+				</div>
+		</div>
+	</div>
+	
+	<!-- 본인 예약내역 모달 -->
+	<div id="myReservation-modal" class="modal">
+		<div class="modal-content">
+		<span class="close" style="text-align: right;">&times;</span>
+			<h3>예약 내역</h3>
+			
+			<table id="myReservationDetail" class="myReservation">
+				<thead>
+					<tr>
+						<th>회의실</th>
+						<th>위치</th>
+						<th>사용일</th>
+						<th>사용 시간</th>
+						<th>회의 주제</th>
+						<th>취소</th>
+					</tr>
+				</thead>	
+				
+				<tbody id="myReservationList">
+					
+				</tbody>
+			</table>
+				<div class="btn-group">
 					<button class="close" type="button">닫기</button>
 				</div>
 		</div>
@@ -552,7 +500,7 @@ input:checked + .slider:before {
 	<!-- 날짜 클릭시 모달 => 예약 -->
 	<div id="reservationMeetingroom-modal" class="modal">
 		<div class="reservation-modal">
-			<span class="close">&times;</span>
+			<span class="close" style="text-align: right;">&times;</span>
 			<h3>회의실 예약</h3>
 			<form id="reservationMeetingroom">
 			<input type="hidden" id="reservationRoomId" name="roomId">

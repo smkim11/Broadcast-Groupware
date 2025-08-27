@@ -16,6 +16,7 @@ import com.example.broadcastgroupware.dto.CarReservationDto;
 import com.example.broadcastgroupware.dto.CarToggle;
 import com.example.broadcastgroupware.dto.MeetingroomReservationDto;
 import com.example.broadcastgroupware.dto.MyReservationDto;
+import com.example.broadcastgroupware.dto.MyReservationRoom;
 import com.example.broadcastgroupware.dto.PageDto;
 import com.example.broadcastgroupware.dto.RoomDetailDto;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
@@ -188,6 +189,11 @@ public class ReservationService {
 	// 예약 취소
 	public int roomCancel(int reservationId) {
 		return reservationMapper.roomCancel(reservationId);
+	}
+
+	// 내 예약 조회
+	public List<MyReservationRoom> myReservation(int userId) {
+		return reservationMapper.myReservation(userId);
 	}
 
 

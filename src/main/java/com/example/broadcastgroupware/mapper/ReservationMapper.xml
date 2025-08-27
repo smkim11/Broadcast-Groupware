@@ -214,4 +214,16 @@
 	<delete id="roomCancel" parameterType="int">
 		DELETE FROM room_reservation WHERE room_reservation_id = #{roomCancel}
 	</delete>
+	
+	<select id="myReservation" resultType="com.example.broadcastgroupware.dto.MyReservationRoom">
+		SELECT rr.room_reservation_id AS roomReservationId, r.room_name AS roomName, r.room_location AS roomLocation, 
+				rr.room_reservation_start_time AS roomReservationStartTime,
+				rr.room_reservation_end_time AS roomReservationEndTime, rr.room_reservation_reason AS roomReservationReason
+		FROM room r
+		INNER JOIN room_reservation rr
+		ON r.room_id = rr.room_id
+		INNER JOIN user u
+		ON rr.user_id = u.user_id
+		WHERE u.user_id = #{userId} AND rr.room_reservation_start_time &gt; NOW()
+	</select>
 </mapper>
