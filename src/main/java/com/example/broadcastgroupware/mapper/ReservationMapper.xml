@@ -168,7 +168,7 @@
 	<select id="meetingroomList" parameterType="com.example.broadcastgroupware.domain.Room">
 		SELECT room_id AS roomId, room_name AS roomName, room_location AS roomLocation 
 		FROM room
-		WHERE room_status = 'Y'
+		WHERE room_status = 'Y' AND room_type = '회의실'
 		ORDER BY room_id
 	</select>
 	
@@ -210,20 +210,58 @@
 		WHERE room_reservation_id = #{reservationId}
 	</select>
 	
-	<!-- 예약 취소 -->
+	<!-- 예약 취소  회의실, 편집실 공통-->
 	<delete id="roomCancel" parameterType="int">
 		DELETE FROM room_reservation WHERE room_reservation_id = #{roomCancel}
 	</delete>
 	
+	<!-- 내 회의실 예약내역 -->
 	<select id="myReservation" resultType="com.example.broadcastgroupware.dto.MyReservationRoom">
 		SELECT rr.room_reservation_id AS roomReservationId, r.room_name AS roomName, r.room_location AS roomLocation, 
-				rr.room_reservation_start_time AS roomReservationStartTime,
+				rr.room_reservation_start_time AS roomReservationStartTime, r.room_type AS roomType,
 				rr.room_reservation_end_time AS roomReservationEndTime, rr.room_reservation_reason AS roomReservationReason
 		FROM room r
 		INNER JOIN room_reservation rr
 		ON r.room_id = rr.room_id
 		INNER JOIN user u
 		ON rr.user_id = u.user_id
-		WHERE u.user_id = #{userId} AND rr.room_reservation_start_time &gt; NOW()
+		WHERE u.user_id = #{userId} AND r.room_type = '회의실' AND rr.room_reservation_start_time &gt; NOW()
+	</select>
+	
+	
+	<!-- ====== 편집실 ========  -->
+	
+	<!-- 관리자-편집실등록 -->
+	<insert id="addCuttingRoom" parameterType="com.example.broadcastgroupware.domain.Room">
+		INSERT INTO room(room_type, room_name, room_location, room_capacity, room_status)
+		VALUES('편집실',#{roomName}, #{roomLocation}, #{roomCapacity}, 'Y')
+	</insert>
+	
+	<!-- 관리자용 편집실 리스트 -->
+	<select id="cuttingroomAdminList">
+		SELECT room_id AS roomId, room_name AS roomName, room_location AS roomLocation, room_capacity AS roomCapacity, room_status AS roomStatus
+		FROM room
+		WHERE room_type = '편집실'
+	</select>
+	
+	<!-- 편집실 리스트 -->
+	<select id="cuttingroomList" parameterType="com.example.broadcastgroupware.domain.Room">
+		SELECT room_id AS roomId, room_name AS roomName, room_location AS roomLocation 
+		FROM room
+		WHERE room_status = 'Y' AND room_type = '편집실'
+		ORDER BY room_id
+	</select>
+	
+	<!-- 내 편집실 예약내역 -->
+	<select id="myCuttingroomReservation" resultType="com.example.broadcastgroupware.dto.MyReservationRoom">
+		SELECT rr.room_reservation_id AS roomReservationId, r.room_name AS roomName, r.room_location AS roomLocation, 
+				rr.room_reservation_start_time AS roomReservationStartTime, r.room_type AS roomType,
+				rr.room_reservation_end_time AS roomReservationEndTime, rr.room_reservation_reason AS roomReservationReason
+		FROM room r
+		INNER JOIN room_reservation rr
+		ON r.room_id = rr.room_id
+		INNER JOIN user u
+		ON rr.user_id = u.user_id
+		WHERE u.user_id = #{userId} AND r.room_type = '편집실' AND rr.room_reservation_start_time &gt; NOW()
 	</select>
 </mapper>

@@ -96,6 +96,21 @@ public interface ReservationMapper {
 
 
 
+	// ====== 편집실 ========
+	// 편집실 등록
+	boolean addCuttingRoom(Room room);
+
+	// 관리자 - 편집실 리스트
+	List<Room> cuttingroomAdminList();
+
+	// 관리자- 편집실 이슈등록
+	boolean cuttingroomAdminModify(AddIssueToRoom addIssueToRoom, int userId);
+
+	// 편집실 리스트
+	List<Room> cuttingroomList();
+
+	// 내 편집시 예약 조회
+	List<MyReservationRoom> myCuttingroomReservation(int userId);
 
 
 

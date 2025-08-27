@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	}
 
 
-	// 관리자 회의실 등록
+	// 관리자 편집실 등록
 	const addForm = forms["등록"];
 	if(addForm) {
 		addForm.addEventListener("submit", function(e) {
@@ -59,12 +59,12 @@ document.addEventListener("DOMContentLoaded", function() {
 			const roomLocation = this.roomLocation.value.trim();
 			const roomCapacity = this.roomCapacity.value.trim();
 
-			if(!roomName) { alert("회의실명을 입력하세요."); return; }
-			if(!roomLocation) { alert("회의실 위치를 입력하세요."); return; }
-			if(!roomCapacity) { alert("회의실 수용인원을 입력하세요."); return; }
+			if(!roomName) { alert("편집실명을 입력하세요."); return; }
+			if(!roomLocation) { alert("편집실 위치를 입력하세요."); return; }
+			if(!roomCapacity) { alert("편집실 수용인원을 입력하세요."); return; }
 
 			$.ajax({
-				url: "/api/meetingroom/addRoom",
+				url: "/api/cuttingroom/addRoom",
 				type: "POST",
 				data: $(this).serialize(),
 				success: function() {
@@ -92,12 +92,12 @@ document.addEventListener("DOMContentLoaded", function() {
 	}
 	
 	$.ajax({
-	    url: '/api/meetingroom/adminList',
+	    url: '/api/cuttingroom/adminList',
 	    method: 'GET',
 	    success: function(meetingroomList) {
 	        const select = $('#modifyIssueSelect');
 	        select.empty();
-	        select.append('<option value="">-- 회의실 선택 --</option>');
+	        select.append('<option value="">-- 편집실 선택 --</option>');
 
 	        meetingroomList.forEach(function(room) {
 	            const statusText = room.roomStatus === 'Y' ? '활성화' : '비활성화';
@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	        });
 	    },
 	    error: function(err) {
-	        console.error('회의실 목록을 불러오는데 실패했습니다.', err);
+	        console.error('편집실 목록을 불러오는데 실패했습니다.', err);
 	    }
 	});
 
@@ -121,12 +121,12 @@ document.addEventListener("DOMContentLoaded", function() {
         return yyyy+"-"+mm+"-"+dd;
     }
 
-    // 시간 select 옵션 생성 (2시간 단위)
+    // 시간 select 옵션 생성 (6시간 단위)
     function populateTimeOptions(selectId, placeholder) {
         const select = document.getElementById(selectId);
         if(!select) return;
         select.innerHTML = `<option value="">${placeholder}</option>`;
-        for(let h = 0; h < 24; h += 2){
+        for(let h = 0; h < 24; h += 6){
             const hh = String(h).padStart(2,'0');
             select.innerHTML += `<option value="${hh}:00:00">${hh}:00</option>`;
         }
@@ -233,9 +233,9 @@ document.addEventListener("DOMContentLoaded", function() {
 	var reservationModal = document.getElementById('reservationMeetingroom-modal');
 	if(reservationModal){
 		var timeSlotsContainer = document.getElementById('timeSlots');
-		for(var hour=0; hour<24; hour+=2){
+		for(var hour=0; hour<24; hour+=6){
 		    var start = hour.toString().padStart(2,'0') + ":00";
-		    var endHour = hour + 1;
+		    var endHour = hour + 5;
 		    var end = endHour.toString().padStart(2,'0') + ":50";
 		    var label = document.createElement('label');
 		    label.innerHTML = '<input type="checkbox" name="selectedTime" value="' + start + '-' + end + '"><span>' + start + ' ~ ' + end + '</span>';
@@ -278,11 +278,11 @@ document.addEventListener("DOMContentLoaded", function() {
 					return;
 				} 
 				if(!reasonText || !reasonText.value.trim()) {
-				    alert("회의 주제를 입력해주세요.");
+				    alert("프로그램명을 입력해주세요.");
 				    return;
 				}
 
-				// 선택 회의실
+				// 선택 편집실
 				var roomListSelect = document.getElementById("roomList");
 				roomIdInput.value = roomListSelect ? roomListSelect.value : "";
 
@@ -326,7 +326,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				//console.log("Ajax로 전송될 데이터:", $(this).serialize());
 
 				$.ajax({
-					url: '/api/meetingroom/reservation', // 회의실, 편집실 공통
+					url: '/api/meetingroom/reservation',  // 회의실, 편집실 공통
 					type: 'post',
 					contentType: 'application/json',
 					data: JSON.stringify(reservations),
@@ -391,7 +391,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 				var roomId = $("#roomList").val();
 				if (!roomId) {
-					alert("먼저 회의실을 선택해주세요.");
+					alert("먼저 편실을 선택해주세요.");
 					return;
 				}
 
@@ -569,31 +569,31 @@ document.addEventListener("DOMContentLoaded", function() {
 		calendar.render();
 	}
 
-	// 뷰 좌측 상단에 회의실 리스트
+	// 뷰 좌측 상단에 편집실 리스트
 	$.ajax({
-	    url: '/api/meetingroom/roomlist',
+	    url: '/api/cuttingroom/roomlist',
 	    type: 'GET',
-	    success: function(meetingroomList) {
+	    success: function(cuttingroomList) {
 	        var select = $('#roomList');
 	        select.empty();
-	        select.append('<option value="">-- 회의실 선택 --</option>');
+	        select.append('<option value="">-- 편집실 선택 --</option>');
 
-	        meetingroomList.forEach(function(room) {
+	        cuttingroomList.forEach(function(room) {
 	            select.append('<option value="' + room.roomId + '">' + room.roomName + ' (' + room.roomLocation + ')</option>');
 	        });
 
-	        if(meetingroomList.length > 0){
-	            select.val(meetingroomList[0].roomId).trigger("change");
+	        if(cuttingroomList.length > 0){
+	            select.val(cuttingroomList[0].roomId).trigger("change");
 	        }
 			
 	    },
 	    error: function(err) {
-	        console.error('회의실 목록 불러오기 실패:', err);
+	        console.error('편집실 목록 불러오기 실패:', err);
 	    }   
 	});
 	
 
-	// 회의실 변경 시 예약 정보 다시 불러오기
+	// 편집실 변경 시 예약 정보 다시 불러오기
 	$("#roomList").on("change", function() {
 		var roomId = $(this).val();
 
@@ -639,7 +639,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	// 상세페이지 호출
 	function reservationDetail(reservationId, callback) {
 		$.ajax({
-			url: "/api/room/detail",  // 회의실, 편집실 공통
+			url: "/api/room/detail", // 회의실, 편집실 공통
 			method: "GET",
 			data: { roomReservationId: reservationId},
 			success: function(res) {
@@ -653,7 +653,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	}
 	
 	// 내 예약 내역
-	var myReservation = document.getElementById("myReservationBtn"); 
+	var myReservation = document.getElementById("myReservationBtn");
 	var myReservationModal = document.getElementById("myReservation-modal");
 	//var reservationId = info.event.id;
 	//console.log("내 예약에서 삭제시 예약 번호: ", reservationId);
@@ -662,7 +662,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	    myReservation.addEventListener("click", function(){
 	        
 	        $.ajax({
-	            url: '/api/room/myMeetingroomReservation',
+	            url: '/api/room/myCuttingroomReservation',
 	            method: 'GET',
 	            success: function(reservations){
 	                if(!reservations || reservations.length === 0){
@@ -723,7 +723,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 						        if(result.isConfirmed){
 						            try { // 회의실, 편집실 공통
-						                const res = await fetch("/api/room/cancel?reservationId=" + reservationId, {
+						                const res = await fetch("/api/room/cancel?reservationId=" + reservationId, { 
 						                    method: "post"
 						                });
 

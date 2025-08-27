@@ -198,6 +198,30 @@ public class ReservationService {
 
 
 	
+	
+	// ====== 편집실 ========
+	
+	// 편집실 등록
+	public boolean addCuttingRoom(Room room) {
+		return reservationMapper.addCuttingRoom(room);
+	}
+
+	// 관리자- 편집실 리스트
+	public List<Room> cuttingroomAdminList() {
+		return reservationMapper.cuttingroomAdminList();
+	}
+
+	// 편집실 리스트
+	public List<Room> cuttingroomList() {
+		return reservationMapper.cuttingroomList();
+	}
+
+	// 내 편집실 예약 조회
+	public List<MyReservationRoom> myCuttingroomReservation(int userId) {
+		return reservationMapper.myCuttingroomReservation(userId);
+	}
+
+
 
 	
 	

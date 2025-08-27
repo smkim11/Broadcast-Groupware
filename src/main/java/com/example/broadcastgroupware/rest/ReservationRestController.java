@@ -264,8 +264,8 @@ public class ReservationRestController {
 		return reservationService.meetingroomAdminList();
 	}
 	
-	// 관리자- 회의실 이슈등록
-	@PostMapping("/meetingroom/adminIssue")
+	// 관리자- 회의실 이슈등록  회의실, 편집실 공통
+	@PostMapping("/meetingroom/adminIssue") 
 	public String meetingroomAdminModify(AddIssueToRoom addIssueToRoom, HttpSession session) {
 		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 		int userId = loginUser.getUserId();
@@ -290,15 +290,15 @@ public class ReservationRestController {
 		return reservationService.meetingroomList();
 	}
 	
-	// 회의실 예약 내역
+	// 회의실 예약 내역   회의실, 편집실 공통
 	@GetMapping("/meetingroom/reservations")
 	public List<RoomReservation> meetingroomReservations(@RequestParam int roomId) {
 		//log.info("roomId: {}", roomId);
 		return reservationService.meetingroomReservations(roomId);
 	}
 	
-	// 회의실 예약
-	@PostMapping("/meetingroom/reservation")
+	// 회의실 예약  회의실, 편집실 공통
+	@PostMapping("/meetingroom/reservation") 
 	public String meetingroomReservation(@RequestBody List<MeetingroomReservationDto> reservations, HttpSession session) {
 	    UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 	    int userId = loginUser.getUserId();
@@ -322,15 +322,15 @@ public class ReservationRestController {
 	    return success ? "success" : "등록에 실패했습니다";
 	}
 
-	// 예약내역 상세보기
+	// 예약내역 상세보기  회의실, 편집실 공통
 	@GetMapping("/room/detail")
 	public RoomDetailDto roomDetail(@RequestParam("roomReservationId") int reservationId) {
 		return reservationService.roomDetail(reservationId);
 	}
 	
-	// 내 예약내역
-	@GetMapping("/room/myReservation")
-	public List<MyReservationRoom> myReservation(HttpSession session) {
+	// 내 회의실 예약내역
+	@GetMapping("/room/myMeetingroomReservation")
+	public List<MyReservationRoom> myMeetingroomReservation(HttpSession session) {
 		
 		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 	    int userId = loginUser.getUserId();
@@ -338,7 +338,7 @@ public class ReservationRestController {
 	    return reservationService.myReservation(userId);
 	}
 	
-	// 예약 취소
+	// 예약 취소  회의실, 편집실 공통
 	@PostMapping("/room/cancel")
 	public String roomCancel(@RequestParam int reservationId) {
 		
@@ -353,4 +353,47 @@ public class ReservationRestController {
 	    }
 	}
 	
+	
+	// ====== 편집실 ========
+	// 편집실 등록
+	@PostMapping("cuttingroom/addRoom")
+	public String addCuttingRoom(Room room) {
+		
+		log.info("=== Ajax로 전달된 회의실등록 ===");
+		log.info("roomName: {}", room.getRoomName());
+		log.info("roomLocation: {}", room.getRoomLocation());
+		log.info("roomCapaticy: {}", room.getRoomCapacity());
+
+		boolean success = reservationService.addCuttingRoom(room);
+		
+		if(!success) {
+			return "등록에 실패했습니다";
+		}
+		
+		return "success";
+	}
+	
+	// 관리자- 편집실 리스트
+	@GetMapping("cuttingroom/adminList")
+	public List<Room> cuttingroomAdminList() {
+		
+		return reservationService.cuttingroomAdminList();
+	}
+	
+	// 편집실 리스트
+	@GetMapping("/cuttingroom/roomlist")
+	public List<Room> cuttingroomList() {
+		return reservationService.cuttingroomList();
+	}
+	
+	// 내 편집실 예약내역
+	@GetMapping("/room/myCuttingroomReservation")
+	public List<MyReservationRoom> myCuttingroomReservation(HttpSession session) {
+		
+		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+	    int userId = loginUser.getUserId();
+	    
+	    return reservationService.myCuttingroomReservation(userId);
+	}
+
 }
