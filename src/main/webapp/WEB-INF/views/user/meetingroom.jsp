@@ -406,7 +406,7 @@ input:checked + .slider:before {
 				<input type="number" name="roomCapacity" placeholder="수용가능한 인원 수">
 				<div class="btn-group">
 					<button class="close" type="button">닫기</button>
-					<button class="submit" type="submit">등록</button>
+					<button class="reservationBtn" type="submit">등록</button>
 				</div>
 			</form>
 	
@@ -440,7 +440,7 @@ input:checked + .slider:before {
 				<input type="hidden" name="roomUseReasonEndDate" value="">
 				<div class="btn-group">
 					<button class="close" type="button">닫기</button>
-					<button type="submit">변경</button>
+					<button type="submit" class="reservationBtn">변경</button>
 				</div>
 			</form>
 		</div>
@@ -517,7 +517,7 @@ input:checked + .slider:before {
 		    
 			<p id="chooseDate" class="chooseDate">선택한 날짜:</p>
 			<div>
-				회의 주제 : <textarea rows="2" cols="20" id="roomReservationReason" placeholder="회의 주제를 입력하세요."></textarea>
+				<textarea rows="2" cols="20" id="roomReservationReason" placeholder="회의 주제를 입력하세요."></textarea>
 			</div>
 				<div id="timeSlots" class="time-slots">
 					
