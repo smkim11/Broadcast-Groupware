@@ -49,7 +49,7 @@
 
       renderWeather(data, q);
 
-      // ✅ 검색 성공 후 입력칸 초기화 & 포커스
+      //  검색 성공 후 입력칸 초기화 & 포커스
       const $input = $('#weather-city');
       $input.val('');              // 비우기
       $input.attr('placeholder', '도시 (예: 서울)'); // placeholder 유지
@@ -66,7 +66,7 @@
     // 입력창 초기값
     $('#weather-city').attr('placeholder', '도시 (예: 서울)');
 
-    // ✅ 초기 1회만 로드
+    // 초기 1회만 로드
     load(DEFAULT_CITY);
 
     // Enter로 조회

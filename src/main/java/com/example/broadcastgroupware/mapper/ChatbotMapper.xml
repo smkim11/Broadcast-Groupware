@@ -1,5 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper
-	namespace="com.example.broadcastgroupware.mapper.ChatbotMapper">
+<mapper namespace="com.example.broadcastgroupware.mapper.ChatbotMapper">
+	
+	<!-- 근태만 검색( 추후에 여러가지 검색 기능 추가 union 준비 
+		 q: 검색어(없어도 동작)
+		 userId: 내것만 검색
+		 limit : 최대 갯수
+	-->
+	
+	<select id="find" resultType="com.example.broadcastgroupware.dto.ChatbotDto">
+		SELECT 	*
+		FROM (SELECT
+				<!-- 전여iD: 모듈 식별 + PK -->
+				CONCAT('ATT:', a.attendance_id) AS id,
+					   'ATTENDANCE'				AS module,
+				CONCAT('근태', DATE_FORMAT(a.attendance_date, '%Y-%m-%d')) AS title,
+				<!-- 미리보기: 출근/퇴근/외근/복귀 요약 -->
+				TRIM(CONCAT_WS(' . ',
+					IF(a.attendance_in	IS NOT NULL, CONCAT('출근', DATE_FORMAT(a.attendance_in, '%H:%i')), NULL),
+					IF(a.attendance_out     IS NOT NULL, CONCAT('퇴근 ', DATE_FORMAT(a.attendance_out, '%H:%i')), NULL),
+          			IF(a.attendance_outside IS NOT NULL, CONCAT('외근 ', DATE_FORMAT(a.attendance_outside, '%H:%i')), NULL),
+          			IF(a.attendance_inside  IS NOT NULL, CONCAT('복귀 ', DATE_FORMAT(a.attendance_inside, '%H:%i')), NULL)
+        		  )) AS text,
+        		  
+        		  <!-- 상세보기 링크 -->
+        		  CONCAT('/user/view?no=attendance', a.attendance_id) AS url,
+        		  
+        		  <!-- 정렬 기준(가장 바깥에서 order by) -->
+        		  a.update_date AS updatedAt
+        		  FROM attendance a
+        		  WHERE a.user_id = #{userId}
+        		  <!-- 검색어: 날짜/시간/키워드 다 걸리게 -->
+			    <if test="q != null and q != ''">
+			      AND (
+			        DATE_FORMAT(a.attendance_date, '%Y-%m-%d') LIKE CONCAT('%', #{q}, '%')
+			        OR DATE_FORMAT(a.attendance_in,  '%H:%i')   LIKE CONCAT('%', #{q}, '%')
+			        OR DATE_FORMAT(a.attendance_out, '%H:%i')   LIKE CONCAT('%', #{q}, '%')
+			        OR DATE_FORMAT(a.attendance_outside, '%H:%i') LIKE CONCAT('%', #{q}, '%')
+			        OR DATE_FORMAT(a.attendance_inside,  '%H:%i') LIKE CONCAT('%', #{q}, '%')
+			        OR CONCAT('근태 ', DATE_FORMAT(a.attendance_date, '%Y-%m-%d')) LIKE CONCAT('%', #{q}, '%')
+			      )
+			    </if>
+	        ) AS u
+	    ORDER BY u.updatedAt DESC
+	    LIMIT #{limit}
+	</select>
+	
 </mapper>

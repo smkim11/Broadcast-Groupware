@@ -78,16 +78,16 @@ document.addEventListener('DOMContentLoaded', async function () {
       const key = ev.__key;
 
       return `
-<div class="row align-items-center g-0 mt-3 agenda-row" data-key="${key}">
+<div class="row align-items-center g-0 mt-2 agenda-row" data-key="${key}">
   <div class="col-sm-2">
     <span class="badge ${typeBadgeClass(type)}">${type}</span>
   </div>
-  <div class="col-sm-6">
+  <div class="col-sm-5">
     <span class="d-inline-block text-truncate" style="max-width:100%"
           title="${escapeHtml(memo)}">${escapeHtml(memo)}</span>
   </div>
   <div class="col-sm-2 text-muted" style="font-size:.9rem;">${dateStr}</div>
-  <div class="col-sm-2 text-muted" style="font-size:.9rem;">${timeStr}</div>
+  <div class="col-sm-3 text-muted" style="font-size:.9rem;">${timeStr}</div>
 </div>`;
     }).join('');
 
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   });
 
-  // ✅ 최신순(시작일 내림차순)
+  // 최신순(시작일 내림차순)
   const sorted = Array.from(uniqMap.values())
     .sort((a,b)=> new Date(b.start) - new Date(a.start));
 
