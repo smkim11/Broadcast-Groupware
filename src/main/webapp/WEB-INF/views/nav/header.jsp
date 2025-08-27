@@ -332,6 +332,11 @@
 								    <li>
 								        <a href="#">요청게시판</a>
 								    </li>
+								    <c:if test="${loginUser.role eq 'admin'}">
+	   								    <li>
+									        <a href="/user/board">게시판 관리</a>
+									    </li>
+								    </c:if>
 								</ul>
                              </li>         
                        		<li>
