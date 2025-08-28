@@ -741,13 +741,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const DEMO_NOTICES = [
     { id: 101, title: '정전 점검으로 오늘 20시 서버 점검', label: '긴급', createdAt: '2025.08.28 19:50', url: '/board/notice/101' },
     { id: 102, title: '사내 메일 장애 복구 안내',           label: '긴급', createdAt: '2025.08.28 18:30', url: '/board/notice/102' },
-    { id: 103, title: '보안 패치 완료 공지',                 label: '시스템', createdAt: '2025.08.28 11:50', url: '/board/notice/103' },
+    { id: 103, title: '보안 패치 완료 공지',                 label: '긴급시스템', createdAt: '2025.08.28 11:50', url: '/board/notice/103' },
   ];
 
   const list = DEMO_NOTICES.filter(it => String(it.label).toUpperCase().includes('긴급'));
   if (!list.length) return;
 
-  // ⛔ 테스트 중엔 숨김 이력 무시 (주석 풀면 다시 동작)
+  // 테스트 중엔 숨김 이력 무시 (주석 풀면 다시 동작)
   // const dismissedAt = +localStorage.getItem('urgentTickerDismissedAt') || 0;
   // if (Date.now() - dismissedAt < 12*60*60*1000) return;
 
@@ -771,7 +771,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const dist = w + vw;
     const sec  = Math.max(10, dist / SPEED);
     // duration만 바꾸면 안 먹는 경우가 있어서 전체 shorthand로 지정
-    track.style.animation = `ticker-ltr ${sec}s linear infinite`;
+    track.style.animation = `ticker-rtl ${sec}s linear infinite`;		// ltr: 왼쪽 rtl: 오른쪽
   }
   applyAnim();
   window.addEventListener('resize', throttle(applyAnim, 150));

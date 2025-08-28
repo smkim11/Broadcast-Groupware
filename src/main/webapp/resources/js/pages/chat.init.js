@@ -476,54 +476,78 @@
   });
   window.addEventListener('focus', markReadIfNeeded);
 
-  // 채팅방 나가기
-  $(document).on('click', '#action-leave-room', function(e){
+  // 채팅방 나가기 (SweetAlert2)
+  $(document).on('click', '#action-leave-room', async function(e){
     e.preventDefault();
 
-    var roomId = (typeof window.CURRENT_ROOM_ID !== 'undefined' && window.CURRENT_ROOM_ID)
-                   ? window.CURRENT_ROOM_ID
-                   : (document.getElementById('chat-meta')?.dataset.roomId || null);
+    const roomId =
+      (typeof window.CURRENT_ROOM_ID !== 'undefined' && window.CURRENT_ROOM_ID) ||
+      (document.getElementById('chat-meta')?.dataset.roomId || null);
 
-    if (!roomId) { alert('열린 채팅방이 없습니다.'); return; }
-    if (!confirm('이 대화방을 나가시겠습니까?')) return;
+    if (!roomId) {
+      Swal.fire({
+        title: '열린 채팅방이 없습니다.',
+        icon: 'error',
+        confirmButtonText: '확인',
+        confirmButtonColor: '#34c38f'
+      });
+      return;
+    }
 
-    fetch('/api/rooms/' + roomId + '/leave', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' }
-    })
-    .then(function(res){
-      if (res.status === 204) {
-        try { roomSub?.unsubscribe(); roomSub = null; } catch(e){}
-        try { readSub?.unsubscribe(); readSub = null; } catch(e){}
-        try { if (window.__CHAT_WS_SINGLETON__?.subs?.room) { window.__CHAT_WS_SINGLETON__.subs.room.unsubscribe(); window.__CHAT_WS_SINGLETON__.subs.room = null; } } catch(e){}
-        try { if (window.__CHAT_WS_SINGLETON__?.subs?.read) { window.__CHAT_WS_SINGLETON__.subs.read.unsubscribe(); window.__CHAT_WS_SINGLETON__.subs.read = null; } } catch(e){}
-
-        chatroomId = null;
-        window.CURRENT_ROOM_ID = null;
-        var metaEl = document.getElementById('chat-meta');
-        if (metaEl) metaEl.setAttribute('data-room-id','');
-
-        var $lists = getAllListsEl();
-        $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li').remove();
-
-        $('#chat-messages').empty();
-        showEmpty();
-        updateSendBtn();
-
-        loadDmList().catch(function(){});
-        if (document.getElementById('chat-header-title')) {
-          document.getElementById('chat-header-title').textContent = '채팅방을 선택하세요';
-        }
-        alert('대화방에서 나갔습니다.');
-        return;
-      }
-      return res.text().then(function(t){ throw new Error(t || ('HTTP '+res.status)); });
-    })
-    .catch(function(err){
-      console.error('leave error:', err);
-      alert('대화방 나가기에 실패했습니다.\n' + err.message);
+    const result = await Swal.fire({
+      title: '채팅방을 나가시겠습니까?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#34c38f',
+      cancelButtonColor: '#f46a6a',
+      confirmButtonText: '예',
+      cancelButtonText: '아니요'
     });
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`/api/rooms/${roomId}/leave`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      // --- 기존 정리 로직 유지 ---
+      try { roomSub?.unsubscribe(); roomSub = null; } catch(e){}
+      try { readSub?.unsubscribe(); readSub = null; } catch(e){}
+      try { window.__CHAT_WS_SINGLETON__?.subs?.room?.unsubscribe(); } catch(e){}
+      try { window.__CHAT_WS_SINGLETON__?.subs?.read?.unsubscribe(); } catch(e){}
+
+      chatroomId = null;
+      window.CURRENT_ROOM_ID = null;
+      document.getElementById('chat-meta')?.setAttribute('data-room-id','');
+
+      const $lists = getAllListsEl();
+      $lists.find(`.dm-item[data-room-id="${roomId}"]`).closest('li').remove();
+
+      $('#chat-messages').empty();
+      showEmpty();
+      if (typeof updateSendBtn === 'function') updateSendBtn();
+
+      await loadDmList().catch(()=>{});
+
+      Swal.fire({
+        title: '나갔습니다.',
+        icon: 'success',
+        confirmButtonText: '확인',
+        confirmButtonColor: '#34c38f'
+      });
+    } catch (err) {
+      console.error('leave error:', err);
+      Swal.fire({
+        title: '나가기 실패',
+        text: '잠시 후 다시 시도해주세요.',
+        icon: 'error',
+        confirmButtonText: '확인',
+        confirmButtonColor: '#34c38f'
+      });
+    }
   });
 
   // ---- 부트 ----

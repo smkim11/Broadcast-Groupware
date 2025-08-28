@@ -379,6 +379,11 @@ html[data-bs-theme="dark"] .notice-rows .n-row + .n-row{ border-top-color: var(-
   100% { transform: translateX(100%);  }
 }
 
+@keyframes ticker-rtl{
+  0%   { transform: translateX(100%); }   /* 오른쪽 바깥에서 시작 */
+  100% { transform: translateX(-100%); }  /* 왼쪽 바깥으로 사라짐 */
+}
+
 html[data-bs-theme="dark"] #urgent-ticker{
   background: #2b171a; border-top-color:#6b3138; color:#ffdce0;
 }

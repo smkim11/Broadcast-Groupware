@@ -33,7 +33,9 @@
 			LEFT JOIN department d
 				ON d.department_id = t.department_id
 		WHERE u.user_resign_date IS NULL					<!--  퇴사자 여부 확인 위해 -->
-		ORDER BY d.department_name, t.team_name, u.full_name
+		ORDER BY 
+			FIELD(u.user_rank, '국장', '부서장', '팀장', '과장', '대리', '사원')  ASC,
+  			u.full_name ASC;
 	</select>
 	
 

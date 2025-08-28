@@ -3,12 +3,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Chat</title>
-</head>
-<body>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+  <meta charset="UTF-8">
+  <title>Chat</title>
+  <style>
+/* 템플릿에서 제공하는 에러메세지만 사용  */
+.was-validated .form-control:valid,
+.form-control.is-valid {
+  border-color: #dee2e6 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+</style>
+</head>
+<body>
 
 <div>
   <jsp:include page ="../nav/header.jsp"></jsp:include>
@@ -197,9 +208,75 @@
       </div>
 
       <div class="modal-body">
-        <input id="inviteSearch" class="form-control mb-2" placeholder="이름/직급 검색">
-        <ul id="invite-modal-body" class="list-unstyled mb-0"></ul>
-      </div>
+  <input id="inviteSearch" class="form-control mb-2" placeholder="이름/직급 검색">
+
+  <ul class="list-unstyled mb-0" id="invite-modal-body">
+    <c:forEach var="dept" items="${orgTree}">
+      <li class="mb-2">
+        <a class="text-decoration-none d-inline-flex align-items-center org-toggle"
+           data-bs-toggle="collapse"
+           href="#dept-${dept.id}"
+           role="button"
+           aria-expanded="true"
+           aria-controls="dept-${dept.id}">
+          <span class="me-1 caret" style="display:inline-block; transition:.2s transform;">▾</span>
+          <i class="uil uil-building me-1"></i> ${dept.name}
+        </a>
+
+        <!-- 부서: 기본 접힘 -->
+        <ul class="list-unstyled ms-3 mt-1 collapse" id="dept-${dept.id}">
+          <c:if test="${not empty dept.users}">
+            <c:forEach var="team" items="${dept.users}">
+              <li class="mt-2">
+                <a class="text-decoration-none d-inline-flex align-items-center org-toggle"
+                   data-bs-toggle="collapse"
+                   href="#team-${dept.id}-${team.id}"
+                   role="button"
+                   aria-expanded="false"
+                   aria-controls="team-${dept.id}-${team.id}">
+                  <span class="me-1 caret" style="display:inline-block; transition:.2s transform;">▸</span>
+                  <i class="uil uil-sitemap me-1"></i> ${team.name}
+                </a>
+
+                <!-- 팀: 기본 접힘 -->
+                <ul class="list-unstyled ms-3 mt-1 collapse" id="team-${dept.id}-${team.id}">
+                  <!-- 팀 전체 체크(개인 비활성화 용 / 초대 대상 수집 안 함) -->
+                  <li class="form-check mb-1">
+                    <input class="form-check-input ref-chk team-chk"
+                           type="checkbox"
+                           id="t${team.id}"
+                           data-team-id="${team.id}">
+                    <label class="form-check-label" for="t${team.id}">
+                      👥 팀 전체: ${team.name}
+                    </label>
+                  </li>
+
+                  <!-- 팀 소속 사용자 -->
+                  <c:forEach var="user" items="${team.users}">
+                    <li class="form-check">
+                      <input class="form-check-input ref-chk user-chk"
+                             type="checkbox"
+                             id="u${user.id}"
+                             data-id="${user.id}"
+                             data-name="${user.name}"
+                             data-rank="${user.userRank}"
+                             data-dept="${dept.name}"
+                             data-team="${team.name}"
+                             data-team-id="${team.id}">
+                      <label class="form-check-label" for="u${user.id}">
+                        👤 ${user.name} <span class="text-muted">(${user.userRank})</span>
+                      </label>
+                    </li>
+                  </c:forEach>
+                </ul>
+              </li>
+            </c:forEach>
+          </c:if>
+        </ul>
+      </li>
+    </c:forEach>
+  </ul>
+</div>
 
       <div class="modal-footer">
         <button class="btn btn-light" data-bs-dismiss="modal">취소</button>
@@ -210,7 +287,7 @@
 </div>
 
 <!-- 멤버 목록 모달 -->
-<div class="modal fade" id="membersModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="membersModal" tabindex="-1" aria-hidden="true"  data-bs-focus="false">
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <div class="modal-header">
@@ -237,5 +314,7 @@
 <!-- jQuery / SockJS / STOMP / bootstrap 등 라이브러리 뒤에 -->
 <script src="<c:url value='/resources/js/pages/chat.init.js'/>?v=1"></script>
 <script src="<c:url value='/resources/js/pages/chat-org.init.js'/>?v=1"></script>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </body>
 </html>

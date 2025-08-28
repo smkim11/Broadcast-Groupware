@@ -81,7 +81,7 @@
       const $input = $('#weather-city');
       $input.val('');
       $input.attr('placeholder', '도시 (예: 서울)');
-      $input.focus();
+      //$input.focus();
     }catch(e){
       if (seq !== reqSeq) return;
       console.error(e);

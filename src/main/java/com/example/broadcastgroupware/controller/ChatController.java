@@ -1,6 +1,5 @@
 package com.example.broadcastgroupware.controller;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.example.broadcastgroupware.dto.ChatMessageDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ChatService;
+import com.example.broadcastgroupware.service.UserListService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -28,11 +28,14 @@ public class ChatController {
     // Spring에서 WebSocket + STOMP를 쓸 때, 서버에서 특정 유저나 특정 topic으로 메시지를 푸시(push) 전송할 수 있게 해주는 객체
     // 특정 대상 유저에게만 보내거나, 조건에 따라 다른 경로로 메시지를 전송하려면 필요
     private final ChatService chatService;	
+    private final UserListService userListService;	
 
     public ChatController(SimpMessagingTemplate messagingTemplate,
-    					  ChatService chatService) {
+    					  ChatService chatService,
+    					  UserListService userListService) {
         this.messagingTemplate = messagingTemplate;
         this.chatService = chatService;
+        this.userListService = userListService;
     }
 
     @GetMapping("/user/chat")
@@ -44,6 +47,7 @@ public class ChatController {
     	model.addAttribute("chatroomId", chatroomId);
     	model.addAttribute("loginUserId", login != null ? login.getUserId() : 0);
     	model.addAttribute("loginUserName", login != null ? login.getFullName() : "");
+    	model.addAttribute("orgTree", userListService.getUserTreeForInvite());
     	
         return "user/chat";
     }
