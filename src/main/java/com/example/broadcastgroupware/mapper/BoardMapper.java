@@ -4,11 +4,11 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.example.broadcastgroupware.domain.Board;
+import com.example.broadcastgroupware.domain.File;
 import com.example.broadcastgroupware.dto.BoardMenuDto;
 import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
-import com.example.broadcastgroupware.dto.PageDto;
+import com.example.broadcastgroupware.dto.PostDto;
 @Mapper
 public interface BoardMapper {
 
@@ -25,6 +25,15 @@ public interface BoardMapper {
 	// 게시글 리스트
 	List<BoardPostDto> getBoardPosts(int boardId, BoardPageDto pageDto);
 
+
+    // 게시글 저장
+    int savePost(PostDto postDto, int userId);
+
+    // 파일 저장 (복수)
+    void saveFiles(List<File> fileList);
+
+    // 게시글 리스트
+    List<BoardMenuDto> getBoardMenuListForFiles();
 
 
 }

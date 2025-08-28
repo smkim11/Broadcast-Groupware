@@ -12,6 +12,7 @@
 #post-list th, #post-list td { border: 1px solid #ddd; padding: 8px; }
 #pagination a { margin: 0 2px; cursor: pointer; text-decoration: none; }
 #pagination span.active { font-weight: bold; }
+
 </style>
 </head>
 <body>
@@ -35,10 +36,7 @@
                     </div>
                 </div>
             </div>
-
-            <!-- 게시판 메뉴 -->
-            <ul id="board-menu-list"></ul>
-
+	
             <!-- 글 리스트 -->
             <table id="post-list">
                 <thead>
@@ -53,6 +51,8 @@
                     <!-- JS에서 동적 생성 -->
                 </tbody>
             </table>
+            
+           	<a href="" id="insertPostModal" class="btn btn-outline-primary waves-effect waves-light">글쓰기</a>
 
             <!-- 페이징 -->
             <div class="pagination" id="pagination"></div>
@@ -69,6 +69,33 @@
             </form>
 
         </div>
+    </div>
+</div>
+
+<!-- 글쓰기 모달 -->
+<div id="postModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+    background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; width:500px; border-radius:8px; position:relative;">
+        <h3>게시글 작성</h3>
+        <form id="postForm" enctype="multipart/form-data">
+            <input type="hidden" name="boardId" id="modalBoardId" value="">
+            <div style="margin-bottom:10px;">
+                <label>제목</label><br>
+                <input type="text" name="postTitle" style="width:100%;" required>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label>내용</label><br>
+                <textarea name="postContent" rows="5" style="width:100%;" required></textarea>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label>파일 업로드</label><br>
+                <input type="file" name="files" multiple>
+            </div>
+            <div style="text-align:right;">
+                <button type="button" id="closePostModal">닫기</button>
+                <button type="submit">등록</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -177,7 +204,6 @@
 	                li.append(link);
 	                menuList.append(li);
 	
-	                // 첫 번째 메뉴 자동 선택
 	                if(index === 0) {
 	                    loadBoard(menu.boardId, menu.boardTitle);
 	                }
@@ -188,6 +214,46 @@
 	        }
 	    });
 	});
+	
+	// 모달 열기
+	$('#insertPostModal').on('click', function(e) {
+	    e.preventDefault(); // 링크 기본 동작 차단
+	    if(!currentBoardId){
+	        alert('게시판을 먼저 선택해주세요.');
+	        return;
+	    }
+	    $('#modalBoardId').val(currentBoardId);
+	    $('#postModal').css('display', 'flex');
+	});
+	
+	// 모달 닫기
+	$('#closePostModal').on('click', function() {
+	    $('#postModal').hide();
+	});
+	
+	// 글쓰기 폼 제출
+	$('#postForm').on('submit', function(e) {
+	    e.preventDefault();
+	
+	    var formData = new FormData(this);
+	
+	    $.ajax({
+	        url: '/board/insertPost', 
+	        type: 'POST',
+	        data: formData,
+	        processData: false,
+	        contentType: false,
+	        success: function(res) {
+	            alert('게시글 등록 성공');
+	            $('#postModal').hide();
+	            loadPosts();
+	        },
+	        error: function() {
+	            alert('게시글 등록 실패');
+	        }
+	    });
+	});
+
 </script>
 
 </body>

@@ -108,10 +108,27 @@
 		        </if>
 		    </trim>
 		</if>
-	    ORDER BY p.create_date DESC
+		ORDER BY
+	    CASE WHEN p.top_fixed = 'Y' THEN 0 ELSE 1 END,
+	    p.create_date DESC
 	    LIMIT #{pageDto.beginRow}, #{pageDto.rowPerPage}
 	</select>
 
+    <!-- 게시글 저장 -->
+	<insert id="savePost" useGeneratedKeys="true" keyProperty="postDto.postId">
+	    INSERT INTO post (board_id, post_title, post_content, user_id, create_date)
+	    VALUES (#{postDto.boardId}, #{postDto.postTitle}, #{postDto.postContent}, #{userId}, NOW())
+	</insert>
 
+    <!-- 복수 파일 저장 -->
+	<insert id="saveFiles" parameterType="list">
+	    INSERT INTO file (file_type, file_target_id, file_name, file_save_name, file_ext, file_path, create_date)
+	    VALUES
+	    <foreach collection="list" item="file" separator=",">
+	        (#{file.fileType}, #{file.fileTargetId}, #{file.fileName}, #{file.fileSaveName}, #{file.fileExt}, #{file.filePath}, NOW())
+	    </foreach>
+	</insert>
+
+    
 
 </mapper>

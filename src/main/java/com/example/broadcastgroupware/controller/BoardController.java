@@ -81,4 +81,5 @@ public class BoardController {
 
         return "user/board";
     }
+	
 }
