@@ -2,30 +2,116 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.broadcastgroupware.mapper.BoardMapper">
 
-<select id="boardList" parameterType="com.example.broadcastgroupware.dto.PageDto" resultType="com.example.broadcastgroupware.dto.AdminBoardListDto">
-	SELECT b.board_id AS boardId, b.board_title AS boardTitle, b.board_status AS boardStatus,
-			p.post_title AS title, p.post_status AS postStatus, p.top_fixed AS fixed, u.full_name AS userName, p.create_date AS createDate
-	FROM board b
-	INNER JOIN post p
-	ON b.board_id = p.board_id
-	INNER JOIN user u
-	ON p.user_id = u.user_id
-	<if test="searchWord  != null and searchWord != ''">
-		<choose>
-			<when test="searchType == 'title' and searchWord != null and searchWord != ''">
-				AND p.post_title LIKE CONCAT('%', #{searchWord}, '%')
-			</when>
-			<when test="searchType == 'userName' and searchWord != null and searchWord != ''">
-				AND u.full_name LIKE CONCAT('%', #{searchWord}, '%')
-			</when>
-			<when test="searchType == 'category'">
-				AND b.board_title LIKE CONCAT('%', #{searchWord}, '%')
-			</when>
-		</choose>
-	</if>
-	ORDER BY p.create_date DESC
-	LIMIT #{beginRow}, #{rowPerPage}
-</select>
+	<select id="boardCount" resultType="int">
+		SELECT COUNT(*)
+		FROM board b
+		INNER JOIN post p
+			ON b.board_id = p.board_id
+		INNER JOIN user u
+			ON p.user_id = u.user_id
+		<where>
+			<if test="searchWord != null and searchWord != ''">
+				<choose>
+					<when test="searchType == 'title'">
+						AND p.post_title LIKE CONCAT('%', #{searchWord}, '%')
+					</when>
+					<when test="searchType == 'userName'">
+						AND u.full_name LIKE CONCAT('%', #{searchWord}, '%')
+					</when>
+					<when test="searchType == 'category'">
+						AND b.board_title LIKE CONCAT('%', #{searchWord}, '%')
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+
+
+	<select id="boardList" parameterType="com.example.broadcastgroupware.dto.BoardPageDto" resultType="com.example.broadcastgroupware.dto.AdminBoardListDto">
+		SELECT b.board_id AS boardId, b.board_title AS boardTitle, b.board_status AS boardStatus,
+				p.post_title AS title, p.post_status AS postStatus, p.top_fixed AS fixed, u.full_name AS userName, p.create_date AS createDate
+		FROM board b
+		INNER JOIN post p
+		ON b.board_id = p.board_id
+		INNER JOIN user u
+		ON p.user_id = u.user_id
+		<if test="searchWord  != null and searchWord != ''">
+			<choose>
+				<when test="searchType == 'title' and searchWord != null and searchWord != ''">
+					AND p.post_title LIKE CONCAT('%', #{searchWord}, '%')
+				</when>
+				<when test="searchType == 'userName' and searchWord != null and searchWord != ''">
+					AND u.full_name LIKE CONCAT('%', #{searchWord}, '%')
+				</when>
+				<when test="searchType == 'category'">
+					AND b.board_title LIKE CONCAT('%', #{searchWord}, '%')
+				</when>
+			</choose>
+		</if>
+		ORDER BY p.create_date DESC
+		LIMIT #{beginRow}, #{rowPerPage}
+	</select>
+
+    <!-- 게시판 메뉴 리스트 -->
+    <select id="getBoardMenuList" resultType="com.example.broadcastgroupware.dto.BoardMenuDto">
+        SELECT board_id AS boardId, board_title AS boardTitle, board_status AS boardStatus
+        FROM board
+        ORDER BY board_id ASC
+    </select>
+    
+	<!-- 게시판 글 수 (검색 포함) -->
+	<select id="getBoardPostCount" parameterType="com.example.broadcastgroupware.dto.BoardPageDto" resultType="int">
+	    SELECT COUNT(*)
+	    FROM post p
+	    LEFT JOIN user u ON p.user_id = u.user_id
+	    LEFT JOIN board b ON p.board_id = b.board_id
+	    WHERE b.board_id = #{boardId}
+		<if test="pageDto.searchType != null and pageDto.searchWord != null and pageDto.searchWord != ''">
+		    <trim prefix="AND (" suffix=")" prefixOverrides="OR">
+		        <if test="pageDto.searchType.contains('title')">
+		            p.post_title LIKE CONCAT('%', #{pageDto.searchWord}, '%')
+		        </if>
+		        <if test="pageDto.searchType.contains('userName')">
+		            <if test="pageDto.searchType.contains('title')"> OR </if>
+		            u.full_name LIKE CONCAT('%', #{pageDto.searchWord}, '%')
+		        </if>
+		        <if test="pageDto.searchType.contains('category')">
+		            <if test="pageDto.searchType.contains('title') or pageDto.searchType.contains('userName')"> OR </if>
+		            b.board_title LIKE CONCAT('%', #{pageDto.searchWord}, '%')
+		        </if>
+		    </trim>
+		</if>
+	</select>
+	
+	<!-- 게시판 글 리스트 (페이징 + 검색) -->
+	<select id="getBoardPosts" parameterType="com.example.broadcastgroupware.dto.BoardPageDto" resultType="com.example.broadcastgroupware.dto.BoardPostDto">
+	    SELECT p.post_id AS postId,
+	           p.post_title AS title,
+	           u.full_name AS userName,
+	           p.create_date AS createDate
+	    FROM post p
+	    LEFT JOIN user u ON p.user_id = u.user_id
+	    LEFT JOIN board b ON p.board_id = b.board_id
+	    WHERE b.board_id = #{boardId}
+		<if test="pageDto.searchType != null and pageDto.searchWord != null and pageDto.searchWord != ''">
+		    <trim prefix="AND (" suffix=")" prefixOverrides="OR">
+		        <if test="pageDto.searchType.contains('title')">
+		            p.post_title LIKE CONCAT('%', #{pageDto.searchWord}, '%')
+		        </if>
+		        <if test="pageDto.searchType.contains('userName')">
+		            <if test="pageDto.searchType.contains('title')"> OR </if>
+		            u.full_name LIKE CONCAT('%', #{pageDto.searchWord}, '%')
+		        </if>
+		        <if test="pageDto.searchType.contains('category')">
+		            <if test="pageDto.searchType.contains('title') or pageDto.searchType.contains('userName')"> OR </if>
+		            b.board_title LIKE CONCAT('%', #{pageDto.searchWord}, '%')
+		        </if>
+		    </trim>
+		</if>
+	    ORDER BY p.create_date DESC
+	    LIMIT #{pageDto.beginRow}, #{pageDto.rowPerPage}
+	</select>
+
 
 
 </mapper>

@@ -5,10 +5,11 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.example.broadcastgroupware.domain.Board;
-import com.example.broadcastgroupware.dto.PageDto;
+import com.example.broadcastgroupware.dto.BoardPageDto;
+import com.example.broadcastgroupware.dto.BoardPostDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.BoardService;
 
@@ -45,13 +46,39 @@ public class BoardController {
 		
 		int totalCount = boardService.boardCount(searchWord, searchType);
 		
-		PageDto pageDto = new PageDto(currentPage, 10, totalCount, searchWord, searchType);
+		BoardPageDto boardPageDto = new BoardPageDto(currentPage, 10, totalCount, searchWord, searchType);
 		
-		List<Board> boardList = boardService.boardList(pageDto);
+		List<BoardPageDto> boardList = boardService.boardList(boardPageDto);
 		
 		model.addAttribute("boardList", boardList);
+		model.addAttribute("pageDto", boardPageDto);
 		model.addAttribute("userId", userId);
 		model.addAttribute("role", role);
 		return "user/adminBoard";
 	}
+	
+	// 게시판
+	@GetMapping("/board/{boardId}/list")
+    public String boardList(@PathVariable int boardId,
+                            @RequestParam(defaultValue = "1") int currentPage,
+                            @RequestParam(required = false) String searchType,
+                            @RequestParam(required = false) String searchWord,
+                            Model model) {
+
+		//log.info("이동할 게시판 번호: {}", boardId);
+        // 페이징 DTO 생성
+        BoardPageDto pageDto = new BoardPageDto(currentPage, 10,
+                boardService.getBoardPostCount(boardId, new BoardPageDto(currentPage, 10, 0, searchWord, searchType)),
+                searchWord, searchType);
+
+        // 게시글 리스트 가져오기
+        List<BoardPostDto> postList = boardService.getBoardPosts(boardId, pageDto);
+
+        // JSP로 전달
+        model.addAttribute("postList", postList);
+        model.addAttribute("pageDto", pageDto);
+        model.addAttribute("boardId", boardId);
+
+        return "user/board";
+    }
 }

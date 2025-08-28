@@ -31,16 +31,6 @@ public class PageDto {
 		this.beginRow = (currentPage-1)*rowPerPage;
 	}
 	
-	// 검색 + 필터 있는 페이징
-		public PageDto(int currentPage, int rowPerPage, int totalPage, String searchWord, String searchType){
-	 		this.rowPerPage = rowPerPage;
-			this.currentPage = currentPage;
-			this.totalPage = totalPage;
-			this.searchWord = searchWord;
-			this.searchType = searchType;
-			this.beginRow = (currentPage-1)*rowPerPage;
-		}
-	
 	// 마지막 페이지
 	public int getLastPage() {
 		int lastPage = this.totalPage / this.rowPerPage;

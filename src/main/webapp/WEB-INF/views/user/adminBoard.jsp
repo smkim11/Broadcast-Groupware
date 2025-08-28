@@ -1,4 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -39,25 +42,48 @@
 						<th>작성시간</th>
 						<th>활성화</th>
 					</tr>
-					<tr>
-						<td></td>
-						<td></td>
-						<td></td>
-						<td></td>
-						<td></td>
-						<td></td>
-						<td></td>
-					</tr>
+					<c:forEach var="board" items="${boardList}">
+						<tr>
+							<td>${board.boardId}</td>
+							<td>${board.boardTitle}(${board.boardStatus == 'Y' ? '활성화' : '비활성화'})</td>
+							<td>${board.fixed == 'Y' ? '활성화' : '비활성화'}</td>
+							<td>${board.title}</td>
+							<td>${board.userName}</td>
+							<td>${board.createDate}</td>
+							<td>${board.postStatus == 'Y' ? '활성화' : '비활성화'}</td>
+						</tr>
+					</c:forEach>
 				</tbody>
 			</table>
            
            
-           <!-- 페이징 -->
-           	<div>
-           		<div>
-           		
-           		</div>
-          	</div>
+<div class="pagination" style="display:flex; gap:8px;">
+
+    <!-- 이전 블럭 -->
+    <c:if test="${pageDto.hasPrev}">
+        <a href="?currentPage=${pageDto.startPage - 1}&searchType=${param.searchType}&searchWord=${param.searchWord}">&lt;</a>
+    </c:if>
+
+    <!-- 현재 블럭 페이지 번호 -->
+    <c:forEach begin="${pageDto.startPage}" end="${pageDto.endPage}" var="i">
+        <c:choose>
+            <c:when test="${i == pageDto.currentPage}">
+                <span style="font-weight:bold; text-decoration:underline;">${i}</span>
+            </c:when>
+            <c:otherwise>
+                <a href="?currentPage=${i}&searchType=${param.searchType}&searchWord=${param.searchWord}">${i}</a>
+            </c:otherwise>
+        </c:choose>
+    </c:forEach>
+
+    <!-- 다음 블럭 -->
+    <c:if test="${pageDto.hasNext}">
+        <a href="?currentPage=${pageDto.endPage + 1}&searchType=${param.searchType}&searchWord=${param.searchWord}">&gt;</a>
+    </c:if>
+
+</div>
+
+
            
            <!-- 검색 -->
            	<form action="/user/adminBoard" method="get" id="searchForm" class="searchForm">
