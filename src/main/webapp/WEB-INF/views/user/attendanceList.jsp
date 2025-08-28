@@ -5,8 +5,16 @@
 <html>
 <head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<!-- DataTables -->
+<link href="${pageContext.request.contextPath}/resources/libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+<link href="${pageContext.request.contextPath}/resources/libs/datatables.net-buttons-bs4/css/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+<!-- Responsive datatable examples -->
+<link href="${pageContext.request.contextPath}/resources/libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" /> 
+
 <link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <meta charset="UTF-8">
+<style>
+</style>
 <title>방송국</title>
 </head>
 <body>
@@ -39,8 +47,9 @@
 		                            <tr>
 		                                <td>${list.departmentName }</td>
 		                                <td>${list.teamName }</td>
-		                                <td>${list.fullName }</td>
+		                                <td>${list.fullName } ${list.userRank }</td>
 		                                <td>${list.monthWorkHours }</td>
+		                                
 		                                <td></td>
 		                                <td></td>
 		                            </tr>
