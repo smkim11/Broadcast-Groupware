@@ -12,10 +12,36 @@
         </script>
     </c:if>
 <title>Insert title here</title>
-<style>
+ <style>
+    #urgent-ticker{
+      position: fixed; left:0; right:0; bottom:0;
+      z-index:2147482000; background:#f8d7da; color:#842029;
+      border-top:1px solid #f1aeb5; padding:8px 48px 8px 12px; font-weight:600;
+    }
+    html[data-bs-theme="dark"] #urgent-ticker{
+      background:#2b171a; border-top-color:#6b3138; color:#ffdce0;
+    }
+    #urgent-ticker.hide{ display:none; }
+    #urgent-ticker .ticker-close{
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      border:0; background:transparent; color:inherit; font-size:20px; line-height:1; opacity:.7; cursor:pointer;
+    }
+    #urgent-ticker .ticker-close:hover{ opacity:1; }
+    #urgent-ticker .ticker-viewport{ overflow:hidden; white-space:nowrap; }
+    #urgent-ticker .ticker-track{
+      display:inline-block; will-change:transform;
+      /* duration 포함한 shorthand — 기본 25s */
+      animation: ticker-ltr 25s linear infinite;
+    }
+    #urgent-ticker.paused .ticker-track{ animation-play-state:paused; }
+    #urgent-ticker .item{ display:inline-block; margin-right:48px; color:inherit; text-decoration:none; }
+    #urgent-ticker .item:hover{ text-decoration:underline; }
 
-
-</style>
+    @keyframes ticker-ltr{
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+  </style>
 </head>
 <body>
 	<input type="hidden" id="event-login-user" value="${sessionScope.loginUser.userId}" />
@@ -47,56 +73,82 @@
              
                <!-- end page title -->
 				<!-- 상단 4개 카드 내용 -->
-             <div class="row">
-                 <div class="col-md-6 col-xl-3">
-                     <div class="card">
-                         <div class="card-body">
-                             <div class="float-end mt-2">
-                                 <div id="total-revenue-chart" data-colors='["--bs-primary"]'></div>
-                             </div>
-                             <div>
-                                 <h4 class="mb-1 mt-1">근태관리</h4>
-                                 <p class="text-muted mb-0">Total Revenue</p>
-                             </div>
-                             <p class="text-muted mt-3 mb-0"><span class="text-success me-1"><i class="mdi mdi-arrow-up-bold me-1"></i>2.65%</span> since last week
-                             </p>
-                             <p class="text-muted mt-3 mb-0"><span class="text-success me-1"><i class="mdi mdi-arrow-up-bold me-1"></i>2.65%</span> since last week
-                             </p>
-                         </div>
-                     </div>
-                 </div>
+			<div class="row">
+			  <div class="col-md-6 col-xl-3">
+			    <div class="card" id="card-att">
+			      <div class="card-body">
+			        <div class="d-flex align-items-center justify-content-between mb-1">
+			        <div class="d-flex align-items-center mb-2">
+			          <h4 class="card-title mb-1">근태</h4>
+			          <span id="resv-range-label" class="title-inline-note ms-2">최근 30일</span>
+			        </div>
+			        </div>
+			
+			        <!-- 도넛 그래프 영역 -->
+	    		 <!-- ▽ 도넛 3개가 가로로 나란히 -->
+				<div class="row text-center g-2" id="att-donuts">
+				  <!-- 출근 -->
+				  <div class="col-4">
+				    <div class="resv-donut position-relative">
+				      <div id="att-donut-in"></div>                  <!-- ApexCharts가 들어갈 자리 -->
+				      <div class="att-center">출근</div>              <!-- 도넛 중앙 라벨 -->
+				    </div>
+				    <div class="small text-muted mt-1"><span id="att-in-time">--:--</span></div>
+				  </div>
+				  <!-- 퇴근 -->
+				  <div class="col-4">
+				    <div class="resv-donut position-relative">
+				      <div id="att-donut-out"></div>
+				      <div class="att-center">퇴근</div>
+				    </div>
+				    <div class="small text-muted mt-1"><span id="att-out-time">--:--</span></div>
+				  </div>
+				  <!-- 외근 -->
+				  <div class="col-4">
+				    <div class="resv-donut position-relative">
+				      <div id="att-donut-field"></div>
+				      <div class="att-center">외근</div>
+				    </div>
+				    <div class="small text-muted mt-1"><span id="att-field-time">-</span></div>
+				  </div>
+				</div>
+			  </div>
+			  </div>
+			  </div>
                  <!-- end col-->
                  
-<div class="col-md-6 col-xl-3">
-  <div class="card" id="card-vac">
-    <div class="card-body">
-      <!-- 제목 + 연차 기준 뱃지 + 전체보기(오른쪽) -->
-      <div class="d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center">
-         <h4 class="card-title mb-1">휴가</h4>
-          <span id="vac-year-badge" class="badge bg-light text-body border ms-2">—</span>
-        </div>
-      </div>
-
-      <!-- 내용 : 칩 2개 + 타일 1개 -->
-      <div class="d-flex align-items-stretch gap-2 mt-2" id="vac-rows">
-        <div class="vac-chip flex-fill text-center" id="vac-total" role="button" data-href="/vacation/summary">
-          <div class="vac-chip-label">전체</div>
-          <div class="vac-chip-value">0</div>
-        </div>
-        <div class="vac-chip flex-fill text-center" id="vac-remaining" role="button" data-href="/vacation/summary">
-          <div class="vac-chip-label">잔여</div>
-          <div class="vac-chip-value">0</div>
-        </div>
-        <div class="vac-tile flex-fill text-center" id="vac-approval" role="button" data-href="/vacation/approvals">
-          <i class="mdi mdi-file-check-outline vac-tile-icon" aria-hidden="true"></i>
-          <div class="vac-tile-label">결재</div>
-          <div class="vac-tile-value">0</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+				<div class="col-md-6 col-xl-3">
+				  <div class="card" id="card-vac">
+				    <div class="card-body">
+				      <!-- 제목 + 연차 기준 뱃지 + 전체보기(오른쪽) -->
+				      <div class="d-flex align-items-center justify-content-between">
+				        <div class="d-flex align-items-center">
+				         <h4 class="card-title mb-1">휴가</h4>
+				          <span id="vac-year-note" class="title-inline-note ms-2">—</span>
+				        </div>
+				      </div>
+				
+				      <!-- 내용 : 칩 2개 + 타일 1개 -->
+				      <div class="d-flex align-items-stretch gap-2 mt-2" id="vac-rows">
+				        <div class="vac-chip flex-fill text-center" id="vac-total" role="button" data-href="/vacation/summary">
+				          <i class="bx bxs-plane-alt vac-chip-icon" aria-hidden="true"></i>  <!-- ✈ 전체 -->
+				          <div class="vac-chip-label">전체</div>
+				          <div class="vac-chip-value">0</div>
+				        </div>
+				        <div class="vac-chip flex-fill text-center" id="vac-remaining" role="button" data-href="/vacation/summary">
+				         <i class="bx bx-hourglass vac-chip-icon" aria-hidden="true"></i>  
+				          <div class="vac-chip-label">잔여</div>
+				          <div class="vac-chip-value">0</div>
+				        </div>
+				        <div class="vac-tile flex-fill text-center" id="vac-approval" role="button" data-href="/vacation/approvals">
+				          <i class="mdi mdi-file-check-outline vac-tile-icon" aria-hidden="true"></i>
+				          <div class="vac-tile-label">결재</div>
+				          <div class="vac-tile-value">0</div>
+				        </div>
+				      </div>
+				    </div>
+				  </div>
+				</div>
                  <!-- end col-->
                  
                  <div class="col-md-6 col-xl-3">
@@ -105,7 +157,7 @@
                              <div class="d-flex align-items-center mb-2">
 					      		<h4 class="card-title mb-1">문서</h4>
 					    			<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
-					    			 <a href="/reservations" class="small text-muted ms-auto">전체 보기</a>
+					    			 <a href="/reservations" class="title-inline-note ms-auto">전체 보기</a>
 							</div>
 							 <div id="doc-rows" class="doc-rows mt-2" role="list" aria-label="문서 상태별 개수"></div>
                          </div>
@@ -145,81 +197,102 @@
                <!--  상단 4개카드 닫기 -->
                  
                  <!-- 중간 내용 2개 카드 -->
-                  <div class="row">
-                            <div class="col-xl-9">
+<div class="row">
+  <!-- 왼쪽: 영상 (두 줄 높이를 차지) -->
+  <div class="col-xl-6">
+    <div class="ratio ratio-16x9">
+      <iframe
+        src="https://www.youtube.com/embed/FJfwehhzIhw?autoplay=1&mute=1"
+        title="[LIVE] 대한민국 24시간 뉴스채널 YTN"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
 
-                                     <div class="mt-1">
-                                            <ul class="list-inline main-chart mb-0">
-                                            <!-- 16:9 aspect ratio -->
-                                        <div class="ratio ratio-21x9">
-                                             <iframe src="https://www.youtube.com/embed/FJfwehhzIhw?autoplay=1&mute=1" 
-                                             		 title="[LIVE] 대한민국 24시간 뉴스채널 YTN" 
-                                             		 frameborder="0" 
-                                             		 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                             		 referrerpolicy="strict-origin-when-cross-origin" 
-                                             		 allowfullscreen>
-                                             </iframe>
-                                        </div>
-                                         </ul>
-                                       </div>
+  <!-- 오른쪽: 2×2 그리드 -->
+  <div class="col-xl-6">
+    <!-- xl 이상에서 2칸, 그보다 작으면 1칸으로 자동 줄바꿈 -->
+    <div class="row row-cols-2 row-cols-xl-2">
+      <!-- (1) 일정 -->
+      <div class="col-3">
+        <div class="card">
+          <div class="card-body" id="home-agenda-card">
+              <div class="d-flex align-items-center mb-2">
+	      		<h4 class="card-title mb-1">일정</h4>
+	    			<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
+	    			 <a href="/calendar" class="title-inline-note ms-auto">전체 보기</a>
+			 </div>
+           <div id="home-agenda-rows" class="agenda-rows mt-2" role="list" aria-label="일정 목록"></div>
+          </div>
+        </div>
+      </div>
 
-                                        <div class="mt-3">
-                                            <div id="sales-analytics-chart" data-colors='["--bs-primary", "#dfe2e6", "--bs-warning"]' class="apex-charts" dir="ltr"></div>
-                                        </div>
-                            </div> <!-- end col-->
-                            
-                            <div class="col-xl-3">
-                                <div class="card">
-                                    <div class="card-body" id="home-agenda-card">
+      <!-- (2) 시청률(예: 차트 자리) -->
+     <div class="col-3">
+  <div class="card" id="card-rating">
+    <div class="card-body">
+      <div class="d-flex align-items-center mb-2">
+        <h4 class="card-title mb-1">시청률</h4>
+        <span class="title-inline-note ms-2">1일 기준</span>
+        <a href="/ratings" class="title-inline-note ms-auto">전체 보기</a>
+      </div>
 
-                                          <div class="d-flex align-items-center justify-content-between">
-										      <h4 class="card-title mb-1">일정</h4>
-										      <!-- 필요 없으면 이 링크는 지워도 됩니다 -->
-										      <a href="/calendar" class="small text-muted">전체 보기</a>
-										    </div>
-										
-										    <!-- 목록이 채워질 자리 -->
-										    <div id="home-agenda-rows"></div>
+      <!-- 그래프 -->
+      <div id="rating-chart"></div>
 
-                                    </div> <!-- end card-body-->
-                                </div> <!-- end card-->
-                            
-                                <div class="card">
-								  <div class="card-body" id="home-notice-card">
-								    <div class="d-flex align-items-center justify-content-between">
-								      <h4 class="mb-1 mt-1">공지사항</h4>
-								      <a href="/board/notice" class="small text-muted">전체 보기</a>
-								    </div>
-								
-								    <!-- 공지 리스트가 채워질 자리 -->
-								    <div id="home-notice-rows" class="notice-rows mt-2" role="list" aria-label="공지 목록"></div>
-								
-								    <!-- 더보기(페이지네이션용, 필요 없으면 숨겨둠) -->
-								    <button id="home-notice-more" class="btn btn-sm btn-light w-100 mt-2 d-none">더보기</button>
-								  </div>
-								</div>
-                                
-                                    <div class="card">
-                                    <div class="card-body">
-                                        <div class="float-end">
-                                        <input id="weather-city" class="form-control form-control-sm" style="max-width: 160px;" placeholder="도시 (예: Seoul)">
-                                        </div>
-                                        <h4 class="card-title mb-0">날씨</h4>
-									  <div class="card-body" id="weather-body">
-									    <div class="text-muted">불러오는 중...</div>
-									  </div>
+      <!-- 방송명 리스트 -->
+      <ul id="rating-list" class="rating-list mt-2" role="list" aria-label="시청률 상위 프로그램"></ul>
+    </div>
+  </div>
+</div>
 
-                                    </div> <!-- end card-body-->
-                                </div> <!-- end card-->
-                                
-                                
-                            </div> <!-- end Col -->
-                        </div> <!-- end row-->
-                        
+      <!-- (3) 공지사항 -->
+      <div class="col-3">
+        <div class="card">
+          <div class="card-body" id="home-notice-card">
+            <div class="d-flex align-items-center mb-2">
+	      		<h4 class="card-title mb-1">공지사항</h4>
+	    			<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
+	    			 <a href="/calendar" class="title-inline-note ms-auto">전체 보기</a>
+			 </div>
+            <div id="home-notice-rows" class="notice-rows mt-2" role="list" aria-label="공지 목록"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- (4) 날씨 -->
+      <div class="col-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+            <h4 class="card-title mb-1">날씨</h4>
+             <input id="weather-city" class="form-control form-control-sm ms-auto" style="max-width:160px" placeholder="도시 (예: Seoul)">
+            </div>
+            <div id="weather-body">
+              <div class="text-muted">불러오는 중...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row-cols -->
+  </div><!-- /col-xl-6 오른쪽 -->
+</div><!-- /row g-3 -->
+                        <!-- 긴급 공지 티커 -->
+<div id="urgent-ticker" class="hide" role="status" aria-live="polite">
+  <button type="button" class="ticker-close" aria-label="닫기">×</button>
+  <div class="ticker-viewport">
+    <div class="ticker-track"></div>
+  </div>
+</div>
          </div> <!-- container-fluid -->
      </div>
    </div>
+   
  </div>
+ 
                      <!-- KOJ AI 챗봇 : 떠있는 버튼 -->
 <button id="koj-chat-fab" aria-label="1:1 챗봇">
  <i class="mdi mdi-robot mdi-48px" aria-hidden="true"></i></button>
@@ -244,17 +317,18 @@
     <button id="koj-chat-send">전송</button>
   </div>
 </div>
+
 <div>
     <jsp:include page ="../views/nav/footer.jsp"></jsp:include>
 </div>
 <div>
     <jsp:include page ="../views/nav/javascript.jsp"></jsp:include>
 </div>
+
 </body>
 <script src="${pageContext.request.contextPath}/resources/libs/apexcharts/apexcharts.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/fullcalendar/index.global.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/pages/weather.init.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/pages/home.init.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/pages/chatbot.init.js"></script>
-<script src="${pageContext.request.contextPath}/resources/js/pages/notice.init.js"></script>
 </html>
