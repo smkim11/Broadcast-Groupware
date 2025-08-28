@@ -345,11 +345,25 @@
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
 								    <li>
-								        <a href="/attendance">본인근태</a>
+								        <a href="/attendance">내 근태</a>
 								    </li>
-								    <li>
-								        <a href="#">-근태</a>
-								    </li>
+								    <c:choose>
+									    <c:when test="${loginUser.role == 'admin' or loginUser.userRank == '국장' }">
+									    	<li>
+				            					<a href="/attendanceList">직원 근태</a>
+				            				</li>
+				            			</c:when>
+				            			<c:when test="${loginUser.role != 'admin' and loginUser.userRank == '팀장' }">
+				            				<li>
+				            					<a href="/attendanceList">팀원 근태</a>
+				            				</li>
+				            			</c:when>
+				            			<c:when test="${loginUser.role != 'admin' and loginUser.userRank == '부서장' }">
+				            				<li>
+				            					<a href="/attendanceList">부서원 근태</a>
+				            				</li>
+				            			</c:when>
+			            			</c:choose>
 								</ul>
                              </li>       
 							<li>
