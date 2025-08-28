@@ -27,7 +27,18 @@
 			<div class="row">
 	            <div class="col-12">
 	            	<div class="page-title-box d-flex align-items-center justify-content-between">
-                        <h4 class="mb-0">근태관리</h4>
+	            		<c:choose>
+	            			<c:when test="${ald.role == 'admin' or ald.userRank == '국장' }">
+	            				<h4 class="mb-0">직원 근태</h4>
+	            			</c:when>
+	            			<c:when test="${ald.role != 'admin' and ald.userRank == '팀장' }">
+	            				<h4 class="mb-0">팀원 근태</h4>
+	            			</c:when>
+	            			<c:when test="${ald.role != 'admin' and ald.userRank == '부서장' }">
+	            				<h4 class="mb-0">부서원 근태</h4>
+	            			</c:when>
+	            		</c:choose>
+                        
                     </div>
 	                <div class="card">
 	                    <div class="card-body">

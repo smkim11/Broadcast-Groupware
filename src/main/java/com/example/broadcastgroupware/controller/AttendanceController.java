@@ -45,6 +45,7 @@ public class AttendanceController {
 		ald.setRole(user.getRole());
 		ald.setUserRank(user.getUserRank());
 		System.out.println(attendanceService.selectAttendanceListByRank(ald));
+		model.addAttribute("ald",ald);
 		model.addAttribute("list",attendanceService.selectAttendanceListByRank(ald));
 		return "user/attendanceList";
 	}
