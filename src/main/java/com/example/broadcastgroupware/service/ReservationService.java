@@ -110,6 +110,10 @@ public class ReservationService {
 	public int modifyCarStatus() {
 		List<Integer> vehicleStatusNList = reservationMapper.StatusNList();
 		
+		if (vehicleStatusNList == null || vehicleStatusNList.isEmpty()) {
+			return 0; 
+		}
+		
 		return reservationMapper.modifyCarStatus(vehicleStatusNList);
 		
 	}
