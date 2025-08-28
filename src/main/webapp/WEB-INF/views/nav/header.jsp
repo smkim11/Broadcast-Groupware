@@ -325,19 +325,18 @@
                                     <i class="uil-store"></i>
                                     <span>게시판</span>
                                 </a>
-                                <ul class="sub-menu" aria-expanded="false">
-								    <li>
-								        <a href="#">공지사항</a>
-								    </li>
-								    <li>
-								        <a href="#">요청게시판</a>
-								    </li>
-								    <c:if test="${loginUser.role eq 'admin'}">
-	   								    <li>
-									        <a href="/user/adminBoard">게시판 관리</a>
-									    </li>
-								    </c:if>
-								</ul>
+								<ul class="sub-menu" aria-expanded="false">
+								        <!-- JS에서 동적으로 li 추가 -->
+								        <span id="board-menu-list"><!-- 동적 게시판리스트 위치 --></span>
+								
+								        <!-- 관리자 메뉴는 항상 출력 -->
+								        <c:if test="${loginUser.role eq 'admin'}">
+								            <li>
+								                <a href="/user/adminBoard">게시판 관리</a>
+								            </li>
+								        </c:if>
+								  </ul>
+
                              </li>         
                        		<li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -416,4 +415,26 @@
 
     </body>
    <!-- </nav> -->
+   
+	<script>
+		$(document).ready(function(){
+		    $.ajax({
+		        url: '/board/menu',
+		        method: 'GET',
+		        success: function(data){
+		            var menuList = $('#board-menu-list');
+		            menuList.empty();
+		            data.forEach(function(menu){
+		                var li = $('<li></li>');
+		                var link = $('<a></a>').attr('href', '/board/' + menu.boardId).text(menu.boardTitle);
+		                li.append(link);
+		                menuList.append(li);
+		            });
+		        },
+		        error: function(){
+		            console.error('게시판 메뉴를 불러오는 데 실패했습니다.');
+		        }
+		    });
+		});
+	</script>
 </html>
