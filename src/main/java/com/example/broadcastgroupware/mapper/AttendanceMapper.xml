@@ -32,9 +32,11 @@
 	<!--직책별 팀,부서,전체 근태-->
 	<select id="selectAttendanceListByRank" resultType="map" parameterType="com.example.broadcastgroupware.dto.AttendanceListDto">
 		SELECT d.department_name departmentName, t.team_name teamName, u.full_name fullName, u.user_rank userRank,
-			(SELECT sec_to_time(sum(timestampdiff(second,attendance_in,attendance_out)) OVER()) monthWorkHours FROM attendance         
-			WHERE year(attendance_date) = year(NOW()) and month(attendance_date) = month(NOW()) AND user_id = u.user_id
-			ORDER BY attendance_date DESC LIMIT 0,1) monthWorkHours
+			(SELECT date_format(sec_to_time(sum(timestampdiff(second,attendance_in,attendance_out)) OVER()),'%H시간 %i분') monthWorkHours FROM attendance         
+			WHERE year(attendance_date) = #{year} and month(attendance_date) = #{month} AND user_id = u.user_id
+			ORDER BY attendance_date DESC LIMIT 0,1) monthWorkHours,
+			(SELECT COUNT(*) FROM attendance WHERE hour(attendance_in)>=9 AND user_id=u.user_id
+			AND year(attendance_date) = #{year} and month(attendance_date) = #{month}) lateness
 		FROM user u 
 		INNER JOIN deployment_history dh ON u.user_id = dh.user_id
 		INNER JOIN team t ON t.team_id = dh.team_id
