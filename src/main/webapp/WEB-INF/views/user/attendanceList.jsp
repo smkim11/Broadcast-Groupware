@@ -14,6 +14,11 @@
 <link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <meta charset="UTF-8">
 <style>
+#datatable-buttons_wrapper .dt-buttons .btn {
+    background-color: #5c74ec !important;
+    border: 1px solid #5c74ec;
+    color: white !important;
+}
 </style>
 <title>방송국</title>
 </head>
@@ -42,6 +47,11 @@
                     </div>
 	                <div class="card">
 	                    <div class="card-body">
+		                    <div class="d-flex align-items-center justify-content-center mb-3">
+							    <button id="prev" class="btn btn-sm btn-outline-primary me-2"><</button>
+							    <h5 id="attendanceDate" class="mb-0">${ald.year }년 ${ald.month }월</h5>
+							    <button id="next" class="btn btn-sm btn-outline-primary ms-2">></button>
+							</div>
 	                        <table id="datatable-buttons" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
 	                            <thead>
 		                            <tr>
@@ -53,19 +63,17 @@
 		                                <th>휴가</th>
 		                            </tr>
 	                            </thead>
-	                            <tbody>
+	                            <tbody id="attendanceBody">
 	                            <c:forEach var="list" items="${list}">
 		                            <tr>
 		                                <td>${list.departmentName }</td>
 		                                <td>${list.teamName }</td>
 		                                <td>${list.fullName } ${list.userRank }</td>
 		                                <td>${list.monthWorkHours }</td>
-		                                
-		                                <td></td>
+		                                <td>${list.lateness }회</td>
 		                                <td></td>
 		                            </tr>
-		                            
-		                            </c:forEach>
+	                            </c:forEach>
 	                            </tbody>
 	                        </table>
 	                    </div>
@@ -83,6 +91,61 @@
     <jsp:include page ="../nav/javascript.jsp"></jsp:include>
 </div>
 </body>
+<script>
+var year = ${ald.year};
+var month = ${ald.month};
+/*
+	
+
+	var attendanceDate = document.getElementById("attendanceDate");
+	function attendance(y,m){
+		fetch(`/selectAttendanceList?year=${y}&month=${m}`)
+	 		.then(res => res.json())
+	        .then(data => {
+	        	console.log("응답 데이터:", data);	
+	            year = data.ald.year;
+	            month = data.ald.month;
+	            attendanceDate.innerText =
+	                `${data.ald.year}년 ${data.ald.month}월`;
+			const tbody = document.getElementById("attendanceBody");
+			tbody.innerHTML ="";
+			data.list.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.departmentName}</td>
+                        <td>${item.teamName}</td>
+                        <td>${item.fullName} ${item.userRank}</td>
+                        <td>${item.monthWorkHours}</td>
+                        <td>${item.lateCount || ''}</td>
+                        <td>${item.vacation || ''}</td>
+                    </tr>
+                `;
+            });
+        });
+	}
+*/	
+	document.getElementById("prev").addEventListener("click",()=>{
+		let newMonth = month - 1;
+	    let newYear = year;
+        if (newMonth < 1) {   // 1월보다 작으면
+        	newMonth = 12;
+            newYear--;
+        }
+        //attendance(year, month);
+        location.href = '/attendanceList?year='+newYear+'&month='+newMonth;
+	});
+	
+	document.getElementById("next").addEventListener("click",()=>{
+		let newMonth = month + 1;
+	    let newYear = year;
+        if (newMonth > 12) {   // 12월보다 크면
+        	newMonth = 1;
+        	newYear++;
+        }
+        location.href = '/attendanceList?year='+newYear+'&month='+newMonth;
+        //attendance(year, month);
+	});
+</script>
 <!-- Required datatable js -->
 <script src="${pageContext.request.contextPath}/resources/libs/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js"></script>

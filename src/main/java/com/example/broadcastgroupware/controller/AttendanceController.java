@@ -1,8 +1,11 @@
 package com.example.broadcastgroupware.controller;
 
+import java.time.LocalDate;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.broadcastgroupware.domain.Attendance;
 import com.example.broadcastgroupware.dto.AttendanceListDto;
@@ -38,12 +41,26 @@ public class AttendanceController {
 	
 	// 팀,부서,전체 근태
 	@GetMapping("/attendanceList")
-	public String attendanceList(Model model, HttpSession session) {
+	public String attendanceList(Model model, HttpSession session,
+								@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month) {
 		UserSessionDto user = (UserSessionDto)session.getAttribute("loginUser");
+		LocalDate now = LocalDate.now();
+		int todayYear = now.getYear();
+		int todayMonth = now.getMonthValue();
+		
 		AttendanceListDto ald = new AttendanceListDto();
 		ald.setUserId(user.getUserId());
 		ald.setRole(user.getRole());
 		ald.setUserRank(user.getUserRank());
+		// 기본값은 오늘날짜
+		if(year != null && month != null) {
+			ald.setYear(year);
+			ald.setMonth(month);
+		}else {
+			ald.setYear(todayYear);
+			ald.setMonth(todayMonth);
+		}
+		System.out.println(ald);
 		System.out.println(attendanceService.selectAttendanceListByRank(ald));
 		model.addAttribute("ald",ald);
 		model.addAttribute("list",attendanceService.selectAttendanceListByRank(ald));

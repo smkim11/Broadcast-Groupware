@@ -7,4 +7,6 @@ public class AttendanceListDto {
 	private int userId;
 	private String role;
 	private String userRank;
+	private Integer year;
+	private Integer month;
 }
