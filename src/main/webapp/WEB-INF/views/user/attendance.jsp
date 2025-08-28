@@ -32,7 +32,7 @@
                 <div class="col-12">
                     <div class="page-title-box d-flex align-items-center justify-content-between">
                         <h4 class="mb-0">근태</h4>
-                        <input type="hidden" name="loginUser" id="loginUser" value="${loginUser}">
+                        <input type="hidden" name="loginUserId" id="loginUserId" value="${loginUserId}">
                     </div>
                 </div>
             </div>
@@ -120,7 +120,7 @@
     <jsp:include page ="../nav/javascript.jsp"></jsp:include>
 </div>
 <script>
-	const loginUser = document.getElementById("loginUser").value;
+	const loginUserId = document.getElementById("loginUserId").value;
 	window.attendaceEvents = [
 	    <c:forEach var="list" items="${attendanceList}" varStatus="loop">
 	    
@@ -179,7 +179,7 @@
         	fetch("/insertAttendanceIn", {
                 method: "POST",
                 headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({userId:loginUser})
+                body: JSON.stringify({userId:loginUserId})
         	}).then((res) => {
         		if(res.ok){
         			Swal.fire({
@@ -210,7 +210,7 @@
         	fetch("/updateAttendanceOut", {
                 method: "PATCH",
                 headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({userId:loginUser})
+                body: JSON.stringify({userId:loginUserId})
         	}).then((res) => {
         		if(res.ok){
         			Swal.fire({
@@ -241,7 +241,7 @@
         	fetch("/updateAttendanceOutside", {
                 method: "PATCH",
                 headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({userId:loginUser})
+                body: JSON.stringify({userId:loginUserId})
         	}).then((res) => {
         		if(res.ok){
         			Swal.fire({
@@ -272,7 +272,7 @@
         	fetch("/updateAttendanceInside", {
                 method: "PATCH",
                 headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({userId:loginUser})
+                body: JSON.stringify({userId:loginUserId})
         	}).then((res) => {
         		if(res.ok){
         			Swal.fire({

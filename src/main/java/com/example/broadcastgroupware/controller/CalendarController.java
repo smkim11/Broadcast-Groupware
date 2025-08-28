@@ -26,7 +26,7 @@ public class CalendarController {
 		log.info("user: ",user);
 		int userId= user.getUserId();
 		String userRole = user.getRole();
-		model.addAttribute("loginUser",userId);
+		model.addAttribute("loginUserId",userId);
 		model.addAttribute("role",userRole);
 		// 공휴일 조회
 		model.addAttribute("events",calendarService.selectHoliday());

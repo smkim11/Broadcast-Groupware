@@ -91,7 +91,7 @@
                                                 <form class="needs-validation" name="event-form" id="form-event" novalidate>
                                                     <input type="hidden" name="calendarId" id="eventid">
                                                     <input type="hidden" name="userId" id="event-user-id">
-                                                    <input type="hidden" name="loginUser" id="event-login-user" value="${loginUser}">
+                                                    <input type="hidden" name="loginUserId" id="event-login-user" value="${loginUserId}">
                                                     <div class="row">
                                                         <div class="col-12">
                                                             <div class="mb-3">

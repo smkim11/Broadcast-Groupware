@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function(){
 			// 작성자 userId
 			console.log("userId:",o.extendedProps.userId);
 			// 로그인한 직원 userId
-			console.log("loginUser:",document.getElementById("event-login-user").value);
+			console.log("loginUserId:",document.getElementById("event-login-user").value);
             document.getElementById("event-title").value = o.title,
 			document.getElementById("event-location").value = o.extendedProps.location,
             document.getElementById("event-type").value = o.extendedProps.type,
