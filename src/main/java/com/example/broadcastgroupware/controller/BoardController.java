@@ -27,7 +27,7 @@ public class BoardController {
 	}
 	
 	// 관리자 게시판리스트
-	@GetMapping("/user/adminBoard")
+	@GetMapping("/admin/adminBoard")
 	public String adminBoard(HttpSession session, Model model, @RequestParam(defaultValue = "1") int currentPage,
 							@RequestParam(required = false) String searchType, @RequestParam(required = false) String searchWord) {
 		
@@ -54,16 +54,24 @@ public class BoardController {
 		model.addAttribute("pageDto", boardPageDto);
 		model.addAttribute("userId", userId);
 		model.addAttribute("role", role);
-		return "user/adminBoard";
+		return "admin/adminBoard";
 	}
 	
 	// 게시판
 	@GetMapping("/board/{boardId}/list")
-    public String boardList(@PathVariable int boardId,
+    public String boardList(@PathVariable int boardId, HttpSession session,
                             @RequestParam(defaultValue = "1") int currentPage,
                             @RequestParam(required = false) String searchType,
                             @RequestParam(required = false) String searchWord,
                             Model model) {
+		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+		
+		if(loginUser == null) {
+			return "redirect:/login";
+		} 
+		
+		int userId = loginUser.getUserId();
+		String role = loginUser.getRole();
 
 		//log.info("이동할 게시판 번호: {}", boardId);
         // 페이징 DTO 생성
@@ -78,6 +86,8 @@ public class BoardController {
         model.addAttribute("postList", postList);
         model.addAttribute("pageDto", pageDto);
         model.addAttribute("boardId", boardId);
+        model.addAttribute("userId", userId);
+        model.addAttribute("role", role);
 
         return "user/board";
     }

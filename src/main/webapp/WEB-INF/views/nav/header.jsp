@@ -325,18 +325,16 @@
                                     <i class="uil-store"></i>
                                     <span>게시판</span>
                                 </a>
-								<ul class="sub-menu" aria-expanded="false">
-								        <!-- JS에서 동적으로 li 추가 -->
-								        <span id="board-menu-list"><!-- 동적 게시판리스트 위치 --></span>
-								
-								        <!-- 관리자 메뉴는 항상 출력 -->
-								        <c:if test="${loginUser.role eq 'admin'}">
-								            <li>
-								                <a href="/user/adminBoard">게시판 관리</a>
-								            </li>
-								        </c:if>
-								  </ul>
-
+                                <ul class="sub-menu" aria-expanded="false">
+                                	<li id="board-menu-list"></li>
+								        <c:choose>
+									        <c:when test="${loginUser.role == 'admin'}">
+									            <li>
+									                <a href="/admin/adminBoard">게시판 관리</a>
+									            </li>
+									        </c:when>
+								        </c:choose>
+								</ul>
                              </li>         
                        		<li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">

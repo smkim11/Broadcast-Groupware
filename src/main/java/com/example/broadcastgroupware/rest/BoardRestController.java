@@ -97,10 +97,10 @@ public class BoardRestController {
 
         List<MultipartFile> files = postDto.getFiles();
         if (files != null) {
-            log.info("파일 개수: {}" + files.size());
+            //log.info("파일 개수: " + files.size());
             for (MultipartFile file : files) {
-                log.info("파일 이름: {}" + file.getOriginalFilename() 
-                    + ", 사이즈: " + file.getSize());
+               /* log.info("파일 이름: " + file.getOriginalFilename() 
+                    + ", 사이즈: " + file.getSize()); */
             }
         } else {
             System.out.println("files가 null입니다.");

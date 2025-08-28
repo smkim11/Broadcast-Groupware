@@ -36,9 +36,10 @@
                     </div>
                 </div>
             </div>
+            <input type="hidden" id="loginRole" value="${loginUser.role}">
 	
             <!-- 글 리스트 -->
-            <table id="post-list">
+            <table id="post-list" class="table table-striped">
                 <thead>
                     <tr>
                         <th>번호</th>
@@ -59,13 +60,13 @@
 
             <!-- 검색 -->
             <form id="searchForm">
-                <select name="searchType">
+                <select name="searchType" class="btn btn-light waves-effect">
                     <option value="title">제목</option>
                     <option value="userName">작성자</option>
                     <option value="category">카테고리</option>
                 </select>
                 <input type="text" name="searchWord" placeholder="검색어 입력">
-                <button type="submit">검색</button>
+                <button type="submit" class="btn btn-light dropdown-toggle waves-effect show">검색</button>
             </form>
 
         </div>
@@ -217,7 +218,7 @@
 	
 	// 모달 열기
 	$('#insertPostModal').on('click', function(e) {
-	    e.preventDefault(); // 링크 기본 동작 차단
+	    e.preventDefault(); 
 	    if(!currentBoardId){
 	        alert('게시판을 먼저 선택해주세요.');
 	        return;
@@ -253,6 +254,24 @@
 	        }
 	    });
 	});
+	
+	var userRole = '${loginUser.role}';
+
+	window.loadBoard = function(boardId, boardTitle) {
+	    currentBoardId = boardId;
+	    currentPage = 1;
+	    $('#boardTitle').text(boardTitle);
+	    loadPosts();
+
+		// 공지사항게시판 관리자만 글쓰기 버튼
+	    if (boardId === 1 && userRole !== 'admin') {
+	        $('#insertPostModal').hide();
+	    } else {
+	        $('#insertPostModal').show();
+	    }
+	};
+
+
 
 </script>
 
