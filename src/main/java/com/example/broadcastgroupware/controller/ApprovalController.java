@@ -25,7 +25,8 @@ public class ApprovalController {
         this.userListService = userListService; 
     }
     
-    // 결재 화면 부서명 / 팀명 조회
+    // ===== 결재 화면 부서명 / 팀명 조회 =====
+    
     // 세션/인증정보에서 userId를 확보 -> 부서/팀 포함 DTO 조회 -> 세션/모델("loginUser")에 주입
     @ModelAttribute("loginUser")
     public UserSessionDto loadLoginUserDeptTeamInfo(HttpSession session, Authentication auth) {

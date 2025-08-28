@@ -113,32 +113,6 @@
 	         #{l.approvalLineStatus}, #{l.approvalLineComment}, NOW())
 	    </foreach>
 	</insert>
-
-	<!-- 결재선 조회 -->
-	<select id="selectApprovalLines"
-	        resultType="com.example.broadcastgroupware.domain.ApprovalLine">
-	    SELECT
-	        approval_line_id, approval_document_id, user_id,
-	        approval_line_sequence, approval_line_status,
-	        approval_line_comment, create_date
-	    FROM approval_line
-	    WHERE approval_document_id = #{approvalDocumentId}
-	    ORDER BY approval_line_sequence ASC
-	</select>
-	
-	<!-- 결재선 상태에 따른 문서 상태 -->
-	<select id="selectApprovalLineStatusCounts"
-	        parameterType="int"
-	        resultType="map">
-	    SELECT
-	        COUNT(*) AS totalCnt,
-	        SUM(CASE WHEN approval_line_status = '승인' THEN 1 ELSE 0 END) AS approvedCnt,
-	        SUM(CASE WHEN approval_line_status = '반려' THEN 1 ELSE 0 END) AS rejectedCnt,
-	        SUM(CASE WHEN approval_line_status = '대기' THEN 1 ELSE 0 END) AS pendingCnt
-	    FROM approval_line
-	    WHERE approval_document_id = #{approvalDocumentId}
-	</select>
-	
 	
 	<!-- 참조선 INSERT -->
 	<insert id="insertReferenceLines">
@@ -150,17 +124,5 @@
 	        (#{r.approvalDocumentId}, #{r.userId}, NOW())
 	    </foreach>
 	</insert>
-	
-	<!-- 참조선 조회 -->
-	<select id="selectReferenceLines"
-	        resultType="com.example.broadcastgroupware.domain.ReferenceLine">
-	    SELECT
-	        reference_line_id,
-	        approval_document_id,
-	        user_id, create_date
-	    FROM reference_line
-	    WHERE approval_document_id = #{approvalDocumentId}
-	    ORDER BY reference_line_id ASC
-	</select>
 
 </mapper>

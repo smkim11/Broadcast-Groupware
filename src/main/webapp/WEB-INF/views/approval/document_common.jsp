@@ -30,7 +30,7 @@
 		    </div>
 		
 		    <!-- 본문 폼 -->
-		    <form id="commonDocForm" method="post" action="${pageContext.request.contextPath}/approval/common">
+		    <form id="commonDocForm" method="post" action="${pageContext.request.contextPath}/approval/common/new">
 		        <input type="hidden" name="documentType" value="COMMON">
 		
 				<!-- 선택 결과(JSON) -->
@@ -355,7 +355,7 @@
 	        if (btnCancel) btnCancel.disabled = true;
 	
 	     	// 서버 전송
-	        fetch(base + '/approval/common?draft=' + (isDraft ? 'true' : 'false'), {
+	        fetch(base + '/approval/common/new?draft=' + (isDraft ? 'true' : 'false'), {
 	            method: 'POST',
 	            headers,
 	            body: JSON.stringify(dto)

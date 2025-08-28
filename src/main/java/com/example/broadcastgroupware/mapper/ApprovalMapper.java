@@ -14,22 +14,34 @@ import com.example.broadcastgroupware.domain.VacationForm;
 
 @Mapper
 public interface ApprovalMapper {
+	
+	// ===== 문서 작성 =====
+	
+	// 일반 문서
 	int insertApprovalDocument(ApprovalDocument doc);
+	// 휴가 폼
     int insertVacationForm(VacationForm form);
-    int insertBroadcastForm(BroadcastForm form);
+    // 방송 폼
+    int insertBroadcastForm(BroadcastForm form);	
+    // 방송 요일
     int insertBroadcastWeekday(BroadcastWeekday weekday);
-    // int insertDocumentFile(File file);
+    
+    
+    // ===== 결재선/참조선 =====
     
     // 결재선
     int insertApprovalLines(@Param("lines") List<ApprovalLine> lines);
-    List<ApprovalLine> selectApprovalLines(@Param("approvalDocumentId") int approvalDocumentId);
-
     // 참조선
     int insertReferenceLines(@Param("refs") List<ReferenceLine> refs);
-    List<ReferenceLine> selectReferenceLines(@Param("approvalDocumentId") int approvalDocumentId);
+    
+        
+    // 팀 ID로 사용자 ID 조회
     List<Integer> selectUserIdsByTeamIds(@Param("teamIds") List<Integer> teamIds);
-
+    
     // 문서 상태 변경
     int updateDocumentStatus(@Param("approvalDocumentId") int approvalDocumentId,
             				@Param("status") String status);
+    
+    
+    
 }

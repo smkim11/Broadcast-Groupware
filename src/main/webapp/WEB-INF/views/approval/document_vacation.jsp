@@ -30,7 +30,7 @@
 		    </div>
 		
 		    <!-- 본문 폼 -->
-		    <form id="vacationDocForm" method="post" action="${pageContext.request.contextPath}/approval/vacation">
+		    <form id="vacationDocForm" method="post" action="${pageContext.request.contextPath}/approval/vacation/new">
 		        <input type="hidden" name="documentType" value="VACATION">
 		
 				<!-- 선택 결과(JSON) -->
@@ -472,7 +472,7 @@
             if (btnCancel) btnCancel.disabled = true;
 
             // 서버 전송
-            fetch(base + '/approval/vacation?draft=' + (isDraft ? 'true' : 'false'), {
+            fetch(base + '/approval/vacation/new?draft=' + (isDraft ? 'true' : 'false'), {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(dto)

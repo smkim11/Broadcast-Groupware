@@ -30,7 +30,7 @@
 		    </div>
 		
 		    <!-- 본문 폼 -->
-		    <form id="broadcastDocForm" method="post" action="${pageContext.request.contextPath}/approval/broadcast">
+		    <form id="broadcastDocForm" method="post" action="${pageContext.request.contextPath}/approval/broadcast/new">
 		        <input type="hidden" name="documentType" value="BROADCAST">
 		
 				<!-- 선택 결과(JSON) -->
@@ -463,7 +463,7 @@
             if (btnCancel) btnCancel.disabled = true;
 
          	// 서버 전송
-            fetch(base + '/approval/broadcast?draft=' + (isDraft ? 'true' : 'false'), {
+            fetch(base + '/approval/broadcast/new?draft=' + (isDraft ? 'true' : 'false'), {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(dto)

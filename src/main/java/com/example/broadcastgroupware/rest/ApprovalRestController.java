@@ -8,38 +8,38 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.dto.ApprovalDocumentDto;
-import com.example.broadcastgroupware.service.ApprovalDocumentService;
+import com.example.broadcastgroupware.service.ApprovalService;
 
 @RestController
 @RequestMapping("/approval")
-public class ApprovalDocumentRestController {
-	private final ApprovalDocumentService approvalDocumentService;
+public class ApprovalRestController {
+	private final ApprovalService approvalService;
 
-    public ApprovalDocumentRestController(ApprovalDocumentService approvalDocumentService) {
-        this.approvalDocumentService = approvalDocumentService;
+    public ApprovalRestController(ApprovalService approvalService) {
+        this.approvalService = approvalService;
     }
 
     // 공통 문서 작성
-    @PostMapping("/common")
+    @PostMapping("/common/new")
     public ResponseEntity<Integer> createCommon(@RequestBody ApprovalDocumentDto dto,
     											@RequestParam(defaultValue = "false") boolean draft) {
-        int docId = approvalDocumentService.createCommonDocument(dto, draft);
+        int docId = approvalService.createCommonDocument(dto, draft);
         return ResponseEntity.ok(docId);
     }
 
     // 휴가 문서 작성
-    @PostMapping("/vacation")
+    @PostMapping("/vacation/new")
     public ResponseEntity<Integer> createVacation(@RequestBody ApprovalDocumentDto dto,
     											@RequestParam(defaultValue = "false") boolean draft) {
-        int docId = approvalDocumentService.createVacationDocument(dto, draft);
+        int docId = approvalService.createVacationDocument(dto, draft);
         return ResponseEntity.ok(docId);
     }
 
     // 방송 문서 작성
-    @PostMapping("/broadcast")
+    @PostMapping("/broadcast/new")
     public ResponseEntity<Integer> createBroadcast(@RequestBody ApprovalDocumentDto dto,
     											@RequestParam(defaultValue = "false") boolean draft) {
-        int docId = approvalDocumentService.createBroadcastDocument(dto, draft);
+        int docId = approvalService.createBroadcastDocument(dto, draft);
         return ResponseEntity.ok(docId);
     }
 }

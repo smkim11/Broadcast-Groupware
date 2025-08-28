@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.example.broadcastgroupware.mapper.ApprovalQueryMapper">
+	
+	<!-- ======== 결재선 / 참조선 ======== -->
+	
+	<!-- 결재선 조회 -->
+	<select id="selectApprovalLines"
+	        resultType="com.example.broadcastgroupware.domain.ApprovalLine">
+	    SELECT
+	        approval_line_id, approval_document_id, user_id,
+	        approval_line_sequence, approval_line_status,
+	        approval_line_comment, create_date
+	    FROM approval_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    ORDER BY approval_line_sequence ASC
+	</select>
+	
+	<!-- 결재선 상태에 따른 문서 상태 -->
+	<select id="selectApprovalLineStatusCounts"
+	        parameterType="int"
+	        resultType="map">
+	    SELECT
+	        COUNT(*) AS totalCnt,
+	        SUM(CASE WHEN approval_line_status = '승인' THEN 1 ELSE 0 END) AS approvedCnt,
+	        SUM(CASE WHEN approval_line_status = '반려' THEN 1 ELSE 0 END) AS rejectedCnt,
+	        SUM(CASE WHEN approval_line_status = '대기' THEN 1 ELSE 0 END) AS pendingCnt
+	    FROM approval_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	</select>
+	
+	<!-- 참조선 조회 -->
+	<select id="selectReferenceLines"
+	        resultType="com.example.broadcastgroupware.domain.ReferenceLine">
+	    SELECT
+	        reference_line_id,
+	        approval_document_id,
+	        user_id, create_date
+	    FROM reference_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    ORDER BY reference_line_id ASC
+	</select>
+	
+	
+	<!-- ======== 문서 상태별 목록 조회 ======== -->
+	
+	<!-- 진행 중 문서 목록 조회 -->
+    <select id="selectInProgressDocuments" parameterType="int" 
+    		resultType="com.example.broadcastgroupware.domain.ApprovalDocument">
+        SELECT
+        	approval_document_id, user_id, approval_document_title,
+        	approval_document_content, approval_document_status,
+        	create_date, update_date
+        FROM approval_document
+        WHERE user_id = #{userId}
+        	AND approval_document_status = '진행 중'
+        ORDER BY create_date DESC
+    </select>
+
+    <!-- 결재 완료 문서 목록 조회 (승인 + 반려) -->
+    <select id="selectCompletedDocuments" parameterType="int" 
+    		resultType="com.example.broadcastgroupware.domain.ApprovalDocument">
+        SELECT
+	        approval_document_id, user_id, approval_document_title,
+        	approval_document_content, approval_document_status,
+        	create_date, update_date
+        FROM approval_document
+        WHERE user_id = #{userId}
+        	AND approval_document_status IN ('승인', '반려')
+        ORDER BY update_date DESC
+    </select>
+
+    <!-- 임시저장 문서 목록 조회 -->
+    <select id="selectDraftDocuments" parameterType="int" 
+    		resultType="com.example.broadcastgroupware.domain.ApprovalDocument">
+        SELECT
+        	approval_document_id, user_id, approval_document_title,
+        	approval_document_content, approval_document_status,
+        	create_date, update_date
+        FROM approval_document
+        WHERE user_id = #{userId}
+        	AND approval_document_status = '임시저장'
+        ORDER BY create_date DESC
+    </select>
+
+    <!-- 참조 문서 목록 조회 -->
+    <select id="selectReferencedDocuments" parameterType="int" 
+    		resultType="com.example.broadcastgroupware.domain.ApprovalDocument">
+        SELECT ad.approval_document_id, ad.user_id, ad.approval_document_title,
+        	ad.approval_document_content, ad.approval_document_status,
+        	ad.create_date, ad.update_date
+        FROM approval_document ad
+        INNER JOIN reference_line rl
+            ON ad.approval_document_id = rl.approval_document_id
+        WHERE rl.user_id = #{userId}
+        ORDER BY ad.create_date DESC
+    </select>
+    
+</mapper>
