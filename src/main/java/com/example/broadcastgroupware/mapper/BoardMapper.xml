@@ -129,6 +129,26 @@
 	    </foreach>
 	</insert>
 
+	<!-- 상세 게시글 -->
+    <select id="postDetail" resultType="com.example.broadcastgroupware.dto.PostDetailDto">
+		SELECT p.post_id AS postId, p.user_id AS userId, p.post_title AS postTitle, p.post_content AS postContent, p.create_date AS createDate,
+		u.full_name AS userName, u.user_rank AS userRank
+		FROM post p
+		INNER JOIN user u
+		ON p.user_id = u.user_id
+		WHERE post_id = #{postId}
+    </select>
     
+    <!-- 댓글 -->
+    <select id="selectComment" resultType="com.example.broadcastgroupware.dto.CommentDto">
+    	SELECT c.post_id AS postId, c.comment_id AS commentId, c.comment_content AS commentContent,
+    			 u.full_name AS userName, u.user_rank AS userRank, c.create_date AS createDate
+		FROM comment c
+		INNER JOIN post p
+		ON c.post_id = p.post_id
+		INNER JOIN user u 
+		ON p.user_id = u.user_id
+		WHERE c.post_id = #{postId}
+    </select>
 
 </mapper>

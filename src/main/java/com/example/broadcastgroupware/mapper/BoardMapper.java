@@ -5,9 +5,11 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.example.broadcastgroupware.domain.File;
+import com.example.broadcastgroupware.domain.Post;
 import com.example.broadcastgroupware.dto.BoardMenuDto;
 import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
+import com.example.broadcastgroupware.dto.CommentDto;
 import com.example.broadcastgroupware.dto.PostDto;
 @Mapper
 public interface BoardMapper {
@@ -34,6 +36,12 @@ public interface BoardMapper {
 
     // 게시글 리스트
     List<BoardMenuDto> getBoardMenuListForFiles();
+    
+    // 상세 게시글
+	List<Post> postDetail(int postId);
+	
+	//댓글
+	List<CommentDto> selectComment(int postId);
 
 
 }

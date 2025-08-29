@@ -13,8 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.broadcastgroupware.dto.BoardMenuDto;
 import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
+import com.example.broadcastgroupware.dto.CommentDto;
 import com.example.broadcastgroupware.dto.PostDto;
 import com.example.broadcastgroupware.domain.File;
+import com.example.broadcastgroupware.domain.Post;
 import com.example.broadcastgroupware.mapper.BoardMapper;
 
 @Service
@@ -93,6 +95,16 @@ public class BoardService {
 		}
 
 		return "success";
+	}
+
+	// 상세 게시글
+	public List<Post> postDetail(int postId) {
+		return boardMapper.postDetail(postId);
+	}
+
+	// 댓글
+	public List<CommentDto> selectComment(int postId) {
+		return boardMapper.selectComment(postId);
 	}
 
 

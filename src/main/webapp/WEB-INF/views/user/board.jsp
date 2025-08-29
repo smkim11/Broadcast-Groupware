@@ -137,7 +137,7 @@
 	            posts.forEach(function(post) {
 	                tbody.append('<tr>'
 	                    + '<td>' + post.postId + '</td>'
-	                    + '<td>' + post.title + '</td>'
+	                    + '<td><a href="/post/detail?postId=' + post.postId + '" target="_blank">' + post.title + '</a></td>'
 	                    + '<td>' + post.userName + '</td>'
 	                    + '<td>' + post.createDate + '</td>'
 	                    + '</tr>');

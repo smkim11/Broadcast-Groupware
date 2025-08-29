@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.broadcastgroupware.domain.Post;
 import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
+import com.example.broadcastgroupware.dto.CommentDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.BoardService;
 
@@ -91,5 +93,32 @@ public class BoardController {
 
         return "user/board";
     }
+	
+	// 게시글 상세보기 
+	@GetMapping("/post/detail")
+	public String postDetail(HttpSession session, Model model, @RequestParam int postId) {
+		
+		// log.info("게시글 번호: {}", postId);
+		
+		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+		
+		if(loginUser == null) {
+			return "redirect:/login";
+		} 
+		
+		int userId = loginUser.getUserId();
+		
+		// 상세게시글 
+		List<Post> detail = boardService.postDetail(postId);
+		
+		// 댓글
+		List<CommentDto> allComments = boardService.selectComment(postId);
+		
+		model.addAttribute("postId", postId);
+		model.addAttribute("detail", detail);
+		model.addAttribute("allComments", allComments);
+		
+		return "user/postDetail";
+	}
 	
 }
