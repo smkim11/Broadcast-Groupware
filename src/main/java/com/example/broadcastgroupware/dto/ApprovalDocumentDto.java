@@ -19,4 +19,7 @@ public class ApprovalDocumentDto {
     private List<ApprovalLineDto> approvalLines;    // 결재선
     private List<ReferenceLineDto> referenceLines;  // 참조선
     private List<Integer> referenceTeamIds;
+    
+    private String documentType;  // COMMON / BROADCAST / VACATION
+    private String fullName;	  // 기안자 이름
 }

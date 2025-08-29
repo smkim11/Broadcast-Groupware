@@ -6,36 +6,55 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.example.broadcastgroupware.domain.ApprovalDocument;
 import com.example.broadcastgroupware.domain.ApprovalLine;
 import com.example.broadcastgroupware.domain.ReferenceLine;
+import com.example.broadcastgroupware.dto.ApprovalDocumentDto;
 
 @Mapper
-public interface ApprovalQueryMapper {
-	
-	// ===== 결재선/참조선 조회 =====
-	
-	// 결재선 조회
-	List<ApprovalLine> selectApprovalLines(@Param("approvalDocumentId") int approvalDocumentId);
-	
-	// 결재선 상태별 카운트 조회
-	Map<String, Object> selectApprovalLineStatusCounts(@Param("approvalDocumentId") int approvalDocumentId);
-	
-	// 참조선 조회
-    List<ReferenceLine> selectReferenceLines(@Param("approvalDocumentId") int approvalDocumentId);
-	
+public interface ApprovalQueryMapper {	
     
 	// ===== 문서 상태별 목록 조회 =====
     
     // 진행 중 문서 목록 조회
-    List<ApprovalDocument> selectInProgressDocuments(@Param("userId") int userId);
+    List<ApprovalDocumentDto> selectInProgressDocuments(@Param("userId") int userId);
 
     // 결재 완료 목록 문서 (승인 + 반려)
-    List<ApprovalDocument> selectCompletedDocuments(@Param("userId") int userId);
+    List<ApprovalDocumentDto> selectCompletedDocuments(@Param("userId") int userId);
 
     // 임시저장 목록 문서
-    List<ApprovalDocument> selectDraftDocuments(@Param("userId") int userId);
+    List<ApprovalDocumentDto> selectDraftDocuments(@Param("userId") int userId);
 
     // 참조 목록 문서
-    List<ApprovalDocument> selectReferencedDocuments(@Param("userId") int userId);
+    List<ApprovalDocumentDto> selectReferencedDocuments(@Param("userId") int userId);
+    
+    
+    // ===== 문서 상세 조회 =====
+    
+    // 문서 + 기안자 정보
+    Map<String, Object> selectDocumentDetail(@Param("approvalDocumentId") int approvalDocumentId);
+
+    // 방송 폼 상세 (+ 방송 요일)
+    Map<String, Object> selectBroadcastFormDetail(@Param("approvalDocumentId") int approvalDocumentId);
+
+    // 휴가 폼 상세
+    Map<String, Object> selectVacationFormDetail(@Param("approvalDocumentId") int approvalDocumentId);
+    
+    // 결재선 상세
+    List<Map<String, Object>> selectApprovalLinesByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+
+    // 참조선 상세 (개인 기준)
+    List<Map<String, Object>> selectReferenceLinesByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+    
+    // 팀 인원 수
+    List<Map<String, Object>> selectTeamMemberCountsByIds(@Param("teamIds") List<Integer> teamIds);
+
+    
+    // ===== 그 외 =====
+    
+    // 최초 결재자의 현재 상태
+    String selectFirstApproverStatus(@Param("approvalDocumentId") int approvalDocumentId);
+
+    // 문서 기안자 ID
+    Integer selectDrafterIdByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+
 }
