@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.broadcastgroupware.mapper.MyPageMapper">
+	<!--마이페이지-->
+	<select id="userInfo" resultType="com.example.broadcastgroupware.dto.MyPageDto">
+		SELECT u.user_id userId, concat(d.department_name,' ',t.team_name)belong, concat(u.full_name,' ',u.user_rank)fullName, 
+			u.username, u.user_phone userPhone, u.user_email userEmail, concat(ui.user_images_name,'.',ui.user_images_ext)sign
+		FROM user u
+		INNER JOIN deployment_history dh ON u.user_id = dh.user_id
+		INNER JOIN team t ON t.team_id = dh.team_id
+		INNER JOIN department d ON d.department_id = t.department_id
+		left JOIN user_images ui ON u.user_id = ui.user_id
+		WHERE u.user_id = #{userId}
+		AND
+		(dh.user_id,dh.create_date) IN 
+		(SELECT user_id, MAX(create_date) FROM deployment_history GROUP BY user_id)
+	</select>
+	
+	<!--서명 저장-->
+	<insert id="insertUserSign" parameterType="com.example.broadcastgroupware.domain.UserImages">
+		insert into user_images(user_id, user_images_type, user_images_name, user_images_ext, user_images_path)
+		values(#{userId}, #{userImagesType}, #{userImagesName}, #{userImagesExt}, #{userImagesPath})
+	</insert>
+	
+	<!--정보수정-->
+	<update id="updateMyPage" parameterType="com.example.broadcastgroupware.domain.User">
+		UPDATE user SET user_phone=#{userPhone},user_email=#{userEmail} WHERE user_id = #{userId}
+	</update>
+</mapper>
