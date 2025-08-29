@@ -21,14 +21,6 @@
         )
     </insert>  
 	
-	<!-- 문서 상태 UPDATE -->
-	<update id="updateDocumentStatus">
-	    UPDATE approval_document
-	    SET approval_document_status = #{status},
-	        update_date = NOW()
-	    WHERE approval_document_id = #{approvalDocumentId}
-	</update>
-	
 	<!-- 팀 ID 들로 소속 사용자 ID 조회 -->
 	<select id="selectUserIdsByTeamIds" resultType="int">
 	    SELECT DISTINCT u.user_id
@@ -99,8 +91,10 @@
 	        NOW()
 	    )
 	</insert>
-
-
+	
+	
+	<!-- ======== 결재선/참조선 ======== -->
+	
 	<!-- 결재선 INSERT -->
 	<insert id="insertApprovalLines">
 	    INSERT INTO approval_line (
@@ -124,5 +118,35 @@
 	        (#{r.approvalDocumentId}, #{r.userId}, NOW())
 	    </foreach>
 	</insert>
+	
+	
+	<!-- ======== 결재 (승인/반려) ======== -->
+	
+	<!-- 결재선 상태/코멘트 업데이트 (대기 -> 승인/반려) -->
+	<update id="updateMyApprovalLineDecision" parameterType="map">
+	    UPDATE approval_line
+	    SET approval_line_status = #{status},
+	        approval_line_comment = #{comment}
+	    WHERE approval_document_id = #{approvalDocumentId}
+	      	AND user_id = #{userId}
+	    	AND approval_line_status = '대기'
+	</update>
+	
+	<!-- 다음 결재자 1명 '대기'로 승격 (NULL -> 대기) -->
+	<update id="activateNextApprover" parameterType="map">
+	    UPDATE approval_line
+	    SET approval_line_status = '대기'
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    	AND approval_line_sequence = #{nextSequence}
+	      	AND approval_line_status IS NULL
+	</update>
+	
+	<!-- 문서 상태 UPDATE -->
+	<update id="updateDocumentStatus">
+	    UPDATE approval_document
+	    SET approval_document_status = #{status},
+	        update_date = NOW()
+	    WHERE approval_document_id = #{approvalDocumentId}
+	</update>
 
 </mapper>

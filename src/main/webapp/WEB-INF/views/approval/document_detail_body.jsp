@@ -37,10 +37,23 @@
                             </div>
                             <div>
                                 <c:choose>
-                                    <c:when test="${al.approvalLineStatus eq '승인'}"><span class="badge bg-success px-3 py-2">승인</span></c:when>
-                                    <c:when test="${al.approvalLineStatus eq '반려'}"><span class="badge bg-danger px-3 py-2">반려</span></c:when>
-                                    <c:otherwise><span class="badge bg-secondary px-3 py-2">대기</span></c:otherwise>
-                                </c:choose>
+									<c:when test="${al.approvalLineStatus eq '승인'}">
+							            <span class="badge bg-success px-3 py-2">승인</span>
+							            <c:if test="${not empty al.signatureUrl}">
+							                <div class="mt-1">
+							                    <img src="${al.signatureUrl}" style="height:26px;" alt="sign">
+							                </div>
+							            </c:if>
+							        </c:when>
+							        
+							        <c:when test="${al.approvalLineStatus eq '반려'}">
+							            <span class="badge bg-danger px-3 py-2">반려</span>
+							        </c:when>
+							
+							        <c:otherwise>
+							            <span class="badge bg-secondary px-3 py-2">대기</span>
+							        </c:otherwise>
+							    </c:choose>
                             </div>
                         </div>
                     </div>
@@ -137,7 +150,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="bg-light text-center">요일</th>
+                            <th class="bg-light text-center">방송 요일</th>
                             <td>
                                 <c:if test="${broadcastForm.broadcastMonday == 1}">월 </c:if>
                                 <c:if test="${broadcastForm.broadcastTuesday == 1}">화 </c:if>
@@ -148,7 +161,7 @@
                                 <c:if test="${broadcastForm.broadcastSunday == 1}">일 </c:if>
                             </td>
                             <th class="bg-light text-center">담당 총 인원</th>
-                            <td><c:out value="${broadcastForm.broadcastFormCapacity}"/></td>
+                            <td><c:out value="${broadcastForm.broadcastFormCapacity}"/>명</td>
                         </tr>
                     </c:when>
                 </c:choose>
@@ -267,7 +280,7 @@
 							                </div>
 							            </c:if>
 
-							            <%-- 3) (레거시) referenceTeams/Individuals가 없을 때의 안전한 폴백: 기존 referenceLines 그대로 --%>
+							            <%-- referenceTeams/Individuals가 없을 때의 안전한 폴백: 기존 referenceLines 그대로 --%>
 							            <c:if test="${empty referenceTeams and empty referenceIndividuals and not empty referenceLines}">
 							                <div class="d-flex flex-wrap gap-2">
 							                    <c:forEach var="rf" items="${referenceLines}">

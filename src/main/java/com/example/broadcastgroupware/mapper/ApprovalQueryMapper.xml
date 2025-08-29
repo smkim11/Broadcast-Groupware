@@ -183,10 +183,27 @@
 	        al.approval_line_status     AS approvalLineStatus,
 	        al.approval_line_comment    AS approvalLineComment,
 	        u.full_name                 AS fullName,
-	        u.user_rank                 AS userRank
+	        u.user_rank                 AS userRank,
+	        sig.signatureUrl            AS signatureUrl
 	    FROM approval_line al
 	    JOIN `user` u 
-	    	ON al.user_id = u.user_id
+	        ON al.user_id = u.user_id
+	    <!--  서명 이미지 (최신 1건) --> 
+	    LEFT JOIN (
+	        SELECT ui.user_id,
+	               CONCAT(ui.user_images_path, '/', ui.user_images_name, '.', ui.user_images_ext) AS signatureUrl
+	        FROM user_images ui
+	        JOIN (
+	            SELECT user_id, MAX(update_date) AS max_ud
+	            FROM user_images
+	            WHERE user_images_type = '서명'
+	            GROUP BY user_id
+	        ) latest
+	        	ON latest.user_id = ui.user_id
+	        	AND latest.max_ud  = ui.update_date
+	    	WHERE ui.user_images_type = '서명'
+	    ) sig
+	      ON sig.user_id = al.user_id
 	    WHERE al.approval_document_id = #{approvalDocumentId}
 	    ORDER BY al.approval_line_sequence ASC
 	</select>
@@ -251,6 +268,8 @@
 	</select>
 	
 	
+	<!-- ======== 문서 수정 및 삭제 ======== -->
+	
 	<!-- 첫 결재자 상태 조회 -->
 	<select id="selectFirstApproverStatus" parameterType="int" resultType="string">
 	    SELECT approval_line_status AS approvalLineStatus
@@ -265,6 +284,35 @@
 	    SELECT user_id AS userId
 	    FROM approval_document
 	    WHERE approval_document_id = #{approvalDocumentId}
+	</select>
+	
+	
+	<!-- ======== 결재 (승인/반려) ======== -->
+	
+	<!-- 현재 '대기' 차수 -->
+	<select id="selectCurrentPendingSequence" parameterType="int" resultType="int">
+	    SELECT MIN(approval_line_sequence)
+	    FROM approval_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    	AND approval_line_status = '대기'
+	</select>
+	
+	<!-- 해당 문서에서 사용자의 결재선 (차수/상태) -->
+	<select id="selectUserApprovalLine" parameterType="map" resultType="map">
+	    SELECT approval_line_sequence AS approvalLineSequence,
+	           approval_line_status   AS approvalLineStatus
+	    FROM approval_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    	AND user_id = #{userId}
+	    LIMIT 1
+	</select>
+	
+	<!-- 다음 활성화될 차수 (status IS NULL 중 가장 작은 차수) -->
+	<select id="selectNextSequenceToActivate" parameterType="int" resultType="int">
+	    SELECT MIN(approval_line_sequence)
+	    FROM approval_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	    	AND approval_line_status IS NULL
 	</select>
 	
 </mapper>

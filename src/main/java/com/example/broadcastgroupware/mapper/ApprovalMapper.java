@@ -38,6 +38,19 @@ public interface ApprovalMapper {
     // 팀 ID로 사용자 ID 조회
     List<Integer> selectUserIdsByTeamIds(@Param("teamIds") List<Integer> teamIds);
     
+    
+    // ===== 결재 (승인/반려) =====
+    
+    // 결재선 상태/코멘트 갱신 (대기 -> 승인/반려)
+    int updateMyApprovalLineDecision(@Param("approvalDocumentId") int approvalDocumentId,
+                                     @Param("userId") int userId,
+                                     @Param("status") String status,
+                                     @Param("comment") String comment);
+
+    // 다음 차수 활성화 (NULL -> 대기)
+    int activateNextApprover(@Param("approvalDocumentId") int approvalDocumentId,
+                             @Param("nextSequence") int nextSequence);
+    
     // 문서 상태 변경
     int updateDocumentStatus(@Param("approvalDocumentId") int approvalDocumentId,
             				@Param("status") String status);

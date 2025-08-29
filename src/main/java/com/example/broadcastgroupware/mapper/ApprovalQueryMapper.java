@@ -49,12 +49,25 @@ public interface ApprovalQueryMapper {
     List<Map<String, Object>> selectTeamMemberCountsByIds(@Param("teamIds") List<Integer> teamIds);
 
     
-    // ===== 그 외 =====
+    // ===== 문서 수정 및 삭제 =====
     
     // 최초 결재자의 현재 상태
     String selectFirstApproverStatus(@Param("approvalDocumentId") int approvalDocumentId);
 
     // 문서 기안자 ID
     Integer selectDrafterIdByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+    
+    
+    // ===== 결재 (승인/반려) =====
+    
+    // 현재 '대기' 차수
+    Integer selectCurrentPendingSequence(int approvalDocumentId);
+
+    // 해당 문서에서 사용자의 결재선 (차수/상태)
+    Map<String,Object> selectUserApprovalLine(@Param("approvalDocumentId") int approvalDocumentId,
+                                              @Param("userId") int userId);
+    
+    // 다음 활성화될 차수 (status IS NULL 중 가장 작은 차수)
+    Integer selectNextSequenceToActivate(int approvalDocumentId);
 
 }
