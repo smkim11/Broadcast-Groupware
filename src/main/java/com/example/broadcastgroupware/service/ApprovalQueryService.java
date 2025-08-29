@@ -29,7 +29,7 @@ public class ApprovalQueryService {
         return approvalQueryMapper.selectInProgressDocuments(userId);
     }
 
-    // 결재 완료 문서 리스트 조회
+    // 종료 문서 리스트 조회
     public List<ApprovalDocumentDto> findCompletedDocuments(int userId) {
         return approvalQueryMapper.selectCompletedDocuments(userId);
     }

@@ -13,12 +13,12 @@ import com.example.broadcastgroupware.dto.ApprovalDocumentDto;
 @Mapper
 public interface ApprovalQueryMapper {	
     
-	// ===== 문서 상태별 목록 조회 =====
+	// ===== 내 문서함 조회 (목록 조회) =====
     
     // 진행 중 문서 목록 조회
     List<ApprovalDocumentDto> selectInProgressDocuments(@Param("userId") int userId);
 
-    // 결재 완료 목록 문서 (승인 + 반려)
+    // 종료 목록 문서 (승인 + 반려)
     List<ApprovalDocumentDto> selectCompletedDocuments(@Param("userId") int userId);
 
     // 임시저장 목록 문서
@@ -28,7 +28,7 @@ public interface ApprovalQueryMapper {
     List<ApprovalDocumentDto> selectReferencedDocuments(@Param("userId") int userId);
     
     
-    // ===== 문서 상세 조회 =====
+    // ===== 내 문서함 조회 (문서 상세 조회) =====
     
     // 문서 + 기안자 정보
     Map<String, Object> selectDocumentDetail(@Param("approvalDocumentId") int approvalDocumentId);

@@ -37,7 +37,7 @@ public class ApprovalQueryController {
         return "approval/list_inprogress";
     }
 
-    // 결재 완료 문서 목록 조회
+    // 종료 문서 목록 조회
     @GetMapping("/documents/completed")
     public String listCompleted(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
         model.addAttribute("docs", approvalQueryService.findCompletedDocuments(loginUser.getUserId()));
