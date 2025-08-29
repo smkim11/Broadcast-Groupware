@@ -12,7 +12,7 @@ public class CommentDto {
 	private String userName;
 	private String userRank;
 	private String commentContent;
-	private int commentParent;
+	private Integer commentParent;
 	private String commentStatus;
 	private String createDate;
 	private String updateDate;

@@ -127,6 +127,9 @@
 	
 	            var posts = data.posts;
 	            var pageDto = data.pageDto;
+	            var boardId = data.boardId;
+	            
+	            console.log('boardId: ', boardId);
 	
 	            if (!posts || posts.length === 0) {
 	                tbody.append('<tr><td colspan="4">게시글이 없습니다.</td></tr>');
@@ -137,7 +140,7 @@
 	            posts.forEach(function(post) {
 	                tbody.append('<tr>'
 	                    + '<td>' + post.postId + '</td>'
-	                    + '<td><a href="/post/detail?postId=' + post.postId + '" target="_blank">' + post.title + '</a></td>'
+	                    + '<td><a href="/post/detail?postId=' + post.postId + '&boardId=' + currentBoardId + '">' + post.title + '</a></td>'
 	                    + '<td>' + post.userName + '</td>'
 	                    + '<td>' + post.createDate + '</td>'
 	                    + '</tr>');

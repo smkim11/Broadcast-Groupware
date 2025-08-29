@@ -30,7 +30,7 @@
                 </div>
             </div>
             <input type="hidden" id="userId" value="${loginUser.userId}">
-	
+
             <!-- 글 리스트 -->
 			<div class="article-header">
             	<c:forEach var="c" items="${detail}">
@@ -48,19 +48,33 @@
 		            </div>
 				</c:forEach>
 				<div class="comment">
-					<c:forEach var="co" items="${allComments}">
+					<c:forEach var="co" items="${oneLevelComments}">
 						<div>
 							<span>${co.userName}(${co.userRank})</span>
 							<p>${co.commentContent}</p>
 							<a>${co.createDate} <a class="reComment">댓글쓰기</a></a>
 						</div>
+						
+				        	<c:forEach var="r" items="${c.replies}">
+					            <div class="reply" style="margin-left:20px;">
+					                <p>${r.userName}(${r.userRank}): ${r.content}</p>
+					            </div>
+					        </c:forEach>
 					</c:forEach>
 				</div>	
 			</div>
-            <a href="" class="btn btn-outline-primary waves-effect waves-light">삭제</a>
-           	<a href="" class="btn btn-outline-primary waves-effect waves-light">수정</a>
-           	<a href="" class="btn btn-outline-primary waves-effect waves-light">닫기</a>
-
+			
+			<c:if test="${boardId == 1 and userRole == 'admin'}">
+			    <a href="" class="btn btn-outline-primary waves-effect waves-light">삭제</a>
+			    <a href="" class="btn btn-outline-primary waves-effect waves-light">수정</a>
+			</c:if>
+			
+			<c:if test="${boardId != 1}">
+			    <a href="" class="btn btn-outline-primary waves-effect waves-light">삭제</a>
+			    <a href="" class="btn btn-outline-primary waves-effect waves-light">수정</a>
+			</c:if>
+			
+			<a href="" class="btn btn-outline-primary waves-effect waves-light">닫기</a>
 
         </div>
     </div>

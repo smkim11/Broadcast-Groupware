@@ -84,6 +84,7 @@ public class BoardRestController {
         Map<String, Object> result = new HashMap<>();
         result.put("posts", posts);
         result.put("pageDto", pageDto);
+        result.put("boardId", boardId);
         return result;
     }
     

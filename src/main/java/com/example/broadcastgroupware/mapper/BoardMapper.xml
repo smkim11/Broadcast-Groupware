@@ -149,6 +149,7 @@
 		INNER JOIN user u 
 		ON p.user_id = u.user_id
 		WHERE c.post_id = #{postId}
+		ORDER BY c.create_date ASC
     </select>
 
 </mapper>

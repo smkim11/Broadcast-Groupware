@@ -1,5 +1,6 @@
 package com.example.broadcastgroupware.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -96,9 +97,10 @@ public class BoardController {
 	
 	// 게시글 상세보기 
 	@GetMapping("/post/detail")
-	public String postDetail(HttpSession session, Model model, @RequestParam int postId) {
+	public String postDetail(HttpSession session, Model model, @RequestParam int postId, @RequestParam int boardId) {
 		
 		// log.info("게시글 번호: {}", postId);
+		// log.info("게시판 번호: {}", boardId);
 		
 		UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
 		
@@ -107,6 +109,7 @@ public class BoardController {
 		} 
 		
 		int userId = loginUser.getUserId();
+		String userRole = loginUser.getRole();
 		
 		// 상세게시글 
 		List<Post> detail = boardService.postDetail(postId);
@@ -114,9 +117,28 @@ public class BoardController {
 		// 댓글
 		List<CommentDto> allComments = boardService.selectComment(postId);
 		
+	    // 댓글 + 대댓글 (1단계)
+	    List<CommentDto> oneLevelComments = new ArrayList<>();
+	    for (CommentDto c : allComments) {
+	        if (c.getCommentParent() == null) {
+	            // 최상위 댓글
+	        	oneLevelComments.add(c);
+	        } else {
+	            // 대댓글
+	            for (CommentDto parent : allComments) {
+	                if (parent.getCommentId() == c.getCommentParent()) {
+	                    parent.getReplies().add(c);
+	                    break;
+	                }
+	            }
+	        }
+	    }
+		
 		model.addAttribute("postId", postId);
+		model.addAttribute("boardId", boardId);
+		model.addAttribute("userRole", userRole);
 		model.addAttribute("detail", detail);
-		model.addAttribute("allComments", allComments);
+		model.addAttribute("oneLevelComments", oneLevelComments);
 		
 		return "user/postDetail";
 	}
