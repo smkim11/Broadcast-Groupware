@@ -24,24 +24,19 @@ public class ApprovalQueryService {
         this.approvalQueryMapper = approvalQueryMapper;
     }
 
-    // 진행 중 문서 리스트 조회
+    // 진행 중 문서 목록 조회
     public List<ApprovalDocumentDto> findInProgressDocuments(int userId) {
         return approvalQueryMapper.selectInProgressDocuments(userId);
     }
 
-    // 종료 문서 리스트 조회
+    // 종료 문서 목록 조회
     public List<ApprovalDocumentDto> findCompletedDocuments(int userId) {
         return approvalQueryMapper.selectCompletedDocuments(userId);
     }
 
-    // 임시저장 문서 리스트 조회
+    // 임시저장 문서 목록 조회
     public List<ApprovalDocumentDto> findDraftDocuments(int userId) {
         return approvalQueryMapper.selectDraftDocuments(userId);
-    }
-
-    // 내가 참조된 문서 리스트 조회
-    public List<ApprovalDocumentDto> findReferencedDocuments(int userId) {
-        return approvalQueryMapper.selectReferencedDocuments(userId);
     }
     
     
@@ -96,7 +91,7 @@ public class ApprovalQueryService {
         boolean isDrafter = (drafterUserId != null && drafterUserId == loginUserId);  // 본인 문서
         boolean firstApproved = "승인".equals(firstStatus);				   			  // 최초 결재자: '승인' 전
         boolean isEditable = isDrafter && !firstApproved &&
-                ("임시저장".equals(status) || "진행 중".equals(status));	   			  // 문서 상태: '임시저장' or '진행 중'
+                ("임시저장".equals(status) || "진행 중".equals(status));	   			      // 문서 상태: '임시저장' or '진행 중'
 
         // 4) 뷰에서 바로 쓸 수 있도록 플래그/타입을 번들에 주입해 반환
         bundle.put("docType", docType);
@@ -168,6 +163,27 @@ public class ApprovalQueryService {
         result.put("referenceTeams", referenceTeams);
         result.put("referenceIndividuals", referenceIndividuals);
         return result;
+    }
+    
+
+    // 사용자가 현재 '대기'인 문서 목록 조회
+    public List<ApprovalDocumentDto> findMyPendingApprovals(int userId) {
+        return approvalQueryMapper.selectMyPendingApprovals(userId);
+    }
+    
+    // 사용자는 '승인' + 문서는 아직 진행 중인 목록 조회
+    public List<ApprovalDocumentDto> findMyInProgressApprovals(int userId) {
+        return approvalQueryMapper.selectMyInProgressApprovals(userId);
+    }
+    
+    // 완료 (최종 승인/반려) 문서 목록 조회 + 필터
+    public List<ApprovalDocumentDto> findMyCompletedApprovals(int userId, String status) {
+        return approvalQueryMapper.selectMyCompletedApprovals(userId, status);
+    }
+
+    // 사용자가 참조된 문서 목록 조회
+    public List<ApprovalDocumentDto> findReferencedDocuments(int userId) {
+        return approvalQueryMapper.selectReferencedDocuments(userId);
     }
     
 }

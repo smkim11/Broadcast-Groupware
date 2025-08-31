@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.ApprovalQueryService;
@@ -50,14 +51,7 @@ public class ApprovalQueryController {
         model.addAttribute("docs", approvalQueryService.findDraftDocuments(loginUser.getUserId()));
         return "approval/list_draft";
     }
-
-    // 내가 참조된 문서 목록 조회
-    @GetMapping("/documents/referenced")
-    public String listReferenced(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
-        model.addAttribute("docs", approvalQueryService.findReferencedDocuments(loginUser.getUserId()));
-        return "approval/list_referenced";
-    }
-    
+   
     
     // 문서 상세 조회
     @GetMapping("/document/detail/{id}")
@@ -83,4 +77,38 @@ public class ApprovalQueryController {
         return "approval/document_detail";
     }
     
+
+	 // 사용자가 현재 '대기'인 문서 목록 조회
+	 @GetMapping("/received/pending")
+	 public String receivedPending(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
+	     model.addAttribute("docs", approvalQueryService.findMyPendingApprovals(loginUser.getUserId()));
+	     return "approval/list_received_pending";
+	 }
+	
+	 // 사용자는 '승인' + 문서는 아직 진행 중인 목록 조회
+	 @GetMapping("/received/in-progress")
+	 public String receivedInProgress(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
+	     model.addAttribute("docs", approvalQueryService.findMyInProgressApprovals(loginUser.getUserId()));
+	     return "approval/list_received_inprogress";
+	 }
+	
+	// 완료 (최종 승인/반려) 문서 목록 조회 + 필터
+	@GetMapping("/received/completed")
+	public String receivedCompleted(
+	      @ModelAttribute("loginUser") UserSessionDto loginUser,
+	      @RequestParam(defaultValue = "ALL") String status,
+	      Model model) {
+	  int userId = loginUser.getUserId();
+	  model.addAttribute("docs", approvalQueryService.findMyCompletedApprovals(userId, status));
+	  model.addAttribute("status", status);  // 필터용
+	  return "approval/list_received_completed";
+	}
+	
+    // 사용자가 참조된 문서 목록 조회
+    @GetMapping("/received/referenced")
+    public String listReferenced(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
+        model.addAttribute("docs", approvalQueryService.findReferencedDocuments(loginUser.getUserId()));
+        return "approval/list_referenced";
+    }
+
 }

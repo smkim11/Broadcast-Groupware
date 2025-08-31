@@ -371,22 +371,36 @@
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
 								    <li>
-								        <a href="/approval/document/main">문서작성</a>
+								        <a href="/approval/document/main">문서 작성</a>
 								    </li>
 								    <li>
-								        <a href="#">받은 문서함</a>
+								        <a href="javascript: void(0);" class="has-arrow">받은 문서함</a>
+								        <ul class="sub-menu" aria-expanded="false">
+								    		<li>
+								                <a href="/approval/received/pending">결재 대기 문서</a>
+								            </li>
+								            <li>
+								                <a href="/approval/received/in-progress">결재 진행 문서</a>
+								            </li>
+								            <li>
+								                <a href="/approval/received/completed">결재 종료 문서</a>
+								            </li>
+								            <li>
+								                <a href="/approval/received/referenced">참조 문서</a>
+								            </li>
+								    	</ul>
 								    </li>
 								    <li>
 								    	<a href="javascript: void(0);" class="has-arrow">내 문서함</a>
 								    	<ul class="sub-menu" aria-expanded="false">
 								    		<li>
-								                <a href="layouts-dark-sidebar.html">임시저장문서</a>
+								                <a href="/approval/documents/draft">임시저장 문서</a>
 								            </li>
 								            <li>
-								                <a href="layouts-dark-sidebar.html">결재완료문서</a>
+								                <a href="/approval/documents/in-progress">진행 중 문서</a>
 								            </li>
 								            <li>
-								                <a href="layouts-dark-sidebar.html">진행중문서</a>
+								                <a href="/approval/documents/completed">종료 문서</a>
 								            </li>
 								    	</ul>
 								    </li>

@@ -76,21 +76,6 @@
 	    	AND ad.approval_document_status = '임시저장'
 	    ORDER BY ad.create_date DESC
     </select>
-
-    <!-- 참조 문서 -->
-    <select id="selectReferencedDocuments" parameterType="int" 
-    		resultMap="ApprovalDocDtoMap">
-	    SELECT <include refid="approvalDocumentColumns" />,
-	    	u.full_name AS fullName
-	    FROM approval_document ad
-	    <include refid="approvalDocumentFromJoins"/>
-	    INNER JOIN reference_line rl
-	        ON ad.approval_document_id = rl.approval_document_id
-	    INNER JOIN `user` u 
-	    	ON ad.user_id = u.user_id
-	    WHERE rl.user_id = #{userId}
-	    ORDER BY ad.create_date DESC
-    </select>
     
     
     <!-- ======== 내 문서함 조회 (문서 상세 조회) ======== -->
@@ -331,7 +316,7 @@
         ORDER BY ad.create_date DESC
     </select>
 
-    <!-- 결재 진행: 사용자는 '승인' + 문서는 아직 진행 중 -->
+    <!-- 결재 진행 중: 사용자는 '승인' + 문서는 아직 진행 중 -->
     <select id="selectMyInProgressApprovals" parameterType="int" resultMap="ApprovalDocDtoMap">
         SELECT <include refid="approvalDocumentColumns" />, u.full_name AS fullName
         FROM approval_document ad
@@ -344,40 +329,46 @@
         ORDER BY ad.update_date DESC
     </select>
 
-    <!-- 결재 완료: 최종 '승인' 완료 -->
-    <select id="selectMyClosedApprovals" parameterType="int" resultMap="ApprovalDocDtoMap">
-        SELECT <include refid="approvalDocumentColumns" />, u.full_name AS fullName
-        FROM approval_document ad
-        <include refid="approvalDocumentFromJoins"/>
-        JOIN `user` u ON ad.user_id = u.user_id
-        WHERE ad.approval_document_status = '승인'
-        	AND EXISTS (
-            	SELECT 1 FROM approval_line al
-              	WHERE al.approval_document_id = ad.approval_document_id
-              		AND al.user_id = #{userId}
-          )
-        ORDER BY ad.update_date DESC
-    </select>
+    <!-- 결재 종료: 최종 승인/반려 문서 -->
+	<select id="selectMyCompletedApprovals" parameterType="map" resultMap="ApprovalDocDtoMap">
+	    SELECT <include refid="approvalDocumentColumns" />, u.full_name AS fullName
+	    FROM approval_document ad
+	    <include refid="approvalDocumentFromJoins"/>
+	    JOIN `user` u ON ad.user_id = u.user_id
+	    WHERE ad.approval_document_status IN ('승인','반려')
+	    	AND EXISTS (
+	        	SELECT 1
+	          	FROM approval_line al
+	          	WHERE al.approval_document_id = ad.approval_document_id
+	            	AND al.user_id = #{userId}
+	      	)
+	      <choose>
+	          <when test="status != null and status == 'APPROVED'">
+	              AND ad.approval_document_status = '승인'
+	          </when>
+	          <when test="status != null and status == 'REJECTED'">
+	              AND ad.approval_document_status = '반려'
+	          </when>
+	          <otherwise>
+	              <!-- ALL -->
+	          </otherwise>
+	      </choose>
+	    ORDER BY ad.update_date DESC
+	</select>
 
-    <!-- 결재 반려: 사용자가 '반려' or '반려'로 끝난 문서 -->
-    <select id="selectMyRejectedApprovals" parameterType="int" resultType="map">
-        SELECT <include refid="approvalDocumentColumns" />, u.full_name AS fullName,
-               CASE WHEN EXISTS (
-                   SELECT 1 FROM approval_line al2
-                   WHERE al2.approval_document_id = ad.approval_document_id
-                       AND al2.user_id = #{userId}
-                       AND al2.approval_line_status = '반려'
-               ) THEN 1 ELSE 0 END AS rejectedByMe
-        FROM approval_document ad
-        <include refid="approvalDocumentFromJoins"/>
-        JOIN `user` u ON ad.user_id = u.user_id
-        WHERE ad.approval_document_status = '반려'
-        	AND EXISTS (
-            	SELECT 1 FROM approval_line al
-              	WHERE al.approval_document_id = ad.approval_document_id
-              		AND al.user_id = #{userId}
-          )
-        ORDER BY ad.update_date DESC
+    <!-- 참조 문서 -->
+    <select id="selectReferencedDocuments" parameterType="int" 
+    		resultMap="ApprovalDocDtoMap">
+	    SELECT <include refid="approvalDocumentColumns" />,
+	    	u.full_name AS fullName
+	    FROM approval_document ad
+	    <include refid="approvalDocumentFromJoins"/>
+	    INNER JOIN reference_line rl
+	        ON ad.approval_document_id = rl.approval_document_id
+	    INNER JOIN `user` u 
+	    	ON ad.user_id = u.user_id
+	    WHERE rl.user_id = #{userId}
+	    ORDER BY ad.create_date DESC
     </select>
 	
 </mapper>

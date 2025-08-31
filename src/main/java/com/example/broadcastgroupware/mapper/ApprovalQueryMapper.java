@@ -15,7 +15,7 @@ public interface ApprovalQueryMapper {
     
 	// ===== 내 문서함 조회 (목록 조회) =====
     
-    // 진행 중 문서 목록 조회
+    // 진행 중 문서 목록
     List<ApprovalDocumentDto> selectInProgressDocuments(@Param("userId") int userId);
 
     // 종료 목록 문서 (승인 + 반려)
@@ -23,9 +23,6 @@ public interface ApprovalQueryMapper {
 
     // 임시저장 목록 문서
     List<ApprovalDocumentDto> selectDraftDocuments(@Param("userId") int userId);
-
-    // 참조 목록 문서
-    List<ApprovalDocumentDto> selectReferencedDocuments(@Param("userId") int userId);
     
     
     // ===== 내 문서함 조회 (문서 상세 조회) =====
@@ -69,5 +66,21 @@ public interface ApprovalQueryMapper {
     
     // 다음 활성화될 차수 (status IS NULL 중 가장 작은 차수)
     Integer selectNextSequenceToActivate(int approvalDocumentId);
+    
 
+	 // ===== 받은 문서함 조회 (목록 조회) =====
+    
+    // 사용자가 현재 '대기'인 문서
+	List<ApprovalDocumentDto> selectMyPendingApprovals(@Param("userId") int userId);
+	
+	// 사용자는 '승인' + 문서는 아직 진행 중
+	List<ApprovalDocumentDto> selectMyInProgressApprovals(@Param("userId") int userId);
+	
+	// 종료 (최종 승인/반려) + 필터
+	List<ApprovalDocumentDto> selectMyCompletedApprovals(@Param("userId") int userId,
+            											@Param("status") String status);
+
+    // 참조 목록 문서
+    List<ApprovalDocumentDto> selectReferencedDocuments(@Param("userId") int userId);
+    
 }
