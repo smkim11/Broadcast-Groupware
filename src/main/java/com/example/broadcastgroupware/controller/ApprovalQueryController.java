@@ -65,6 +65,7 @@ public class ApprovalQueryController {
             return "error/404";
         }
 
+        // 기본 문서/폼/결재선/참조선 정보
         model.addAttribute("document", bundle.get("document"));
         model.addAttribute("broadcastForm", bundle.get("broadcastForm"));
         model.addAttribute("vacationForm", bundle.get("vacationForm"));
@@ -74,34 +75,38 @@ public class ApprovalQueryController {
         model.addAttribute("referenceIndividuals", bundle.get("referenceIndividuals"));  // 팀/개인 분리 목록
         model.addAttribute("docType", bundle.get("docType"));
         model.addAttribute("isEditable", bundle.get("isEditable"));
+        
+        // 문서 결재 가능 여부 계산
+        // true일 경우 JSP에서 승인/반려 버튼 노출
+        boolean canApprove = approvalQueryService.canApprove(approvalDocumentId, loginUser.getUserId());
+        model.addAttribute("canApprove", canApprove);
+        
         return "approval/document_detail";
     }
     
 
-	 // 사용자가 현재 '대기'인 문서 목록 조회
-	 @GetMapping("/received/pending")
-	 public String receivedPending(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
-	     model.addAttribute("docs", approvalQueryService.findMyPendingApprovals(loginUser.getUserId()));
-	     return "approval/list_received_pending";
-	 }
+	// 사용자가 현재 '대기'인 문서 목록 조회
+	@GetMapping("/received/pending")
+	public String receivedPending(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
+	    model.addAttribute("docs", approvalQueryService.findMyPendingApprovals(loginUser.getUserId()));
+	    return "approval/list_received_pending";
+	}
 	
-	 // 사용자는 '승인' + 문서는 아직 진행 중인 목록 조회
-	 @GetMapping("/received/in-progress")
-	 public String receivedInProgress(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
-	     model.addAttribute("docs", approvalQueryService.findMyInProgressApprovals(loginUser.getUserId()));
-	     return "approval/list_received_inprogress";
-	 }
+	// 사용자는 '승인' + 문서는 아직 진행 중인 목록 조회
+	@GetMapping("/received/in-progress")
+	public String receivedInProgress(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
+	    model.addAttribute("docs", approvalQueryService.findMyInProgressApprovals(loginUser.getUserId()));
+	    return "approval/list_received_inprogress";
+	}
 	
-	// 완료 (최종 승인/반려) 문서 목록 조회 + 필터
+	// 종료 (최종 승인/반려) 문서 목록 조회 + 필터
 	@GetMapping("/received/completed")
-	public String receivedCompleted(
-	      @ModelAttribute("loginUser") UserSessionDto loginUser,
-	      @RequestParam(defaultValue = "ALL") String status,
-	      Model model) {
-	  int userId = loginUser.getUserId();
-	  model.addAttribute("docs", approvalQueryService.findMyCompletedApprovals(userId, status));
-	  model.addAttribute("status", status);  // 필터용
-	  return "approval/list_received_completed";
+	public String receivedCompleted(@ModelAttribute("loginUser") UserSessionDto loginUser,
+									@RequestParam(defaultValue = "ALL") String status, Model model) {
+	    int userId = loginUser.getUserId();
+	    model.addAttribute("docs", approvalQueryService.findMyCompletedApprovals(userId, status));
+	    model.addAttribute("status", status);  // 필터용
+	    return "approval/list_received_completed";
 	}
 	
     // 사용자가 참조된 문서 목록 조회

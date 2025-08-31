@@ -165,6 +165,24 @@ public class ApprovalQueryService {
         return result;
     }
     
+    
+    // 문서 결재 가능 여부 판정
+    @Transactional(readOnly = true)
+    public boolean canApprove(int documentId, int userId) {
+    	// 현재 '대기' 차수 조회
+        Integer cur = approvalQueryMapper.selectCurrentPendingSequence(documentId);
+        
+        // 사용자의 결재선 정보 조회 (차수/상태)
+        Map<String,Object> my = approvalQueryMapper.selectUserApprovalLine(documentId, userId);
+        
+        if (cur == null || my == null) return false;
+        Integer mySeq = (Integer) my.get("approvalLineSequence");
+        String myStatus = (String) my.get("approvalLineStatus");
+        
+        // 사용자가 현재 대기 차수 & 상태 '대기'라면 결재 가능
+        return "대기".equals(myStatus) && cur.equals(mySeq);
+    }
+    
 
     // 사용자가 현재 '대기'인 문서 목록 조회
     public List<ApprovalDocumentDto> findMyPendingApprovals(int userId) {
@@ -176,7 +194,7 @@ public class ApprovalQueryService {
         return approvalQueryMapper.selectMyInProgressApprovals(userId);
     }
     
-    // 완료 (최종 승인/반려) 문서 목록 조회 + 필터
+    // 종료 (최종 승인/반려) 문서 목록 조회 + 필터
     public List<ApprovalDocumentDto> findMyCompletedApprovals(int userId, String status) {
         return approvalQueryMapper.selectMyCompletedApprovals(userId, status);
     }

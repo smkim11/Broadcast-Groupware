@@ -319,6 +319,7 @@
 <div class="mt-3 d-flex align-items-center">
     <a href="${pageContext.request.contextPath}/approval/document/main" class="btn btn-outline-secondary">목록</a>
 
+	<!-- 사용자가 기안자 & 수정 가능한 경우 -->
     <c:if test="${isEditable}">
         <div class="ms-auto d-flex gap-2">
             <form method="post"
@@ -329,6 +330,30 @@
             </form>
             <a href="${pageContext.request.contextPath}/approval/document/edit/${document.approvalDocumentId}"
                class="btn btn-outline-success">수정</a>
+        </div>
+    </c:if>
+    
+    <!-- 사용자가 결재할 차례인 경우 -->
+    <c:if test="${canApprove}">
+        <div class="ms-auto d-flex gap-2">
+            <form method="post" action="${pageContext.request.contextPath}/approval/document/decide-web" class="m-0">
+                <input type="hidden" name="documentId" value="${document.approvalDocumentId}">
+                <input type="hidden" name="decision" value="APPROVE">
+                <c:if test="${not empty _csrf}">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                </c:if>
+                <button type="submit" class="btn btn-success">승인</button>
+            </form>
+
+            <form method="post" action="${pageContext.request.contextPath}/approval/document/decide-web" class="m-0 d-flex">
+                <input type="hidden" name="documentId" value="${document.approvalDocumentId}">
+                <input type="hidden" name="decision" value="REJECT">
+                <input type="text" name="comment" placeholder="반려 사유(선택)" class="form-control form-control-sm me-1" style="width:220px;">
+                <c:if test="${not empty _csrf}">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                </c:if>
+                <button type="submit" class="btn btn-danger">반려</button>
+            </form>
         </div>
     </c:if>
 </div>

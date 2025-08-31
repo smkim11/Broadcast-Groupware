@@ -55,7 +55,7 @@
 	</select>
 
 
-    <!-- 결재 완료 문서 (승인 + 반려) -->
+    <!-- 결재 종료 문서 (승인 + 반려) -->
     <select id="selectCompletedDocuments" parameterType="int" 
     		resultMap="ApprovalDocDtoMap">
 	    SELECT <include refid="approvalDocumentColumns" />
