@@ -1,4 +1,30 @@
-//resources/js/pages/chat.init.js
+(function syncLoginSidebar() {
+  const meta  = document.getElementById('chat-meta')?.dataset || {};
+  const name  = meta.userName || '';
+  const rank  = meta.userRank || '';
+  const ver   = meta.avatarVersion ? `?v=${meta.avatarVersion}` : '';
+  const url   = (meta.avatarUrl && meta.avatarUrl.trim()) ? meta.avatarUrl : meta.avatarDefault;
+
+  const nameEl   = document.getElementById('sidebar-login-name');
+  const rankEl   = document.getElementById('sidebar-login-rank');
+  const avatarEl = document.getElementById('sidebar-login-avatar');
+
+  if (nameEl) nameEl.textContent = name || nameEl.textContent || 'Me';
+  if (rankEl && rank) {
+    rankEl.textContent = `(${rank})`;
+  }
+  if (avatarEl && url) avatarEl.src = url + ver;
+})();
+
+function updateMyAvatar(avatarUrl, avatarVersion){
+  const bust = avatarVersion ? `?v=${avatarVersion}` : `?t=${Date.now()}`;
+  const avatarEl = document.getElementById('sidebar-login-avatar');
+  if (avatarEl && avatarUrl) avatarEl.src = avatarUrl + bust;
+
+  // 같은 사용자 아바타를 쓰는 곳 전부(리스트, 메시지 등) 동기화하고 싶으면 data-user-id로 찾아 바꿔주기
+  const me = document.getElementById('chat-meta')?.dataset.userId;
+  document.querySelectorAll(`img[data-user-id="${me}"]`).forEach(img => img.src = avatarUrl + bust);
+}
 
 (function (window, $) {
   'use strict';
@@ -122,6 +148,7 @@
   let retry = 0;
   let isConnecting = false;
   let reconnectTimer = null;
+  let currentRoomType = null;
 
   // 구독 핸들
   let roomSub = null;
@@ -323,6 +350,7 @@
 
     const $lists = getAllListsEl();
     const $item  = $lists.find('.dm-item[data-room-id="'+roomId+'"]').closest('li');
+	currentRoomType = String($item.find('.dm-item').data('room-type') || '').toUpperCase();
 
     if ($item.length === 0) {
 		loadDmList().then(function(){
@@ -353,7 +381,7 @@
         const rid = Number(evt.roomId || evt.chatroomId || 0);
         if (!chatroomId || (rid && rid !== Number(chatroomId))) return;
 
-		     if (rtype !== 'GROUP') return;
+		if (currentRoomType !== 'GROUP') return;
         if (typeof evt.memberCount === 'number') {
           const $count = $('#room-members-count');
           const $word  = $('#room-members-word');
@@ -594,6 +622,10 @@
   }
 
 })(window, jQuery);
+
+if (window.ChatNotify && typeof window.ChatNotify.clearBadge === 'function') {
+  window.ChatNotify.clearBadge();
+}
 
 // ======================= Chat (DM 목록/클릭) =======================
 
@@ -936,4 +968,6 @@ $(document).on('click', '#action-show-members', async function(e){
     alert('멤버 목록을 불러오지 못했습니다.');
   }
 });
+
+
 

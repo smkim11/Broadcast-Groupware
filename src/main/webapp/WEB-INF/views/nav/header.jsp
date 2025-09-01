@@ -86,16 +86,13 @@
                             </div>
                         </div>
 
-                        
 
-                        
 
                         <div class="dropdown d-none d-lg-inline-block ms-1">
                             <button type="button" class="btn header-item noti-icon waves-effect" data-bs-toggle="fullscreen">
                                 <i class="uil-minus-path"></i>
                             </button>
                         </div>
-
                         <div class="dropdown d-inline-block">
                             <button type="button" class="btn header-item noti-icon waves-effect" id="page-header-notifications-dropdown"
                                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -441,8 +438,7 @@
 
     </body>
    <!-- </nav> -->
-   
-	<script>
+		<script>
 		$(document).ready(function(){
 		    $.ajax({
 		        url: '/board/menu',
@@ -462,5 +458,5 @@
 		        }
 		    });
 		});
-	</script>
+		</script>
 </html>

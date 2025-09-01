@@ -47,6 +47,7 @@ public class ChatController {
     	model.addAttribute("chatroomId", chatroomId);
     	model.addAttribute("loginUserId", login != null ? login.getUserId() : 0);
     	model.addAttribute("loginUserName", login != null ? login.getFullName() : "");
+    	model.addAttribute("loginUserRank", login.getUserRank());
     	model.addAttribute("orgTree", userListService.getUserTreeForInvite());
     	
         return "user/chat";

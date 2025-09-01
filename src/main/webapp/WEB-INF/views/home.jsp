@@ -331,4 +331,5 @@
 <script src="${pageContext.request.contextPath}/resources/js/pages/weather.init.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/pages/home.init.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/pages/chatbot.init.js"></script>
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </html>

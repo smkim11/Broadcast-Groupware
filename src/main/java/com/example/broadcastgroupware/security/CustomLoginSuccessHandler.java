@@ -49,7 +49,9 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         
         // 세션에 저장
         session.setAttribute("loginUser", sessionUser);
-
+        // 잠금 해제 보증
+        session.setAttribute("LOCKED", false);
+        
         // 권한에 따라 리디렉션
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
         System.out.println("🔒 로그인된 사용자 권한 목록: " + roles);

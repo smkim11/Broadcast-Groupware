@@ -155,7 +155,7 @@
         <div class="rightbar-overlay"></div>
 
         <!-- JAVASCRIPT -->
-
+<script src="${pageContext.request.contextPath}/resources/js/pages/chat-notify.global.js?v=1"></script>
 
     </body>
     </nav>

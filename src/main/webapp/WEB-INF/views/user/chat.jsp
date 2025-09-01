@@ -50,6 +50,9 @@
            data-room-id="${chatroomId}"
            data-user-id="${loginUserId}"
            data-user-name="${loginUserName}"
+           data-user-rank="${loginUserRank}"
+		   data-avatar-url="${loginUserAvatarUrl}"
+		   data-avatar-version="${loginUserAvatarVersion}"
            data-context-path="${pageContext.request.contextPath}"
            data-avatar-default="<c:url value='/resources/images/users/avatar-default.png'/>">
       </div>
@@ -59,19 +62,27 @@
         <div class="chat-leftsidebar card">
           <div class="p-3 px-4">
             <div class="d-flex align-items-start">
-              <div class="flex-shrink-0 me-3 align-self-center">
-                <img src="<c:url value='/resources/images/users/avatar-default.png'/>"
-                     class="avatar-xs rounded-circle" alt="">
-              </div>
-              <div class="flex-grow-1">
-                <h5 class="font-size-16 mb-1">
-                  <a href="#" class="text-reset ">
-                    Marcus
-                    <i class="mdi mdi-circle text-success align-middle font-size-10 ms-1"></i>
-                  </a>
-                </h5>
-                <p class="text-muted mb-0">Available</p>
-              </div>
+             <c:set var="loginAvatar" value="${empty loginUserAvatarUrl 
+			  ? pageContext.request.contextPath.concat('/resources/images/users/avatar-default.png') 
+			  : loginUserAvatarUrl}" />
+			
+			<div class="flex-shrink-0 me-3 align-self-center">
+			  <img id="sidebar-login-avatar"
+			       src="${loginAvatar}"
+			       class="avatar-xs rounded-circle" alt="">
+			</div>
+			
+			<div class="flex-grow-1">
+			  <h5 class="font-size-16 mb-1">
+			    <a href="#" class="text-reset">
+			      <span id="sidebar-login-name">${loginUserName}</span>
+					<span class="text-muted" id="sidebar-login-rank">
+					  <c:if test="${not empty loginUserRank}">(${loginUserRank})</c:if>
+					</span>
+			      <i class="mdi mdi-circle text-success align-middle font-size-10 ms-1"></i>
+			    </a>
+			  </h5>
+			</div>
                 <div class="float-end">
                   <a href="javascript:void(0);" id="open-invite" class="text-primary"><i class="mdi mdi-plus"></i> 초대하기</a>
                 </div>
