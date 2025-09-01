@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper
-	namespace="com.example.broadcastgroupware.mapper.VacationMapper">
+<mapper namespace="com.example.broadcastgroupware.mapper.VacationMapper">
+	<!--현재 근무하고있는 직원들의 userId-->
+	<select id="selectJoinUser" resultType="int">
+		SELECT user_id userId FROM user WHERE user_resign_date is null
+	</select>
+	
+	<!--전년도에 일한 개월수 만큼 연차 추가-->
+	<update id="updateVacation">
+		update vacation set vacation_annual_total = (vacation_annual_total+
+			(SELECT case when year(user_join_date) = YEAR(NOW())-1 then 13-MONTH(user_join_date) 
+			ELSE 12 end vac FROM user WHERE user_id=#{userId}))
+		WHERE user_id = #{userId}
+	</update>
 </mapper>
