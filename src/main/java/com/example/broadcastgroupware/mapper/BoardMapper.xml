@@ -210,5 +210,11 @@
     	UPDATE comment SET comment_content = #{commentContent}
     	WHERE comment_id = #{commentId}
     </update>
+    
+    <!-- 댓글, 대댓글 삭제(비활성화) -->
+    <update id="deleteComment" parameterType="int">
+    	UPDATE comment SET comment_status = 'N'
+    	WHERE comment_id = #{commentId}
+    </update>
 
 </mapper>

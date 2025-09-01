@@ -140,6 +140,12 @@ public class BoardService {
 		boardMapper.modifyComment(comment);
 	}
 
+	// 댓글, 대댓글 삭제(비활성화)
+	public void deleteComment(int commentId) {
+		boardMapper.deleteComment(commentId);
+	}
+
+
 
 
 

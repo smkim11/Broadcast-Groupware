@@ -162,6 +162,33 @@ public class BoardRestController {
         return ResponseEntity.ok("success");
     }
 
+    // 댓글, 대댓글 삭제(비활성화)
+    @PostMapping("/comment/delete")
+    @ResponseBody
+    public ResponseEntity<?> deleteComment(@RequestBody Map<String, Integer> param, HttpSession session){
+        UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+        
+
+        if(loginUser == null){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한 없음");
+        }
+        
+        Integer commentId = param.get("commentId");
+        if(commentId == null){
+            return ResponseEntity.badRequest().body("commentId 필요");
+        }
+        // log.info("삭제할 댓글 id: {}, commentId");
+        
+        /*
+        Comment target = boardService.getCommentById(commentId);
+        if(target == null || !loginUser.getUserId().equals(target.getUserId())){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한 없음");
+        }
+        */
+
+        boardService.deleteComment(commentId);
+        return ResponseEntity.ok("success");
+    }
 
 
 }

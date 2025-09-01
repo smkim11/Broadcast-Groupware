@@ -465,6 +465,34 @@ $(document).ready(function() {
 	    });
 	
 	});
+	
+		// 댓글, 대댓글 삭제
+		$(document).on('click', '.deleteComment, .deleteReply', function(){
+		    var commentId = $(this).data('id');
+		    
+		    // console.log('삭제할 댓글 id: ', commentId);
+		
+		    if(!confirm('정말 삭제하시겠습니까?')){
+		        return;
+		    }
+		
+		    $.ajax({
+		        url: '/board/comment/delete',
+		        type: 'POST',
+		        contentType: 'application/json',
+		        data: JSON.stringify({ commentId: commentId }),
+		        success: function(res){
+		            alert('삭제되었습니다.');
+		            location.reload();
+		        },
+		        error: function(err){
+		            console.error(err);
+		            alert('삭제 실패');
+		        }
+		    });
+		});
+
+	
 
 
 </script>

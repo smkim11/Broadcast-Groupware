@@ -61,6 +61,9 @@ public interface BoardMapper {
 	
 	// 댓글, 대댓글 수정
 	void modifyComment(Comment comment);
+	
+	// 댓글, 대댓글 삭제(비활성화)
+	void deleteComment(int commentId);
 
 
 }
