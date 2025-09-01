@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.broadcastgroupware.domain.User;
 import com.example.broadcastgroupware.domain.UserImages;
+import com.example.broadcastgroupware.dto.PasswordDto;
 import com.example.broadcastgroupware.service.MyPageService;
 
 
@@ -28,5 +29,23 @@ public class MyPageRest {
 	@PatchMapping("/updateMyPage")
 	public void updateMyPage(@RequestBody User user) {
 		myPageService.updateMyPage(user);
+	}
+	
+	// 비밀번호 수정
+	@PatchMapping("/updatePassword")
+	public String updatePassword(@RequestBody PasswordDto passwordDto) {
+		int userId = passwordDto.getUserId();
+		if(!myPageService.findPw(userId).equals(passwordDto.getPrevPw())) {
+			return "기존 비밀번호를 틀렸습니다.";
+		}else if(!passwordDto.getNewPw().equals(passwordDto.getNewPw2())) {
+			return "변경 비밀번호가 일치하지 않습니다.";
+		}else if(myPageService.findPrevPw(userId).equals(passwordDto.getNewPw())) {
+			return "직전에 사용한 비밀번호입니다.";
+		}else if(!passwordDto.getNewPw().matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,13}$")) {
+		    return "비밀번호는 8자이상 13자이하이며, 숫자/특수문자를 포함해야 합니다.";
+		}
+		
+		myPageService.updatePassword(passwordDto);
+		return "변경성공";
 	}
 }

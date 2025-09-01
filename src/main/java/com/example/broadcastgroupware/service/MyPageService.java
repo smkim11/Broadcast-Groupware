@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.broadcastgroupware.domain.User;
 import com.example.broadcastgroupware.domain.UserImages;
 import com.example.broadcastgroupware.dto.MyPageDto;
+import com.example.broadcastgroupware.dto.PasswordDto;
 import com.example.broadcastgroupware.mapper.MyPageMapper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,16 @@ public class MyPageService {
 	// 마이페이지
 	public MyPageDto userInfo(int userId) {
 		return myPageMapper.userInfo(userId);
+	}
+	
+	// 비밀번호 조회
+	public String findPw(int userId) {
+		return myPageMapper.findPw(userId);
+	}
+	
+	// 직전에 사용한 비밀번호
+	public String findPrevPw(int userId) {
+		return myPageMapper.findPrevPw(userId);
 	}
 	
 	// 서명등록
@@ -62,8 +73,23 @@ public class MyPageService {
 	    return filename;
 	}
 	
+	// 프로필 사진 등록,수정
+	public void addProfile(UserImages userImages) {
+		if (myPageMapper.findProfile(userImages.getUserId()) == null) {
+	        myPageMapper.insertUserSign(userImages);
+	    } else {
+	        myPageMapper.updateUserProfile(userImages);
+	    }
+	}
+	
 	// 정보수정
 	public void updateMyPage(User user) {
 		myPageMapper.updateMyPage(user);
+	}
+	
+	// 비밀번호 수정 후 이력에 추가
+	public void updatePassword(PasswordDto passwordDto) {
+		myPageMapper.updatePassword(passwordDto);
+		myPageMapper.insertPasswordHistory(passwordDto);
 	}
 }

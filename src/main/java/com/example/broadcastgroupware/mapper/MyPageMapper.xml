@@ -3,8 +3,12 @@
 <mapper namespace="com.example.broadcastgroupware.mapper.MyPageMapper">
 	<!--마이페이지-->
 	<select id="userInfo" resultType="com.example.broadcastgroupware.dto.MyPageDto">
-		SELECT u.user_id userId, concat(d.department_name,' ',t.team_name)belong, concat(u.full_name,' ',u.user_rank)fullName, 
-			u.username, u.user_phone userPhone, u.user_email userEmail, concat(ui.user_images_name,'.',ui.user_images_ext)sign
+		SELECT distinct u.user_id userId, concat(d.department_name,' ',t.team_name)belong, concat(u.full_name,' ',u.user_rank)fullName, 
+			u.username, u.user_phone userPhone, u.user_email userEmail,
+			CONCAT((select user_images_name FROM user_images WHERE user_images_type='서명' AND user_id = u.user_id),'.',
+			(select user_images_ext FROM user_images WHERE user_images_type='서명' AND user_id = u.user_id)) sign,
+			CONCAT((select user_images_name FROM user_images WHERE user_images_type='프로필' AND user_id = u.user_id),'.',
+			(select user_images_ext FROM user_images WHERE user_images_type='프로필' AND user_id = u.user_id)) profile
 		FROM user u
 		INNER JOIN deployment_history dh ON u.user_id = dh.user_id
 		INNER JOIN team t ON t.team_id = dh.team_id
@@ -16,14 +20,48 @@
 		(SELECT user_id, MAX(create_date) FROM deployment_history GROUP BY user_id)
 	</select>
 	
+	<!--프로필 조회-->
+	<select id="findProfile" resultType="com.example.broadcastgroupware.domain.UserImages">
+		SELECT user_id userId,user_images_type userImagesType, user_images_name userImagesName 
+		FROM user_images WHERE user_images_type='프로필' AND user_id=#{userId}
+	</select>
+	
+	<!--비밀번호 조회-->
+	<select id="findPw" resultType="string">
+		SELECT password FROM user WHERE user_id=#{userId}
+	</select>
+	
+	<!--직전 비밀번호 조회-->
+	<select id="findPrevPw" resultType="string">
+		SELECT PASSWORD FROM password_history 
+		WHERE user_id=53 AND (user_id,create_date) IN
+			(SELECT user_id, MAX(create_date) FROM password_history GROUP BY user_id)
+	</select>
+	
 	<!--서명 저장-->
 	<insert id="insertUserSign" parameterType="com.example.broadcastgroupware.domain.UserImages">
 		insert into user_images(user_id, user_images_type, user_images_name, user_images_ext, user_images_path)
 		values(#{userId}, #{userImagesType}, #{userImagesName}, #{userImagesExt}, #{userImagesPath})
 	</insert>
 	
+	<!--비밀번호 이력 추가-->
+	<insert id="insertPasswordHistory" parameterType="com.example.broadcastgroupware.dto.PasswordDto">
+		INSERT into password_history(user_id,password) VALUES(#{userId},#{prevPw})
+	</insert>
+	
+	<!--프로필 수정-->
+	<update id="updateUserProfile" parameterType="com.example.broadcastgroupware.domain.UserImages">
+		update user_images set user_images_name = #{userImagesName}, user_images_ext=#{userImagesExt} 
+		where user_id =#{userId} and user_images_type='프로필'
+	</update>
+	
 	<!--정보수정-->
 	<update id="updateMyPage" parameterType="com.example.broadcastgroupware.domain.User">
 		UPDATE user SET user_phone=#{userPhone},user_email=#{userEmail} WHERE user_id = #{userId}
+	</update>
+	
+	<!--비밀번호 수정-->
+	<update id="updatePassword" parameterType="com.example.broadcastgroupware.dto.PasswordDto">
+		UPDATE user SET password=#{newPw} WHERE user_id=#{userId}
 	</update>
 </mapper>

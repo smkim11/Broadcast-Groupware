@@ -33,15 +33,19 @@
                     </div>
                 </div>
             </div>
+            <div style="text-align:center;">
+			    <!-- 프로필 이미지 -->
+			    <img src="/final/${myInfo.profile}" alt="프로필" 
+			         id="profileImg" class="avatar-lg rounded-circle img-thumbnail" style="cursor:pointer;">
+			
+			    <!-- 숨겨진 파일 업로드 -->
+			    <form id="uploadForm" action="/addProfile" method="post" enctype="multipart/form-data">
+			        <input type="file" id="fileInput" name="file" accept="image/*" style="display:none;" onchange="document.getElementById('uploadForm').submit();">
+			    </form>
+			</div>
    		<form class="needs-validation" id="myPageForm" novalidate>
 			<table class="table table-bordered align-middle">
 				<input type="hidden" name="userId" id="userId" value="${myInfo.userId }"/>
-				<tr>
-					<th colspan="2">
-						<img src="${pageContext.request.contextPath}/resources/images/users/avatar-4.jpg" 
-							alt="" class="avatar-lg rounded-circle img-thumbnail">
-					</th>
-				</tr>
 				<tr>
 					<th class="text-center">소속</th>
 					<td><input type="text" name="belong" id="belong" class="form-control" value="${myInfo.belong }" readonly></td>
@@ -93,10 +97,62 @@
 				    	</td>
 				</tr>
 			</table>
-			<div class="text-center">
-				<button type="submit" id="btn" class="btn btn-outline-primary">수정</button>
+				
+			<div class="d-flex justify-content-end gap-2 mt-3">
+				<!-- 비밀번호 변경 모달 버튼 -->
+				<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#event-modal">
+				   비밀번호 변경
+				</button>
+				<button type="submit" id="btn" class="btn btn-outline-primary">수정</button>			
 			</div>
 		</form>
+		
+		<!--비밀번호 변경 모달 -->
+		<div class="modal fade" id="event-modal" tabindex="-1" aria-hidden="true">
+		  <div class="modal-dialog modal-dialog-centered">
+		    <div class="modal-content">
+		      
+		      <div class="modal-header py-3 px-4 border-bottom-0">
+		        <h5 class="modal-title">비밀번호 변경</h5>
+		        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		      </div>
+		      
+		      <div class="modal-body">
+		      		<form class="needs-validation" id="changePwForm" novalidate>
+		      			<div class="row">
+		      				<div class="col-12">
+                   				<div class="mb-3">
+                   					<label class="form-label">기존 비밀번호</label>
+                   					<input class="form-control" type="password" name="prevPw" id="prevPw" placeholder="기존 비밀번호" required/>
+                                    <div class="invalid-feedback">기존 비밀번호를 입력하세요.</div>
+                   				</div>
+                   			</div>
+                   			<div class="col-12">
+                   				<div class="mb-3">
+                   					<label class="form-label">새로운 비밀번호</label>
+                   					<input class="form-control" type="password" name="newPw" id="newPw" required/>
+                                    <div class="invalid-feedback">새로운 비밀번호를 입력하세요.</div>
+                   				</div>
+                   			</div>
+                   			<div class="col-12">
+                   				<div class="mb-3">
+                   					<label class="form-label">비밀번호 확인</label>
+                   					<input class="form-control" type="password" name="newPw2" id="newPw2" placeholder="비밀번호 확인" required/>
+                                    <div class="invalid-feedback">비밀번호가 다릅니다.</div>
+                   				</div>
+                   			</div>
+		      			</div>
+		      			<div class="modal-footer">
+					        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+					        <button type="submit" class="btn btn-outline-success">수정</button>
+				      	</div>
+		      		</form>
+		      </div>
+		      
+		      
+		    </div>
+		  </div>
+		</div>
    		</div>
     </div>
 </div>
@@ -196,6 +252,77 @@
                 });
 			}
 		});
+	});
+	
+	// 프로필사진 등록, 수정
+	const profileImg = document.getElementById("profileImg");
+	const fileInput = document.getElementById("fileInput");
+
+	profileImg.addEventListener("click", () => fileInput.click());
+
+	fileInput.addEventListener("change", function() {
+	    if (this.files && this.files[0]) {
+	        const reader = new FileReader();
+	        reader.onload = function(e) {
+	            profileImg.src = e.target.result; // 선택 즉시 미리보기
+	        }
+	        reader.readAsDataURL(this.files[0]);
+	        
+	        // 선택 즉시 서버 업로드
+	        document.getElementById("uploadForm").submit();
+	    }
+	});
+	
+	// 비밀번호 변경
+	const pwForm = document.getElementById("changePwForm");
+	pwForm.addEventListener("submit", function(e){
+		// 유효성검사에 걸리면 실행되지 않는다
+		e.preventDefault();
+	    if(!pwForm.checkValidity()){
+	        e.stopPropagation();
+	        pwForm.classList.add("was-validated");
+	        return;
+	    }
+		const userId = document.getElementById("userId").value;
+		const prevPw = document.getElementById("prevPw").value;
+		const newPw = document.getElementById("newPw").value;
+		const newPw2 = document.getElementById("newPw2").value;
+		
+		fetch("/updatePassword", {
+	        method: "PATCH",
+	        headers: {"Content-Type":"application/json"},
+	        body: JSON.stringify({userId:userId,prevPw:prevPw,newPw:newPw,newPw2:newPw2})
+	    }).then(res => res.text())   // 문자열 응답 받기
+	    .then(msg => {
+	        if (msg === "변경성공") {
+	            Swal.fire({
+	                title: "수정되었습니다.",
+	                icon: "success",
+	                confirmButtonText: "확인",
+	                confirmButtonColor: "#34c38f"
+	            }).then((result)=>{ 
+	                if(result.isConfirmed){
+	                    location.href='/logout';
+	                }
+	            });
+	        } else {
+	            Swal.fire({
+	                title: msg,  // 실패 사유에따라 메세지 출력
+	                icon: "error",
+	                confirmButtonText: "확인",
+	                confirmButtonColor: "#34c38f"
+	            });
+	        }
+	    })
+	    .catch(err => {
+	        console.error(err);
+	        Swal.fire({
+	            title: "오류가 발생했습니다.",
+	            icon: "error",
+	            confirmButtonText: "확인",
+	            confirmButtonColor: "#34c38f"
+	        });
+	    });
 	});
 </script>
 </body>
