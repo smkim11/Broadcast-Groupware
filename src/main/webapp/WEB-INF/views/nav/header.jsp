@@ -312,7 +312,7 @@
 								</ul>
                              </li>     
                              <li>
-                                <a href="chat.html" class=" waves-effect">
+                                <a href="/user/userList" class=" waves-effect">
                                     <i class="uil-comments-alt"></i>
                                     <span>조직도</span>
                                 </a>

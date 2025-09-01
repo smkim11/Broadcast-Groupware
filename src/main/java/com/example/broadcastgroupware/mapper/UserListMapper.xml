@@ -38,5 +38,50 @@
   			u.full_name ASC;
 	</select>
 	
+	<!-- 조직도 -->
+	<select id="selectUserList" resultType="com.example.broadcastgroupware.dto.UserListDto">
+	  SELECT
+	    u.user_id                         AS userId,
+	    u.full_name                       AS fullName,
+	    u.user_rank                       AS userRank,
+	    u.user_email                      AS email,
+	    t.team_id                         AS teamId,
+	    t.team_name                       AS teamName,
+	    COALESCE(ui.user_images_type, '/resources/images/users/avatar-default.png') AS profileImage,
+	    d.department_id					  AS departmentId,
+	    d.department_name				  AS departmentName
+	    
+	  FROM `user` u
+	  LEFT JOIN deployment_history dh	        
+	  		ON dh.user_id = u.user_id
+	       AND dh.create_date = (
+	            SELECT MAX(dh2.create_date)
+	            FROM deployment_history dh2
+	            WHERE dh2.user_id = u.user_id
+	       )
+	  LEFT JOIN team t ON t.team_id = dh.team_id	<!-- 팀(소속) -->
+	  LEFT JOIN department d ON d.department_id = t.department_id	<!-- 부서 -->
+	  LEFT JOIN user_images ui ON u.user_id = ui.user_id
+	  <where>
+	    <if test="q != null and q != ''">
+	      (u.full_name LIKE CONCAT('%', #{q}, '%')
+	       OR u.user_email LIKE CONCAT('%', #{q}, '%'))
+	    </if>
+	  </where>
+	  ORDER BY u.full_name
+	  LIMIT #{limit} OFFSET #{offset}
+	</select>
+
+ <select id="countUserList" resultType="int">
+    SELECT COUNT(*)
+    FROM `user` u
+    <where>
+      <if test="q != null and q != ''">
+        (u.full_name LIKE CONCAT('%', #{q}, '%')
+         OR u.user_email LIKE CONCAT('%', #{q}, '%'))
+      </if>
+    </where>
+  </select>
+	
 
 </mapper>

@@ -67,8 +67,8 @@
     // 한 번만 초기화
     $.sessionTimeout({
       // 유휴 시간: 테스트용으로 5초/10초 (실서비스는 25분/30분)
-      warnAfter: 10 * 60 * 1000,	// 경고 띄우는 시점
-      redirAfter: 15 * 60 * 1000,	// 시작후 총 경과시간
+      warnAfter: 5 * 60 * 1000,	// 경고 띄우는 시점
+      redirAfter: 10 * 60 * 1000,	// 시작후 총 경과시간
 
       // 경로들 꼭 실제 URL로
       redirUrl: "<c:url value='/lock?from=timeout'/>",
