@@ -15,6 +15,7 @@ import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
 import com.example.broadcastgroupware.dto.CommentDto;
 import com.example.broadcastgroupware.dto.PostDto;
+import com.example.broadcastgroupware.domain.Comment;
 import com.example.broadcastgroupware.domain.File;
 import com.example.broadcastgroupware.domain.Post;
 import com.example.broadcastgroupware.mapper.BoardMapper;
@@ -115,6 +116,18 @@ public class BoardService {
 	// 파일 
 	public File fileById(int fileId) {
 		return boardMapper.fileById(fileId);
+	}
+
+	// 첫 댓글 등록
+	public Comment commentInsert(Comment comment) {
+		boardMapper.commentInsert(comment);
+		return comment;
+	}
+	
+	// 대댓글
+	public Comment cecondCommentInsert(Comment comment) {
+		boardMapper.cecondCommentInsert(comment);
+		return comment;
 	}
 
 

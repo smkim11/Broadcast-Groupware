@@ -6,17 +6,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.broadcastgroupware.domain.Comment;
 import com.example.broadcastgroupware.dto.BoardMenuDto;
 import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
@@ -108,6 +112,38 @@ public class BoardRestController {
         }
 
         return boardService.insertPost(postDto, userId);
+    }
+    
+    // 최초댓글
+    @PostMapping("/comment/insert")
+    public ResponseEntity<Comment> commentInsert(@RequestBody Comment comment) {
+    	// log.info("댓글 내용: " + comment.getCommentContent());
+        try {
+
+        	Comment commentInsert = boardService.commentInsert(comment);
+            return ResponseEntity.ok(commentInsert);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    // 대댓글
+    @PostMapping("/cecondComment/insert")
+    public ResponseEntity<Comment> cecondCommentInsert(@RequestBody Comment comment) {
+    	//log.info("댓글 내용: " + comment.getCommentContent());
+    	//log.info("원댓글 아이디: " + comment.getCommentParent());
+    	//log.info("postId: " + comment.getPostId());
+    	//log.info("userId: " + comment.getUserId());
+    	
+        try {
+
+        	Comment cecondCommentInsert = boardService.cecondCommentInsert(comment);
+            return ResponseEntity.ok(cecondCommentInsert);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 

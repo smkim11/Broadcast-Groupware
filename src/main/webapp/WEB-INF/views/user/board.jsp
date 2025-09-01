@@ -92,6 +92,10 @@
                 <label>파일 업로드</label><br>
                 <input type="file" name="files" multiple>
             </div>
+            <div style="margin-bottom:10px;">
+                <label>비밀번호</label><br>
+                <input type="text" name="postPassword" style="width:100%;" required>
+            </div>
             <div style="text-align:right;">
                 <button type="button" id="closePostModal">닫기</button>
                 <button type="submit">등록</button>

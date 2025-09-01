@@ -12,5 +12,6 @@ public class PostDto {
 	private int postId;
 	private String postTitle;
 	private String postContent;
+	private String postPassword;
 	private List<MultipartFile> files;
 }

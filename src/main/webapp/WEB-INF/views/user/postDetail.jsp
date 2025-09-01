@@ -53,51 +53,75 @@
     margin-bottom: 20px;
 }
 
-/* 댓글 영역 */
+/* 댓글 전체 영역 */
 .comment {
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
-.comment .main-comment {
+/* 최상위 댓글 입력 폼 */
+#firstComment {
+    margin-bottom: 15px;
+}
+
+#firstComment textarea {
+    width: 100%;
+    resize: none;
+}
+
+#firstComment button {
+    margin-top: 5px;
+}
+
+/* 댓글 리스트 - 최상위 댓글 */
+.secondComment {
+    padding: 10px;
+    margin-top: 10px;
     border-top: 1px solid #eee;
-    padding: 10px 0;
+    background-color: #fafafa;
+    border-radius: 6px;
 }
 
-.comment .main-comment span {
+/* 댓글 작성자 / 내용 */
+.secondComment span {
     font-weight: bold;
-    margin-right: 10px;
+    margin-right: 8px;
 }
 
-.comment .main-comment p {
+.secondComment p {
     margin: 5px 0;
 }
 
-.comment .main-comment a.reComment {
-    font-size: 12px;
-    color: #007bff;
-    cursor: pointer;
-    text-decoration: none;
+/* 대댓글 입력 폼 */
+.secondForm {
+    display: none;
+    margin-top: 10px;
+    margin-left: 30px; /* 최상위 댓글보다 들여쓰기 */
 }
 
-.comment .main-comment a.reComment:hover {
-    text-decoration: underline;
+.secondForm textarea {
+    width: 100%;
+    resize: none;
+}
+
+.secondForm button {
+    margin-top: 5px;
 }
 
 /* 대댓글 */
-.comment .reply {
-    margin-left: 40px;  /* 댓글보다 더 오른쪽으로 들여쓰기 */
-    padding-left: 10px;
-    border-left: 2px solid #ddd;
+.reply {
+    margin-left: 30px; /* 최상위 댓글보다 들여쓰기 */
+    padding: 8px 12px;
+    border-left: 2px solid #007bff;
+    background-color: #f0f8ff;
+    border-radius: 6px;
     margin-top: 5px;
-    background-color: #f8f8f8;
-    border-radius: 4px;
-    padding: 8px;
 }
 
-.comment .reply p {
+.reply p {
     margin: 0;
     font-size: 14px;
 }
+
 
 /* 버튼 스타일 */
 .btn {
@@ -135,6 +159,10 @@ a.btn:last-of-type {
 
 a.btn:last-of-type:hover {
     background-color: #d5d5d5;
+}
+
+.secondForm {
+	display: none;
 }
 </style>
 
@@ -182,20 +210,37 @@ a.btn:last-of-type:hover {
 			                <div class="content-main">${c.postContent}</div>
 			            </div>
 					</c:forEach>
+					
+					
 					<div class="comment">
+					<p>댓글
+						<div id="firstComment">
+							<textarea rows="2" cols="50" name="commentContent" placeholder="댓글입력"></textarea>
+							<button type="button">등록</button>
+						</div>
 						<c:forEach var="co" items="${oneLevelComments}">
-							<div class="main-comment">
-								<span>${co.userName}(${co.userRank})</span>
-								<p>${co.commentContent}</p>
-								<a>${co.createDate} <a class="reComment">댓글쓰기</a></a>
-							</div>
-							
-					        	<c:forEach var="r" items="${c.replies}">
+						    <div class="secondComment">
+						        <input type="hidden" name="commentId" value="${co.commentId}">
+						        <span>${co.userName}(${co.userRank})</span>
+						        <p>${co.commentContent}</p>
+						        <span>${co.createDate}</span>
+						        <button type="button" class="second">댓글쓰기</button>
+						        <div class="secondForm">
+						            <textarea rows="2" cols="50" name="commentContent" placeholder="댓글입력"></textarea>
+						            <button type="button">등록</button>
+						        </div>
+						
+						        <!-- 대댓글 -->
+						        <c:forEach var="r" items="${co.replies}">
 						            <div class="reply">
-						                <p>${r.userName}(${r.userRank}): ${r.content}</p>
+						                <span>${r.userName}(${r.userRank})</span>
+						                <p>${r.content}</p>
+						                <span>${r.createDate}</span>
 						            </div>
 						        </c:forEach>
+						    </div>
 						</c:forEach>
+
 					</div>	
 				</div>
 				
@@ -204,10 +249,13 @@ a.btn:last-of-type:hover {
 				    <a href="" class="btn btn-outline-primary waves-effect waves-light">수정</a>
 				</c:if>
 				
-				<c:if test="${boardId != 1}">
-				    <a href="" class="btn btn-outline-primary waves-effect waves-light">삭제</a>
-				    <a href="" class="btn btn-outline-primary waves-effect waves-light">수정</a>
-				</c:if>
+				<c:forEach var="c" items="${detail}">
+				    <c:if test="${boardId != 1 and loginUser.userId == c.userId}">
+				        <a href="/board/delete?postId=${c.postId}" class="btn btn-outline-primary waves-effect waves-light">삭제</a>
+				        <a href="/board/edit?postId=${c.postId}" class="btn btn-outline-primary waves-effect waves-light">수정</a>
+				    </c:if>
+				</c:forEach>
+
 				<a href="" class="btn btn-outline-primary waves-effect waves-light">닫기</a>
 
 			</div>
@@ -220,6 +268,96 @@ a.btn:last-of-type:hover {
 	    console.log("다운로드 파일 id", fileId);
 	    window.location.href = "/file/download?fileId=" + fileId;
 	});
+
+	
+	$(document).ready(function() {
+	    // 등록 버튼 클릭 이벤트
+	    $('#firstComment button').on('click', function() {
+	        var commentContent = $('#firstComment textarea[name="commentContent"]').val().trim();
+	        var postId = '${detail[0].postId}';
+	        var userId = $('#userId').val();
+	        
+	        //console.log("게시글번호: ", postId);
+	        //console.log("댓글: ", commentContent);
+
+	        if(commentContent === '') {
+	            alert('댓글을 입력해주세요.');
+	            return;
+	        }
+
+	        
+	        $.ajax({
+	            url: '/board/comment/insert',
+	            type: 'POST',
+	            contentType: 'application/json',
+	            data: JSON.stringify({
+					userId: userId,
+	                postId: postId,
+	                commentContent: commentContent
+	            }),
+	            success: function(res) {
+	                alert('댓글이 등록되었습니다.');
+
+	                $('#firstComment textarea[name="commentContent"]').val('');
+
+	                location.reload(); 
+	            },
+	            error: function(err) {
+	                console.error(err);
+	                alert('댓글 등록에 실패했습니다.');
+	            }
+	        });
+	    });	
+	});
+	
+    // 대댓글 등록
+$(document).ready(function() {
+    $('.secondForm').hide();
+
+    // 댓글쓰기 버튼 클릭
+    $(document).on('click', '.second', function() {
+        $(this).siblings('.secondForm').toggle();
+    });
+
+    // 대댓글 등록
+    $(document).on('click', '.secondForm button', function() {
+        var form = $(this).closest('.secondForm');
+        var commentContent = form.find('textarea[name="commentContent"]').val().trim();
+        var commentParent = $(this).closest('.secondComment').find('input[name="commentId"]').val();
+        var postId = '${detail[0].postId}';
+        var userId = $('#userId').val();
+
+        if(commentContent === '') {
+            alert('댓글을 입력해주세요.');
+            return;
+        }
+
+        $.ajax({
+            url: '/board/cecondComment/insert',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({	
+				userId: userId,
+                postId: postId,
+                commentParent: commentParent,
+                commentContent: commentContent
+            }),
+            success: function(res) {
+                alert('대댓글이 등록되었습니다.');
+                form.find('textarea[name="commentContent"]').val('');
+                location.reload();
+            },
+            error: function(err) {
+                console.error(err);
+                alert('대댓글 등록 실패');
+            }
+        });
+    });
+});
+
+
+
+
 </script>
 
 

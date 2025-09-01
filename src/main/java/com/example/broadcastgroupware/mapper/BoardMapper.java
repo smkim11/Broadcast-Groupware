@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
+import com.example.broadcastgroupware.domain.Comment;
 import com.example.broadcastgroupware.domain.File;
 import com.example.broadcastgroupware.domain.Post;
 import com.example.broadcastgroupware.dto.BoardMenuDto;
@@ -48,6 +49,12 @@ public interface BoardMapper {
 	
 	// 파일
 	File fileById(int fileId);
+	
+	// 첫댓글
+	int commentInsert(Comment comment);
+	
+	// 대댓글
+	void cecondCommentInsert(Comment comment);
 
 
 }

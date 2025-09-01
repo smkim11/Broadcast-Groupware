@@ -116,8 +116,8 @@
 
     <!-- 게시글 저장 -->
 	<insert id="savePost" useGeneratedKeys="true" keyProperty="postDto.postId">
-	    INSERT INTO post (board_id, post_title, post_content, user_id, create_date)
-	    VALUES (#{postDto.boardId}, #{postDto.postTitle}, #{postDto.postContent}, #{userId}, NOW())
+	    INSERT INTO post (board_id, post_title, post_content, post_password, user_id, create_date)
+	    VALUES (#{postDto.boardId}, #{postDto.postTitle}, #{postDto.postContent}, #{PostPassword}, #{userId}, NOW())
 	</insert>
 
     <!-- 복수 파일 저장 -->
@@ -139,7 +139,7 @@
 		WHERE p.post_id = #{postId}
     </select>
     
-    <!-- 댓글 -->
+    <!-- 댓글리스트 -->
     <select id="selectComment" resultType="com.example.broadcastgroupware.dto.CommentDto">
     	SELECT c.post_id AS postId, c.comment_id AS commentId, c.comment_content AS commentContent,
     			 u.full_name AS userName, u.user_rank AS userRank, c.create_date AS createDate
@@ -147,21 +147,35 @@
 		INNER JOIN post p
 		ON c.post_id = p.post_id
 		INNER JOIN user u 
-		ON p.user_id = u.user_id
+		ON c.user_id = u.user_id
 		WHERE c.post_id = #{postId}
 		ORDER BY c.create_date ASC
     </select>
     
+    <!-- 파일목록 출력(상세페이지) -->
     <select id="fileList" resultType="com.example.broadcastgroupware.domain.File" parameterType="int">
     	SELECT file_id AS fileId, file_target_id AS fileTargetId, file_name AS fileName, file_save_name AS fileSaveName, file_path AS filePath
 		FROM file
 		WHERE file_target_id = #{postId}
     </select>
     
+    <!-- 파일 아이디찾기(다운로드) -->
     <select id="fileById" parameterType="int" resultType="com.example.broadcastgroupware.domain.File">
     	SELECT file_name AS fileName, file_save_name AS fileSaveName, file_path AS filePath
 		FROM file
 		WHERE file_id = #{fileId}
     </select>
+    
+    <!-- 첫댓글 -->
+    <insert id="commentInsert" parameterType="com.example.broadcastgroupware.domain.Comment">
+    	INSERT INTO comment (post_id, comment_content, comment_status, user_id)
+    	VALUES(#{postId}, #{commentContent}, 'Y', #{userId})
+    </insert>
+    
+    <!-- 대댓글 -->
+    <insert id="cecondCommentInsert" parameterType="com.example.broadcastgroupware.domain.Comment">
+	    INSERT INTO comment (post_id, comment_content, comment_parent, comment_status, user_id)
+    	VALUES(#{postId}, #{commentContent}, #{commentParent}, 'Y', #{userId})
+    </insert>
 
 </mapper>
