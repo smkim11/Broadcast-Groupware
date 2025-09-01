@@ -60,7 +60,7 @@
 		                                <th>이름</th>
 		                                <th>근무시간</th>
 		                                <th>지각횟수</th>
-		                                <th>휴가</th>
+		                                <th>사용휴가</th>
 		                            </tr>
 	                            </thead>
 	                            <tbody id="attendanceBody">
