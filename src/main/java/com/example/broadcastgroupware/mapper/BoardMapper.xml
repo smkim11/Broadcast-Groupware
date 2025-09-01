@@ -141,16 +141,43 @@
     
     <!-- 댓글리스트 -->
     <select id="selectComment" resultType="com.example.broadcastgroupware.dto.CommentDto">
-    	SELECT c.post_id AS postId, c.comment_id AS commentId, c.comment_content AS commentContent,
-    			 u.full_name AS userName, u.user_rank AS userRank, c.create_date AS createDate
+		SELECT 
+			c.comment_id AS commentId,
+			c.post_id AS postId,
+			c.user_id AS userId,
+			c.comment_status AS commentStatus,
+			c.comment_content AS commentContent,
+			c.comment_status AS commentStatus,
+			c.comment_parent AS commentParent,
+			c.create_date AS createDate,
+			u.full_name AS userName,
+			u.user_rank AS userRank
 		FROM comment c
-		INNER JOIN post p
-		ON c.post_id = p.post_id
-		INNER JOIN user u 
-		ON c.user_id = u.user_id
+		JOIN user u ON c.user_id = u.user_id
 		WHERE c.post_id = #{postId}
+		AND c.comment_parent IS NULL
 		ORDER BY c.create_date ASC
     </select>
+    <!-- 대댓글리스트 -->
+   	<select id="selectReplies" resultType="com.example.broadcastgroupware.dto.CommentDto">
+		SELECT 
+			c.comment_id AS commentId,
+			c.post_id AS postId,
+			c.user_id AS userId,
+			c.comment_status AS commentStatus,
+			c.comment_content AS commentContent,
+			c.comment_status AS commentStatus,
+			c.comment_parent AS commentParent,
+			c.create_date AS createDate,
+			u.full_name AS userName,
+			u.user_rank AS userRank
+		FROM comment c
+		JOIN user u ON c.user_id = u.user_id
+		WHERE c.post_id = #{postId}
+		AND c.comment_parent IS NOT NULL
+		ORDER BY c.create_date ASC
+   	</select> 
+   
     
     <!-- 파일목록 출력(상세페이지) -->
     <select id="fileList" resultType="com.example.broadcastgroupware.domain.File" parameterType="int">
@@ -177,5 +204,11 @@
 	    INSERT INTO comment (post_id, comment_content, comment_parent, comment_status, user_id)
     	VALUES(#{postId}, #{commentContent}, #{commentParent}, 'Y', #{userId})
     </insert>
+    
+    <!-- 댓글, 대댓글 수정 -->
+    <update id="modifyComment" parameterType="com.example.broadcastgroupware.domain.Comment">
+    	UPDATE comment SET comment_content = #{commentContent}
+    	WHERE comment_id = #{commentId}
+    </update>
 
 </mapper>

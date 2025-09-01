@@ -122,24 +122,23 @@ public class BoardController {
 		List<Post> detail = boardService.postDetail(postId);
 		
 		// 댓글
-		List<CommentDto> allComments = boardService.selectComment(postId);
+		List<CommentDto> oneLevelComments = boardService.selectComment(postId);
+		// 대댓글
+		List<CommentDto> replies = boardService.selectReplies(postId);
 		
-	    // 댓글 + 대댓글 (1단계)
-	    List<CommentDto> oneLevelComments = new ArrayList<>();
-	    for (CommentDto c : allComments) {
-	        if (c.getCommentParent() == null) {
-	            // 최상위 댓글
-	        	oneLevelComments.add(c);
-	        } else {
-	            // 대댓글
-	            for (CommentDto parent : allComments) {
-	                if (parent.getCommentId() == c.getCommentParent()) {
-	                    parent.getReplies().add(c);
-	                    break;
-	                }
-	            }
-	        }
-	    }
+		// 댓글 + 대댓글 매핑
+		for (CommentDto reply : replies) {
+			Integer parentId = reply.getCommentParent(); 
+			if (parentId == null) {
+				continue;
+			}
+			for (CommentDto parent : oneLevelComments) {
+				if (parentId.equals(parent.getCommentId())) { 
+					parent.getReplies().add(reply);
+					break;
+				}
+			}
+		}
 	    
 	    List<File> fileList = boardService.fileList(postId);
 		

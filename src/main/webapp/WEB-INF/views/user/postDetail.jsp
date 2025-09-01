@@ -211,37 +211,90 @@ a.btn:last-of-type:hover {
 			            </div>
 					</c:forEach>
 					
-					
+										
 					<div class="comment">
-					<p>댓글
-						<div id="firstComment">
-							<textarea rows="2" cols="50" name="commentContent" placeholder="댓글입력"></textarea>
-							<button type="button">등록</button>
-						</div>
-						<c:forEach var="co" items="${oneLevelComments}">
-						    <div class="secondComment">
-						        <input type="hidden" name="commentId" value="${co.commentId}">
-						        <span>${co.userName}(${co.userRank})</span>
-						        <p>${co.commentContent}</p>
-						        <span>${co.createDate}</span>
-						        <button type="button" class="second">댓글쓰기</button>
-						        <div class="secondForm">
-						            <textarea rows="2" cols="50" name="commentContent" placeholder="댓글입력"></textarea>
-						            <button type="button">등록</button>
-						        </div>
-						
-						        <!-- 대댓글 -->
-						        <c:forEach var="r" items="${co.replies}">
-						            <div class="reply">
-						                <span>${r.userName}(${r.userRank})</span>
-						                <p>${r.content}</p>
-						                <span>${r.createDate}</span>
-						            </div>
-						        </c:forEach>
-						    </div>
-						</c:forEach>
+					    <p>댓글</p>
+					
+					    <!-- 최상위 댓글 입력 -->
+					    <div id="firstComment">
+					        <textarea rows="2" cols="50" name="commentContent" placeholder="댓글입력"></textarea>
+					        <button type="button" id="submitComment">등록</button>
+					    </div>
+					
+					    <!-- 댓글 리스트 -->
+					    <c:forEach var="co" items="${oneLevelComments}">
+					        <div class="secondComment">
+					            <input type="hidden" name="commentId" value="${co.commentId}">
+					
+					            <c:choose>
+					                <c:when test="${co.commentStatus eq 'N'}">
+					                    <p>삭제된 글입니다</p>
+					                </c:when>
+					                <c:otherwise>
+					                    <span class="author">${co.userName} (${co.userRank})</span>
+					                    <p class="commentContent">${co.commentContent}</p>
+					                    <span class="date">${co.createDate}</span>
+					
+					                    <!-- 본인 글 수정/삭제 -->
+					                    <c:if test="${loginUser.userId eq co.userId}">
+					                        <button type="button" class="editComment" data-id="${co.commentId}">수정</button>
+					                        <button type="button" class="deleteComment" data-id="${co.commentId}">삭제</button>
+					                    </c:if>
+					
+					                    <!-- 댓글 수정 폼 (숨김) -->
+					                    <div class="editForm" style="display:none;">
+					                        <textarea rows="2" class="editContent">${co.commentContent}</textarea>
+					                        <button type="button" class="updateComment" data-id="${co.commentId}">수정 완료</button>
+					                        <button type="button" class="cancelEdit">취소</button>
+					                    </div>
+					
+					                    <!-- 대댓글 작성 버튼 -->
+					                    <button type="button" class="second">댓글쓰기</button>
+					
+					                    <!-- 대댓글 입력 폼 -->
+					                    <div class="secondForm" style="display:none;">
+					                        <textarea rows="2" name="commentContent" placeholder="댓글입력"></textarea>
+					                        <input type="hidden" name="parentCommentId" value="${co.commentId}">
+					                        <button type="button" class="replySubmit">등록</button>
+					                    </div>
+					                </c:otherwise>
+					            </c:choose>
+					
+					            <!-- 대댓글 리스트 -->
+					            <c:forEach var="r" items="${co.replies}">
+					                <div class="reply">
+					                    <input type="hidden" name="commentId" value="${r.commentId}">
+					
+					                    <c:choose>
+					                        <c:when test="${r.commentStatus eq 'N'}">
+					                            <p>삭제된 글입니다</p>
+					                        </c:when>
+					                        <c:otherwise>
+					                            <span class="author">${r.userName} (${r.userRank})</span>
+					                            <p class="commentContent">${r.commentContent}</p>
+					                            <span class="date">${r.createDate}</span>
+					
+					                            <!-- 본인 대댓글 수정/삭제 -->
+					                            <c:if test="${loginUser.userId eq r.userId}">
+					                                <button type="button" class="editReply" data-id="${r.commentId}">수정</button>
+					                                <button type="button" class="deleteReply" data-id="${r.commentId}">삭제</button>
+					                            </c:if>
+					
+					                            <!-- 대댓글 수정 폼 (숨김) -->
+					                            <div class="editForm" style="display:none;">
+					                                <textarea rows="2" class="editContent">${r.commentContent}</textarea>
+					                                <button type="button" class="updateComment" data-id="${r.commentId}">수정 완료</button>
+					                                <button type="button" class="cancelEdit">취소</button>
+					                            </div>
+					                        </c:otherwise>
+					                    </c:choose>
+					                </div>
+					            </c:forEach>
+					        </div>
+					    </c:forEach>
+					</div>
 
-					</div>	
+
 				</div>
 				
 				<c:if test="${boardId == 1 and userRole == 'admin'}">
@@ -356,6 +409,62 @@ $(document).ready(function() {
 });
 
 
+	$(document).ready(function(){
+	
+	    // 댓글/대댓글 수정 버튼 클릭
+	    $(document).on('click', '.editComment, .editReply', function(){
+	        var parentDiv = $(this).parent(); 
+	        parentDiv.find('> .editForm').show();  
+	        parentDiv.find('> .commentContent').hide();
+	        $(this).hide();                            
+	    });
+	
+	    // 수정 취소
+		$(document).on('click', '.cancelEdit', function() {
+
+		    var parentDiv = $(this).closest('.secondComment, .reply');
+		
+		    parentDiv.find('.editForm').hide();
+		
+		    parentDiv.find('.commentContent').show();
+		
+		    parentDiv.find('.editComment, .editReply').show();
+		});
+	
+	    // 댓글/대댓글 수정 완료
+	    $(document).on('click', '.updateComment', function(){
+	        var parentDiv = $(this).closest('div.secondComment, div.reply');
+	        var commentId = $(this).data('id');
+	        var newContent = parentDiv.find('.editContent').val().trim();
+	
+	        if(newContent === ''){
+	            alert('댓글 내용을 입력해주세요.');
+	            return;
+	        }
+	
+	        $.ajax({
+	            url: '/board/comment/modify',
+	            type: 'POST',
+	            contentType: 'application/json',
+	            data: JSON.stringify({
+	                commentId: commentId,
+	                commentContent: newContent,
+	                userId: $('#userId').val()
+	            }),
+	            success: function(res){
+	                parentDiv.find('.commentContent').text(newContent).show();
+	                parentDiv.find('.editForm').hide();
+	                parentDiv.find('.editComment, .editReply').show();
+	                location.reload();
+	            },
+	            error: function(err){
+	                console.error(err);
+	                alert('댓글 수정 실패');
+	            }
+	        });
+	    });
+	
+	});
 
 
 </script>

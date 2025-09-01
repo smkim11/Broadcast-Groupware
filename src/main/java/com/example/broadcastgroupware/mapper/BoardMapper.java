@@ -44,17 +44,23 @@ public interface BoardMapper {
 	//댓글
 	List<CommentDto> selectComment(int postId);
 	
+	// 대댓글 
+	List<CommentDto> selectReplies(int postId);
+	
 	// 게시글 파일
 	List<File> fileList(int postId);
 	
 	// 파일
 	File fileById(int fileId);
 	
-	// 첫댓글
+	// 첫댓글 등록
 	int commentInsert(Comment comment);
 	
-	// 대댓글
+	// 대댓글 등록
 	void cecondCommentInsert(Comment comment);
+	
+	// 댓글, 대댓글 수정
+	void modifyComment(Comment comment);
 
 
 }

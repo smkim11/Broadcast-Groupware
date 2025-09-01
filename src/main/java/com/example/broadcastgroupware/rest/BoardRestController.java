@@ -1,6 +1,5 @@
 package com.example.broadcastgroupware.rest;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -145,6 +144,24 @@ public class BoardRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    
+    // 댓글, 대댓글 수정
+    @PostMapping("/comment/modify")
+    @ResponseBody
+    public ResponseEntity<?> updateComment(@RequestBody Comment comment, HttpSession session){
+        UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+        
+        //log.info("댓글 id: " + comment.getCommentId());
+        //log.info("수정 댓글 내용: " + comment.getCommentContent());
+
+        if(loginUser == null || loginUser.getUserId() != comment.getUserId()){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한 없음");
+        }
+
+        boardService.modifyComment(comment);
+        return ResponseEntity.ok("success");
+    }
+
 
 
 }

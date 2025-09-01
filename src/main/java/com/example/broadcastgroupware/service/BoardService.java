@@ -107,6 +107,11 @@ public class BoardService {
 	public List<CommentDto> selectComment(int postId) {
 		return boardMapper.selectComment(postId);
 	}
+	
+	// 대댓글
+	public List<CommentDto> selectReplies(int postId) {
+		return boardMapper.selectReplies(postId);
+	}
 
 	// 게시글 파일
 	public List<File> fileList(int postId) {
@@ -124,11 +129,17 @@ public class BoardService {
 		return comment;
 	}
 	
-	// 대댓글
+	// 대댓글 등록
 	public Comment cecondCommentInsert(Comment comment) {
 		boardMapper.cecondCommentInsert(comment);
 		return comment;
 	}
+
+	// 댓글, 대댓글 수정
+	public void modifyComment(Comment comment) {
+		boardMapper.modifyComment(comment);
+	}
+
 
 
 

@@ -9,6 +9,7 @@ import lombok.Data;
 public class CommentDto {
 	private int commentId;
 	private int postId;
+	private int userId;
 	private String userName;
 	private String userRank;
 	private String commentContent;
