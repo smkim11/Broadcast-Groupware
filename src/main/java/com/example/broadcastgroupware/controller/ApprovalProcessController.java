@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.broadcastgroupware.dto.UserSessionDto;
-import com.example.broadcastgroupware.mapper.ApprovalQueryMapper;
 import com.example.broadcastgroupware.service.ApprovalProcessService;
 import com.example.broadcastgroupware.service.ApprovalQueryService;
 
@@ -24,14 +23,11 @@ import jakarta.servlet.http.HttpSession;
 public class ApprovalProcessController {
 
     private final ApprovalQueryService approvalQueryService;
-    private final ApprovalQueryMapper approvalQueryMapper;
     private final ApprovalProcessService approvalProcessService;
 
     public ApprovalProcessController(ApprovalQueryService approvalQueryService,
-                                      ApprovalQueryMapper approvalQueryMapper,
                                       ApprovalProcessService approvalProcessService) {
         this.approvalQueryService = approvalQueryService;
-        this.approvalQueryMapper = approvalQueryMapper;
         this.approvalProcessService = approvalProcessService;
     }
 

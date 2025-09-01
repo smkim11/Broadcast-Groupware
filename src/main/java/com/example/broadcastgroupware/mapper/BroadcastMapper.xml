@@ -1,5 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper
+<mapper 
 	namespace="com.example.broadcastgroupware.mapper.BroadcastMapper">
+	
+	<!-- 방송편성 공통 resultMap -->
+    <resultMap id="BroadcastMap" type="com.example.broadcastgroupware.dto.BroadcastFormDto">
+        <id     column="broadcast_schedule_id"   property="broadcastScheduleId"/>
+        <result column="approval_document_id"    property="approvalDocumentId"/>
+
+        <result column="broadcast_form_id"       property="broadcastFormId"/>
+        <result column="broadcast_form_name"     property="broadcastFormName"/>
+        <result column="broadcast_form_capacity" property="broadcastFormCapacity"/>
+        <result column="start_date"              property="broadcastFormStartDate"/>
+        <result column="end_date"                property="broadcastFormEndDate"/>
+        <result column="start_time"              property="broadcastFormStartTime"/>
+        <result column="end_time"                property="broadcastFormEndTime"/>
+
+        <!-- 대표자 -->
+        <result column="user_id"                 property="userId"/>
+        <result column="full_name"               property="fullName"/>
+
+        <!-- 요일 플래그 -->
+        <result column="broadcast_monday"        property="broadcastMonday"/>
+        <result column="broadcast_tuesday"       property="broadcastTuesday"/>
+        <result column="broadcast_wednesday"     property="broadcastWednesday"/>
+        <result column="broadcast_thursday"      property="broadcastThursday"/>
+        <result column="broadcast_friday"        property="broadcastFriday"/>
+        <result column="broadcast_saturday"      property="broadcastSaturday"/>
+        <result column="broadcast_sunday"        property="broadcastSunday"/>
+
+        <!-- 회차 수 -->
+        <result column="episodes_count"          property="episodesCount"/>
+    </resultMap>
+    
+    
+    <!-- ======== 방송편성 ======== -->
+
+    <!-- 방송편성 총 개수 -->
+    <select id="countBroadcasts" resultType="int">
+        SELECT COUNT(*)
+        FROM broadcast_schedule bs
+        JOIN approval_line al
+        	ON al.approval_line_id = bs.approval_line_id
+        JOIN approval_document ad
+        	ON ad.approval_document_id = al.approval_document_id
+        JOIN broadcast_form bf
+        	ON bf.approval_document_id = ad.approval_document_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                bf.broadcast_form_name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 방송편성 목록 -->
+    <select id="selectBroadcasts" resultMap="BroadcastMap">
+        SELECT
+            bs.broadcast_schedule_id,
+            bf.broadcast_form_id, bf.broadcast_form_name,
+            bf.broadcast_form_start_date AS start_date,
+            bf.broadcast_form_end_date AS end_date,
+            bw.broadcast_monday, bw.broadcast_tuesday, bw.broadcast_wednesday,
+            bw.broadcast_thursday, bw.broadcast_friday, bw.broadcast_saturday, bw.broadcast_sunday
+        FROM broadcast_schedule bs
+        JOIN approval_line al 
+        	ON al.approval_line_id = bs.approval_line_id
+        JOIN approval_document ad 
+        	ON ad.approval_document_id = al.approval_document_id
+        JOIN broadcast_form bf
+        	ON bf.approval_document_id = ad.approval_document_id
+        LEFT JOIN broadcast_weekday bw
+        	ON bw.broadcast_form_id = bf.broadcast_form_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                bf.broadcast_form_name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY bs.broadcast_schedule_id DESC
+        LIMIT #{beginRow}, #{rowPerPage}
+    </select>
+
+    <!-- 방송편성 상세 -->
+    <select id="selectBroadcastDetail" parameterType="int" resultMap="BroadcastMap">
+        SELECT
+            bs.broadcast_schedule_id, ad.approval_document_id,
+            bf.broadcast_form_id, bf.broadcast_form_name, bf.broadcast_form_capacity,
+            bf.broadcast_form_start_date AS start_date,
+            bf.broadcast_form_end_date AS end_date,
+            bf.broadcast_form_start_time AS start_time,
+            bf.broadcast_form_end_time AS end_time,
+            ad.user_id, u.full_name,
+            bw.broadcast_monday, bw.broadcast_tuesday, bw.broadcast_wednesday,
+            bw.broadcast_thursday, bw.broadcast_friday, bw.broadcast_saturday, bw.broadcast_sunday,
+            (SELECT COUNT(*) FROM broadcast_episode be
+            	WHERE be.broadcast_schedule_id = bs.broadcast_schedule_id) AS episodes_count
+        FROM broadcast_schedule bs
+        JOIN approval_line al 
+        	ON al.approval_line_id = bs.approval_line_id
+        JOIN approval_document ad 
+        	ON ad.approval_document_id = al.approval_document_id
+        JOIN broadcast_form bf 
+        	ON bf.approval_document_id = ad.approval_document_id
+        LEFT JOIN broadcast_weekday bw
+        	ON bw.broadcast_form_id = bf.broadcast_form_id
+        LEFT JOIN `user` u
+        	ON u.user_id = ad.user_id
+        WHERE bs.broadcast_schedule_id = #{scheduleId}
+    </select>
+    
 </mapper>
