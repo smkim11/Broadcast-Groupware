@@ -42,7 +42,17 @@ public class AttendanceService {
 	public String selectTotalWorkDay(int userId) {
 		return attendanceMapper.selectTotalWorkDay(userId);
 	}
-		
+	
+	// 잔여휴가
+	public Double selectRemainVacation(int userId) {
+		return attendanceMapper.selectRemainVacation(userId);
+	}
+	
+	// 출근후 퇴근 안누른 사람 목록
+	public List<Integer> selectNotOutUser(){
+		return attendanceMapper.selectNotOutUser();
+	}
+	
 	// 출근 기록
 	public void insertAttendanceIn(Attendance attendance) {
 		attendanceMapper.insertAttendanceIn(attendance);
@@ -70,5 +80,10 @@ public class AttendanceService {
 	// 외근복귀 기록
 	public void updateAttendanceInside(Attendance attendance) {
 		attendanceMapper.updateAttendanceInside(attendance);
+	}
+	
+	// 퇴근 안누른 사람 정시퇴근 처리
+	public void updateNotOutUser(int userId) {
+		attendanceMapper.updateNotOutUser(userId);
 	}
 }

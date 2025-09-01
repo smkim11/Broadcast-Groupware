@@ -31,7 +31,17 @@ public class AttendanceController {
 			model.addAttribute("attendance",attendance);
 			System.out.println(attendance);
 		}
+		
+		// 정수면 소수점없이 출력
+		double remainVacation =attendanceService.selectRemainVacation(user.getUserId());
+		if(remainVacation == Math.floor(remainVacation)) {
+			model.addAttribute("remainVacation",(int)remainVacation);
+		}else {
+			model.addAttribute("remainVacation",remainVacation);
+		}
+		
 		System.out.println(attendanceService.selectAttendanceList(user.getUserId()));
+		
 		model.addAttribute("weekWorkHours",attendanceService.selectWeekWorkHours(user.getUserId()));
 		model.addAttribute("totalWorkDay",attendanceService.selectTotalWorkDay(user.getUserId()));
 		model.addAttribute("attendanceList",attendanceService.selectAttendanceList(user.getUserId()));

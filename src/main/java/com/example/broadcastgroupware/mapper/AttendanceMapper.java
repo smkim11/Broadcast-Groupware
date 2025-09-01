@@ -18,6 +18,10 @@ public interface AttendanceMapper {
 	String selectWeekWorkHours(int userId);
 	// 입사후 총 근무일
 	String selectTotalWorkDay(int userId);
+	// 잔여 휴가
+	Double selectRemainVacation(int userId);
+	// 오늘 퇴근을 찍지않고 퇴근한 직원목록
+	List<Integer> selectNotOutUser();
 	// 직책별 팀,부서,전체 근태
 	List<HashMap<String,Object>> selectAttendanceListByRank(AttendanceListDto attendanceListDto);
 	// 출근 기록
@@ -28,4 +32,6 @@ public interface AttendanceMapper {
 	void updateAttendanceOutside(Attendance attendance);
 	// 외근복귀 기록
 	void updateAttendanceInside(Attendance attendance);
+	// 퇴근 안누른사람 정시퇴근 처리
+	void updateNotOutUser(int userId);
 }

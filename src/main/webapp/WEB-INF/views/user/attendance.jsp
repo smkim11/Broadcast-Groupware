@@ -88,6 +88,7 @@
                 					<div class="card">
                      					<div class="card-body">
                      						잔여 휴가
+                     						<div>${remainVacation}일</div>
                      					</div>
                      				</div>
                                  </div>
@@ -183,7 +184,7 @@
         	}).then((res) => {
         		if(res.ok){
         			Swal.fire({
-        		        title: "출근하였습니다.",
+        		        title: "출근 처리되었습니다.",
         		        icon: "success",
         				confirmButtonText: "확인",
         		        confirmButtonColor: "#34c38f"
@@ -214,7 +215,7 @@
         	}).then((res) => {
         		if(res.ok){
         			Swal.fire({
-        		        title: "퇴근하였습니다.",
+        		        title: "퇴근 처리되었습니다.",
         		        icon: "success",
         				confirmButtonText: "확인",
         		        confirmButtonColor: "#34c38f"
@@ -245,7 +246,7 @@
         	}).then((res) => {
         		if(res.ok){
         			Swal.fire({
-        		        title: "외근.",
+        		        title: "외근 처리되었습니다.",
         		        icon: "success",
         				confirmButtonText: "확인",
         		        confirmButtonColor: "#34c38f"
@@ -276,7 +277,7 @@
         	}).then((res) => {
         		if(res.ok){
         			Swal.fire({
-        		        title: "외근복귀하였습니다.",
+        		        title: "외근 복귀 처리되었습니다.",
         		        icon: "success",
         				confirmButtonText: "확인",
         		        confirmButtonColor: "#34c38f"
