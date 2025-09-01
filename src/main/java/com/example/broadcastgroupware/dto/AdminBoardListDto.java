@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class AdminBoardListDto {
 	private int boardId;
+	private int postId;
 	private String boardTitle;
 	private String boardStatus;
 	private String title;

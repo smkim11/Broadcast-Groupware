@@ -44,18 +44,30 @@
 					</tr>
 					<c:forEach var="board" items="${boardList}">
 						<tr>
-							<td>${board.boardId}</td>
+							<td>${board.postId}</td>
 							<td>${board.boardTitle}(${board.boardStatus == 'Y' ? '활성화' : '비활성화'})</td>
-							<td>${board.fixed == 'Y' ? '활성화' : '비활성화'}</td>
+							<td>
+							    <button class="toggle-fixed-btn"
+							            data-id="${board.postId}"
+							            data-status="${board.fixed}">
+							        ${board.fixed == 'Y' ? '활성화' : '비활성화'}
+							    </button>
+							</td>
 							<td>${board.title}</td>
 							<td>${board.userName}</td>
 							<td>${board.createDate}</td>
-							<td>${board.postStatus == 'Y' ? '활성화' : '비활성화'}</td>
+							<td>
+							    <button class="toggle-post-status-btn"
+							            data-id="${board.postId}"
+							            data-status="${board.postStatus}">
+							        ${board.postStatus == 'Y' ? '활성화' : '비활성화'}
+							    </button>
+							</td>
 						</tr>
 					</c:forEach>
 				</tbody>
 			</table>
-           
+           <a href="" id="insertBoardModal" class="btn btn-outline-primary waves-effect waves-light">게시판 등록</a>
            
 <div class="pagination" style="display:flex; gap:8px;">
 
@@ -102,6 +114,109 @@
           </div>
 	</div>
 </div>
+
+
+<!-- 게시판 등록 모달 -->
+<div id="postModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+    background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; width:500px; border-radius:8px; position:relative;">
+        <h3>게시글 등록</h3>
+        <form id="postForm" enctype="multipart/form-data">
+            <div style="margin-bottom:10px;">
+                <label>게시판 이름</label><br>
+                <input type="text" name="boardTitle" style="width:100%;" required>
+            </div>
+            <div style="text-align:right;">
+                <button type="button" id="closePostModal">닫기</button>
+                <button type="submit">등록</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+	<script type="text/javascript">
+	// 모달 열기
+	$('#insertBoardModal').on('click', function(e) {
+	    e.preventDefault(); 
+	    $('#postModal').css('display', 'flex');
+	});
+	
+	// 모달 닫기
+	$('#closePostModal').on('click', function() {
+	    $('#postModal').hide();
+	});
+	
+	// 글쓰기 폼 제출
+	$('#postForm').on('submit', function(e) {
+	    e.preventDefault();
+	
+	    var formData = new FormData(this);
+	
+	    $.ajax({
+	        url: '/board/newBoard', 
+	        type: 'POST',
+	        data: formData,
+	        processData: false,
+	        contentType: false,
+	        success: function(res) {
+	            alert('게시판 등록 성공');
+	            $('#postModal').hide();
+	            loadPosts();
+	        },
+	        error: function() {
+	            alert('게시판 등록 실패');
+	        }
+	    });
+	});
+	
+	// 토글 상태값 변경
+	// 상단고정 토글
+	$(document).on('click', '.toggle-fixed-btn', function() {
+	    var btn = $(this);
+	    var id = btn.data('id');
+	    var status = btn.data('status');
+	    var newStatus = status === 'Y' ? 'N' : 'Y';
+	    
+	    console.log('상단고정: ', '');
+	    console.log('postId: ', id);
+	    console.log('변경 값 : ', newStatus);
+	
+	    $.ajax({
+	        url: '/board/toggleFixed',
+	        type: 'POST',
+	        contentType: 'application/json',
+	        data: JSON.stringify({ postId: id, topFixed: newStatus }),
+	        success: function(res) {
+	            btn.data('status', newStatus);
+	            btn.text(newStatus === 'Y' ? '활성화' : '비활성화');
+	        }
+	    });
+	});
+	
+	// 노출활성화 토글
+	$(document).on('click', '.toggle-post-status-btn', function() {
+	    var btn = $(this);
+	    var id = btn.data('id');
+	    var status = btn.data('status');
+	    var newStatus = status === 'Y' ? 'N' : 'Y';
+	    
+	    console.log('노출설정: ', '');
+	    console.log('postId: ', id);
+	    console.log('변경 값 : ', newStatus);
+	
+	    $.ajax({
+	        url: '/board/togglePostStatus',
+	        type: 'POST',
+	        contentType: 'application/json',
+	        data: JSON.stringify({ postId: id, postStatus: newStatus }),
+	        success: function(res) {
+	            btn.data('status', newStatus);
+	            btn.text(newStatus === 'Y' ? '활성화' : '비활성화');
+	        }
+	    });
+	});
+
+</script>
 
 </body>
 <!-- Sweet Alerts js -->

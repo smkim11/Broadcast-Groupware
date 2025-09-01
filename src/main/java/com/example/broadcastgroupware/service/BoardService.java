@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.broadcastgroupware.dto.BoardMenuDto;
@@ -45,6 +47,21 @@ public class BoardService {
 	// 게시판 내 게시글 수
 	public int getBoardPostCount(int boardId, BoardPageDto pageDto) {
 		return boardMapper.getBoardPostCount(boardId, pageDto);
+	}
+	
+	// 관리자 - 게시판 생성
+	public void newBoard(String boardTitle) {
+		boardMapper.newBoard(boardTitle);
+	}
+	
+	// 관리자 - 상단고정
+	public void modifyFixed(int postId, String topFixed) {
+		boardMapper.modifyFixed(postId, topFixed);
+	}
+
+	// 관리자 - 게시글 노출 성정
+	public void modifyPostStatus(int postId, String postStatus) {
+		boardMapper.modifyPostStatus(postId, postStatus);
 	}
 
 	// 게시글 리스트
@@ -144,8 +161,6 @@ public class BoardService {
 	public void deleteComment(int commentId) {
 		boardMapper.deleteComment(commentId);
 	}
-
-
 
 
 

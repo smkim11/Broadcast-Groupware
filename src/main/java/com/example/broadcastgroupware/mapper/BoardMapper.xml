@@ -26,9 +26,9 @@
 		</where>
 	</select>
 
-
+	<!-- 게시판 리스트 -->
 	<select id="boardList" parameterType="com.example.broadcastgroupware.dto.BoardPageDto" resultType="com.example.broadcastgroupware.dto.AdminBoardListDto">
-		SELECT b.board_id AS boardId, b.board_title AS boardTitle, b.board_status AS boardStatus,
+		SELECT b.board_id AS boardId, b.board_title AS boardTitle, b.board_status AS boardStatus, p.post_id AS postId,
 				p.post_title AS title, p.post_status AS postStatus, p.top_fixed AS fixed, u.full_name AS userName, p.create_date AS createDate
 		FROM board b
 		INNER JOIN post p
@@ -48,7 +48,7 @@
 				</when>
 			</choose>
 		</if>
-		ORDER BY p.create_date DESC
+		ORDER BY p.post_id DESC
 		LIMIT #{beginRow}, #{rowPerPage}
 	</select>
 
@@ -82,6 +82,26 @@
 		    </trim>
 		</if>
 	</select>
+	
+	<!-- 관리자- 게시판생성 -->
+	<insert id="newBoard" parameterType="com.example.broadcastgroupware.domain.Board">
+		INSERT INTO board(board_title)
+		values(#{boardTitle})
+	</insert>
+	
+	<!-- 관리자 - 상단고정  -->
+	<update id="modifyFixed">
+	    UPDATE post
+	    SET top_fixed = #{topFixed}
+	    WHERE post_id = #{postId}
+	</update>
+	<!-- 게시글 저장 -->
+	<update id="modifyPostStatus">
+	    UPDATE post
+	    SET post_status = #{postStatus}
+	    WHERE post_id = #{postId}
+	</update>
+	
 	
 	<!-- 게시판 글 리스트 (페이징 + 검색) -->
 	<select id="getBoardPosts" parameterType="com.example.broadcastgroupware.dto.BoardPageDto" resultType="com.example.broadcastgroupware.dto.BoardPostDto">

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.broadcastgroupware.domain.Comment;
+import com.example.broadcastgroupware.domain.Post;
 import com.example.broadcastgroupware.dto.BoardMenuDto;
 import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
@@ -90,6 +91,48 @@ public class BoardRestController {
         result.put("boardId", boardId);
         return result;
     }
+    
+    // 관리자-게시판생성
+	@PostMapping("/newBoard")
+	public ResponseEntity<?> newBoard(@RequestParam("boardTitle") String boardTitle, HttpSession session){
+        UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+        int userId = loginUser.getUserId();
+        
+		boardService.newBoard(boardTitle);
+		
+		return ResponseEntity.ok("success");
+	}
+	
+	// 관리자- 상태값 변경
+	// 상단노출(긴급공지)
+	@PostMapping("/toggleFixed")
+	@ResponseBody
+	public ResponseEntity<?> toggleFixed(@RequestBody Post post) {
+	    try {
+	        boardService.modifyFixed(post.getPostId(), post.getTopFixed());
+	        return ResponseEntity.ok("success");
+	    } catch (Exception e) {
+	        e.printStackTrace(); // 콘솔 로그 확인
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+	    }
+		
+	}
+
+	// 노출(비활성화시 게시글리스트에 출력x)
+	@PostMapping("/togglePostStatus")
+	@ResponseBody
+	public ResponseEntity<?> togglePostStatus(@RequestBody Post post) {
+	    try {
+	        boardService.modifyPostStatus(post.getPostId(), post.getPostStatus());
+	        return ResponseEntity.ok("success");
+	    } catch (Exception e) {
+	        e.printStackTrace(); // 콘솔 로그 확인
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+	    }
+
+	}
+
+	
     
     @PostMapping("/insertPost")
     @ResponseBody
