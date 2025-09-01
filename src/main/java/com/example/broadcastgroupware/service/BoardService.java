@@ -107,6 +107,16 @@ public class BoardService {
 		return boardMapper.selectComment(postId);
 	}
 
+	// 게시글 파일
+	public List<File> fileList(int postId) {
+		return boardMapper.fileList(postId);
+	}
+
+	// 파일 
+	public File fileById(int fileId) {
+		return boardMapper.fileById(fileId);
+	}
+
 
 
 }

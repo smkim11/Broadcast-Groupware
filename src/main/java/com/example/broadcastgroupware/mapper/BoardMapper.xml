@@ -136,7 +136,7 @@
 		FROM post p
 		INNER JOIN user u
 		ON p.user_id = u.user_id
-		WHERE post_id = #{postId}
+		WHERE p.post_id = #{postId}
     </select>
     
     <!-- 댓글 -->
@@ -150,6 +150,18 @@
 		ON p.user_id = u.user_id
 		WHERE c.post_id = #{postId}
 		ORDER BY c.create_date ASC
+    </select>
+    
+    <select id="fileList" resultType="com.example.broadcastgroupware.domain.File" parameterType="int">
+    	SELECT file_id AS fileId, file_target_id AS fileTargetId, file_name AS fileName, file_save_name AS fileSaveName, file_path AS filePath
+		FROM file
+		WHERE file_target_id = #{postId}
+    </select>
+    
+    <select id="fileById" parameterType="int" resultType="com.example.broadcastgroupware.domain.File">
+    	SELECT file_name AS fileName, file_save_name AS fileSaveName, file_path AS filePath
+		FROM file
+		WHERE file_id = #{fileId}
     </select>
 
 </mapper>

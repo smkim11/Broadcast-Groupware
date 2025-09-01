@@ -1,5 +1,10 @@
 package com.example.broadcastgroupware.controller;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.broadcastgroupware.domain.File;
 import com.example.broadcastgroupware.domain.Post;
 import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
@@ -16,6 +22,7 @@ import com.example.broadcastgroupware.dto.CommentDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.BoardService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
@@ -133,14 +140,52 @@ public class BoardController {
 	            }
 	        }
 	    }
+	    
+	    List<File> fileList = boardService.fileList(postId);
 		
 		model.addAttribute("postId", postId);
 		model.addAttribute("boardId", boardId);
 		model.addAttribute("userRole", userRole);
 		model.addAttribute("detail", detail);
 		model.addAttribute("oneLevelComments", oneLevelComments);
+		model.addAttribute("fileList", fileList);
 		
 		return "user/postDetail";
 	}
+	
+	// 파일 다운로드
+	@GetMapping("/file/download")
+	public void downloadFile(@RequestParam("fileId") int fileId, HttpServletResponse response) throws IOException {
+
+		log.info("fileId: {}", fileId);
+	    // DB에서 DTO 가져오기
+	    File fileDto = boardService.fileById(fileId);
+	    if (fileDto == null) {
+	        response.sendError(HttpServletResponse.SC_NOT_FOUND, "파일이 존재하지 않습니다.");
+	        return;
+	    }
+
+	    // DTO에서 실제 파일 객체 생성
+	    java.io.File f = new java.io.File(fileDto.getFilePath());
+	    if (!f.exists()) {
+	        response.sendError(HttpServletResponse.SC_NOT_FOUND, "서버에 파일이 없습니다.");
+	        return;
+	    }
+
+	    // 다운로드 헤더
+	    response.setContentType("application/octet-stream");
+	    response.setHeader("Content-Disposition",
+	            "attachment; filename=\"" + URLEncoder.encode(fileDto.getFileName(), "UTF-8") + "\";");
+
+	    try (InputStream in = new FileInputStream(f);
+	         OutputStream out = response.getOutputStream()) {
+	        byte[] buffer = new byte[1024];
+	        int len;
+	        while ((len = in.read(buffer)) != -1) {
+	            out.write(buffer, 0, len);
+	        }
+	    }
+	}
+
 	
 }

@@ -42,6 +42,12 @@ public interface BoardMapper {
 	
 	//댓글
 	List<CommentDto> selectComment(int postId);
+	
+	// 게시글 파일
+	List<File> fileList(int postId);
+	
+	// 파일
+	File fileById(int fileId);
 
 
 }
