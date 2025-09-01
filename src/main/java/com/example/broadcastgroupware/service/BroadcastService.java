@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.example.broadcastgroupware.domain.BroadcastTeam;
 import com.example.broadcastgroupware.dto.BroadcastFormDto;
 import com.example.broadcastgroupware.dto.BroadcastTeamRowDto;
 import com.example.broadcastgroupware.dto.PageDto;
@@ -73,6 +75,56 @@ public class BroadcastService {
         computeDays(dto);
         
         return dto;
+    }
+        
+    
+    // 프로그램별 팀원 목록 페이징 조회
+    public Map<String, Object> getBroadcastTeamPage(int scheduleId, int page, int size) {
+        int total = broadcastMapper.countBroadcastTeamBySchedule(scheduleId);  // 전체 인원 수
+        int lastPage = Math.max(1, (int) Math.ceil((double) total / size));    // 마지막 페이지 번호
+        int safePage = Math.max(1, Math.min(page, lastPage));				   // 유효한 페이지 번호 보정
+        int beginRow = (safePage - 1) * size;								   // 조회 시작 행
+
+        // 페이징된 팀원 목록 조회
+        List<BroadcastTeamRowDto> rows =
+            broadcastMapper.selectBroadcastTeamBySchedule(scheduleId, beginRow, size);
+
+        // 결과 Map 구성
+        Map<String, Object> out = new HashMap<>();
+        out.put("totalCount", total);       // 총 인원 수
+        out.put("page", safePage);          // 현재 페이지
+        out.put("size", size);              // 페이지 크기
+        out.put("beginRow", beginRow + 1);  // 화면 번호 시작값
+        out.put("rows", rows);              // 팀원 목록
+        return out;
+    }
+    
+    
+    // 프로그램 팀원 등록
+    @Transactional
+    public int addBroadcastTeam(int scheduleId, int userId) {
+        // 중복 체크
+        if (broadcastMapper.existsBroadcastTeam(scheduleId, userId) > 0) {
+            return -1;  // 이미 등록됨
+        }
+        // 정원 체크
+        Integer capacity = broadcastMapper.selectCapacityBySchedule(scheduleId);
+        if (capacity != null && capacity > 0) {
+            int assigned = broadcastMapper.countBroadcastTeamBySchedule(scheduleId);
+            if (assigned >= capacity) {
+                return -2;  // 정원 초과
+            }
+        }
+        BroadcastTeam row = new BroadcastTeam();
+        row.setBroadcastScheduleId(scheduleId);
+        row.setUserId(userId);
+        return broadcastMapper.insertBroadcastTeam(row);  // 1 등록 성공
+    }
+
+    // 프로그램 팀원 삭제
+    @Transactional
+    public int deleteBroadcastTeam(List<Integer> ids) {
+        return (ids == null || ids.isEmpty()) ? 0 : broadcastMapper.deleteBroadcastTeamByIds(ids);
     }
 
 }

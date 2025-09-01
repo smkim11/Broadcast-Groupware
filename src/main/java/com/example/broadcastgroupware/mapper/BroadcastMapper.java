@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.example.broadcastgroupware.domain.BroadcastTeam;
 import com.example.broadcastgroupware.dto.BroadcastFormDto;
 import com.example.broadcastgroupware.dto.BroadcastTeamRowDto;
 
@@ -29,5 +30,18 @@ public interface BroadcastMapper {
     List<BroadcastTeamRowDto> selectBroadcastTeamBySchedule(@Param("scheduleId") int scheduleId,
 				                                            @Param("beginRow") int beginRow,
 				                                            @Param("rowPerPage") int rowPerPage);
+    
+    // 프로그램 팀원 중복 여부
+    int existsBroadcastTeam(@Param("scheduleId") int scheduleId,
+                            @Param("userId") int userId);
+
+    // 프로그램 팀 정원
+    int selectCapacityBySchedule(@Param("scheduleId") int scheduleId);
+
+    // 프로그램 팀원 등록
+    int insertBroadcastTeam(BroadcastTeam row);
+
+    // 프로그램 팀원 삭제
+    int deleteBroadcastTeamByIds(@Param("ids") List<Integer> ids);
 
 }
