@@ -13,4 +13,17 @@
 			ELSE 12 end vac FROM user WHERE user_id=#{userId}))
 		WHERE user_id = #{userId}
 	</update>
+	
+	<!--휴가결재 승인되면 휴가테이블에 사용한 휴가일 수 반영-->
+	<update id="updateUseVacation">
+		UPDATE vacation SET vacation_annual_use=vacation_annual_use+(SELECT vacation_history_day FROM vacation_history WHERE
+			approval_line_id=(SELECT vh.approval_line_id FROM vacation_history vh INNER JOIN approval_line al
+			ON vh.approval_line_id = al.approval_line_id WHERE vh.create_date = (SELECT MAX(create_date) FROM vacation_history)))
+		WHERE user_id=(SELECT ad.user_id FROM vacation_history vh INNER JOIN approval_line al ON al.approval_line_id = vh.approval_line_id
+							INNER JOIN approval_document ad ON al.approval_document_id = ad.approval_document_id
+							INNER JOIN vacation_form vf ON vf.approval_document_id = ad.approval_document_id
+						WHERE vh.create_date=(SELECT MAX(vh.create_date) FROM vacation_history vh 
+													INNER JOIN approval_line al ON al.approval_line_id = vh.approval_line_id
+													INNER JOIN approval_document ad ON al.approval_document_id = ad.approval_document_id))
+	</update>
 </mapper>

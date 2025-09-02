@@ -10,4 +10,6 @@ public interface VacationMapper {
 	List<Integer> selectJoinUser();
 	// 전년도에 일한 개월수 만큼 연차 추가
 	void updateVacation(int userId);
+	// 결재 승인된 휴가 반영
+	void updateUseVacation();
 }

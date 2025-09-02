@@ -24,4 +24,9 @@ public class VacationService {
 	public void updateVacation(int userId) {
 		vacationMapper.updateVacation(userId);
 	}
+	
+	// 휴가결재 승인되면 휴가테이블에 사용한 휴가일 수 반영
+	public void updateUseVacation() {
+		vacationMapper.updateUseVacation();
+	}
 }
