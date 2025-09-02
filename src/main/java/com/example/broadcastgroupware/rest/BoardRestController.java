@@ -189,6 +189,24 @@ public class BoardRestController {
         return boardService.insertPost(postDto, userId);
     }
     
+    // 게시글 수정
+    @PostMapping("/modifyPost")
+    @ResponseBody
+    public Map<String, Object> modifyPost(@RequestParam int postId, @RequestParam String postTitle,
+    									@RequestParam String postContent) {
+
+        log.info("수정할 게시글 ID: {}", postId);
+        log.info("수정 게시글 제목: {}", postTitle);
+        log.info("수정 게시글 내용: {}", postContent);
+
+        boolean result = boardService.modifyPost(postId, postTitle, postContent);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", result);
+
+        return response;
+    }
+
     
     
     // 게시글 삭제

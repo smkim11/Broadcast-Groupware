@@ -46,6 +46,9 @@ public interface BoardMapper {
     // 게시글 저장
     int savePost(PostDto postDto, int userId);
     
+    // 게시글 수정
+	int modifyPost(int postId, String postTitle, String postContent);
+    
     // 게시글 삭제
 	int deletePost(int postId, String postPassword);
 

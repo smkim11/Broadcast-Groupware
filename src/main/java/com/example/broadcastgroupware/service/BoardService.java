@@ -130,6 +130,14 @@ public class BoardService {
 		return boardMapper.postDetail(postId);
 	}
 	
+	// 게시글 수정
+	public boolean modifyPost(int postId, String postTitle, String postContent) {
+		
+		int deletedCount = boardMapper.modifyPost(postId, postTitle, postContent);
+		
+		return deletedCount > 0;
+	}
+	
 	// 게시글 삭제
 	public boolean deletePost(int postId, String postPassword) {
 	
@@ -179,6 +187,7 @@ public class BoardService {
 	public void deleteComment(int commentId) {
 		boardMapper.deleteComment(commentId);
 	}
+
 
 
 }

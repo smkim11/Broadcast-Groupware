@@ -157,6 +157,12 @@
 	    VALUES (#{postDto.boardId}, #{postDto.postTitle}, #{postDto.postContent}, #{postDto.postPassword}, #{userId}, NOW())
 	</insert>
 	
+	<!-- 게시글 수정 -->
+	<update id="modifyPost">
+		UPDATE post SET post_title = #{postTitle}, post_content = #{postContent}
+		WHERE post_id = #{postId}
+	</update>
+	
 	<!-- 게시글 삭제 -->
 	<update id="deletePost">
 		UPDATE post SET post_status = 'N'

@@ -298,21 +298,49 @@ a.btn:last-of-type:hover {
 				</div>
 				
 				<c:if test="${boardId == 1 and userRole == 'admin'}">
-				    <button data-postid="${postId}" class="deletePostBtn btn btn-outline-primary waves-effect waves-light">삭제</button>
-				    <button data-postid="${postId}" class="modifyPostBtn btn btn-outline-primary waves-effect waves-light">수정</button>
+				    <c:forEach var="c" items="${detail}">
+				        <button data-postid="${c.postId}"
+				                data-title="${c.postTitle}"
+				                data-content="${c.postContent}"
+				                class="deletePostBtn btn btn-outline-primary waves-effect waves-light">삭제</button>
+				        <button data-postid="${c.postId}"
+				                data-title="${c.postTitle}"
+				                data-content="${c.postContent}"
+				                class="modifyPostBtn btn btn-outline-primary waves-effect waves-light">수정</button>
+				    </c:forEach>
 				</c:if>
 				
+								
 				<c:forEach var="c" items="${detail}">
 				    <c:if test="${boardId != 1 and loginUser.userId == c.userId}">
-				        <button data-postid="${postId}" class="deletePostBtn btn btn-outline-primary waves-effect waves-light">삭제</button>
-				        <button data-postid="${postId}" class="modifyPostBtn btn btn-outline-primary waves-effect waves-light">수정</button>
+				        <button data-postid="${c.postId}"
+				                data-title="${c.postTitle}"
+				                data-content="${c.postContent}"
+				                class="deletePostBtn btn btn-outline-primary waves-effect waves-light">삭제</button>
+				        <button data-postid="${c.postId}"
+				                data-title="${c.postTitle}"
+				                data-content="${c.postContent}"
+				                class="modifyPostBtn btn btn-outline-primary waves-effect waves-light">수정</button>
 				    </c:if>
 				</c:forEach>
+
 
 				<button onclick="window.close()" class="btn btn-outline-primary waves-effect waves-light">닫기</button>
 
 			</div>
 			
+			<!-- 게시글 수정 모달 -->
+			<div id="modifyPostModal" style="display:none;">
+				<input type="hidden" id="modifyPostId">
+				<label>제목</label>
+				<input type="text" id="modifyTitle">
+				<label>내용</label>
+				<textarea id="modifyContent"></textarea>
+				<button id="confirmModify">수정</button>
+				<button id="cancelModify">닫기</button>
+			</div>
+			
+			<!-- 게시글 삭제 모달 -->
 			<div id="passwordModal" style="display:none;">
 			    <input type="password" id="deletePassword" placeholder="비밀번호 입력">
 			    <button id="confirmDelete">삭제 확인</button>
@@ -327,9 +355,57 @@ a.btn:last-of-type:hover {
 	    console.log("다운로드 파일 id", fileId);
 	    window.location.href = "/file/download?fileId=" + fileId;
 	});
+	
+	// 수정 버튼 클릭 시 → 게시글 내용 모달에 셋팅
+	$(document).on("click", ".modifyPostBtn", function () {
+		let postId = $(this).data("postid");
+		let title = $(this).data("title");
+		let content = $(this).data("content");
+		
+		//console.log('수정 게시글 id: ', postId);
+		//console.log('수정 게시글 제목: ', title);
+		//console.log('수정 게시글 내용: ', content);
+
+		$("#modifyPostId").val(postId);
+		$("#modifyTitle").val(title);
+		$("#modifyContent").val(content);
+
+		$("#modifyPostModal").show();
+	});
+
+	// 닫기 버튼
+	$("#cancelModify").on("click", function () {
+		$("#modifyPostModal").hide();
+	});
+
+	// 수정 확인 버튼 → Ajax 요청
+	$("#confirmModify").on("click", function () {
+		let postId = $("#modifyPostId").val();
+		let title = $("#modifyTitle").val();
+		let content = $("#modifyContent").val();
+
+		$.ajax({
+			url: "/board/modifyPost",
+			type: "POST",
+			data: {
+				postId: postId,
+				postTitle: title,
+				postContent: content
+			},
+			success: function (res) {
+				alert("게시글이 수정되었습니다.");
+				location.reload();
+			},
+			error: function () {
+				alert("수정 중 오류가 발생했습니다.");
+			}
+		});
+	});
 
 	
-	//게시글 삭제
+
+	
+	// 게시글 삭제
 	$('.deletePostBtn').on('click', function() {
 	    var postId = $(this).data('postid');
 	    $('#passwordModal').data('postid', postId).show();
