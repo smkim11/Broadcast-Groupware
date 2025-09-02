@@ -424,7 +424,7 @@
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
 								    <li>
-								        <a href="#">편성목록</a>
+								        <a href="/broadcast/list">편성목록</a>
 								    </li>
 								    <li>
 								        <a href="#">시청률</a>

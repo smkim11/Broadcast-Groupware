@@ -24,7 +24,7 @@
                         <h4 class="mb-0">방송편성 상세</h4>
                         <div class="page-title-right">
                             <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/broadcast/list">방송편성</a></li>
+                                <li class="breadcrumb-item"><a href="javascript:void(0);">방송편성</a></li>
                                 <li class="breadcrumb-item active">상세</li>
                             </ol>
                         </div>
