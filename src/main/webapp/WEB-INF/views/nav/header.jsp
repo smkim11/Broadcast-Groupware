@@ -6,7 +6,7 @@
     <head>
 
         <meta charset="UTF-8" />
-        <title>Calendar | Minible - Admin & Dashboard Template</title>
+        <title>Broadcast Groupware</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
         <meta content="Themesbrand" name="author" />
@@ -312,10 +312,24 @@
 								</ul>
                              </li>     
                              <li>
-                                <a href="/user/userList" class=" waves-effect">
+                                <a href="javascript: void(0);" class="has-arrow waves-effect">
                                     <i class="uil-comments-alt"></i>
                                     <span>조직도</span>
                                 </a>
+	                                <ul class="sub-menu" aria-expanded="false">
+									    <c:choose>
+										    <c:when test="${loginUser.role == 'user'}">
+			                     				<li>
+											        <a href="/user/userList">직원 리스트</a>
+											    </li>
+									   		</c:when>
+										    <c:when test="${loginUser.role == 'admin'}">
+										    	<li>
+					            					<a href="/admin/adminUserList">직원 관리</a>
+					            				</li>
+					            			</c:when>
+				            			</c:choose>
+									</ul>
                             </li>
                             <li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">

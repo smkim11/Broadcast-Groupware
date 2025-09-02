@@ -22,12 +22,12 @@
       <div class="row">
         <div class="col-12">
           <div class="page-title-box d-flex align-items-center justify-content-between">
-            <h4 class="mb-0">직원 리스트</h4>
+            <h4 class="mb-0">직원 관리</h4>
 
             <div class="page-title-right">
               <ol class="breadcrumb m-0">
                 <li class="breadcrumb-item"><a href="javascript:void(0);">조직도</a></li>
-                <li class="breadcrumb-item active">직원 리스트</li>
+                <li class="breadcrumb-item active">직원 관리</li>
               </ol>
             </div>
           </div>
@@ -43,7 +43,7 @@
 
               <!-- 목록 테이블 -->
               <div class="table-responsive mb-4">
-                <table class="table table-centered table-nowrap mb-0 align-middle table-auto-eq">
+                <table class="table table-centered table-nowrap mb-0">
                   <thead>
                     <tr>
                       <th scope="col" style="width: 50px;">
@@ -52,11 +52,10 @@
                           <label class="form-check-label" for="contacusercheck"></label>
                         </div>
                       </th>
-                      <th scope="col-auto">이름</th>
-                      <th scope="col-auto">직급</th>
-                      <th scope="col-auto">부서</th>
-                      <th scope="col-auto">팀</th>
-                      <th scope="col-auto">Email</th>
+                      <th scope="col">이름</th>
+                      <th scope="col">부서/직급</th>
+                      <th scope="col">Email</th>
+                      <th scope="col" style="width: 200px;">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -77,17 +76,42 @@
                           <a href="${ctx}/user/detail/${r.userId}" class="text-body">
                             <c:out value="${r.fullName}"/>
                           </a>
+                         (<c:out value="${r.userRank}"/>)
                         </td>
-                        
-						<td><c:out value="${r.userRank}"/></td>
-						
+
                         <td>
+                         <div class="text-muted small">
                             <c:out value="${r.departmentName}"/>
                             <c:if test="${not empty r.departmentName}">
+                              /<c:out value="${r.teamName}"/>
                             </c:if>
+                          </div>
                         </td>
-                        <td><c:out value="${r.teamName}"/></td>
                         <td><c:out value="${r.email}"/></td>
+
+                        <td>
+                          <ul class="list-inline mb-0">
+                            <li class="list-inline-item">
+                              <a href="${ctx}/user/edit/${r.userId}" class="px-2 text-primary">
+                                <i class="uil uil-pen font-size-18"></i>
+                              </a>
+                            </li>
+                            <li class="list-inline-item">
+                              <a href="javascript:void(0);" class="px-2 text-danger" data-user-id="${r.userId}">
+                                <i class="uil uil-trash-alt font-size-18"></i>
+                              </a>
+                            </li>
+                            <li class="list-inline-item dropdown">
+                              <a class="text-muted dropdown-toggle font-size-18 px-2" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true">
+                                <i class="uil uil-ellipsis-v"></i>
+                              </a>
+                              <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="${ctx}/user/detail/${r.userId}">View</a>
+                                <a class="dropdown-item" href="${ctx}/user/edit/${r.userId}">Edit</a>
+                              </div>
+                            </li>
+                          </ul>
+                        </td>
                       </tr>
                     </c:forEach>
 
@@ -102,7 +126,7 @@
 
               <!-- 하단 페이징/카운트 -->
               <div class="row mt-4">
-                <div class="col-sm-0">
+                <div class="col-sm-6">
                   <div>
                     <c:set var="startIndex" value="${(page.currentPage - 1) * page.rowPerPage + 1}" />
                     <c:set var="endIndex"   value="${page.currentPage * page.rowPerPage}" />
@@ -130,7 +154,7 @@
                     <ul class="pagination mb-sm-0">
                       <li class="page-item ${page.currentPage == 1 ? 'disabled' : ''}">
                         <a class="page-link"
-                           href="${ctx}/user/userList?page=${page.currentPage - 1}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">
+                           href="${ctx}/admin/adminUserList?page=${page.currentPage - 1}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">
                           <i class="mdi mdi-chevron-left"></i>
                         </a>
                       </li>
@@ -138,13 +162,13 @@
                       <c:forEach var="p" begin="${startPage}" end="${endPage}">
                         <li class="page-item ${p == page.currentPage ? 'active' : ''}">
                           <a class="page-link"
-                             href="${ctx}/user/userList?page=${p}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">${p}</a>
+                             href="${ctx}/admin/adminUserList?page=${p}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">${p}</a>
                         </li>
                       </c:forEach>
 
                       <li class="page-item ${page.currentPage == lastPage ? 'disabled' : ''}">
                         <a class="page-link"
-                           href="${ctx}/user/userList?page=${page.currentPage + 1}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">
+                           href="${ctx}/admin/adminUserList?page=${page.currentPage + 1}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">
                           <i class="mdi mdi-chevron-right"></i>
                         </a>
                       </li>
@@ -155,7 +179,7 @@
               <!-- 검색 -->
               <div class="row mb-2">
                 <div class="col-md-6">
-                  <form class="form-inline float-md-end mb-3" method="get" action="${ctx}/user/userList">
+                  <form class="form-inline float-md-end mb-3" method="get" action="${ctx}/admin/adminUserList">
                     <input type="hidden" name="size" value="${page.rowPerPage}" />
                     <div class="search-box ms-2">
                       <div class="position-relative">
