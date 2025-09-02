@@ -27,6 +27,7 @@
 
 					// 차량 정보 td
 					var tdInfo = document.createElement("td");
+					tdInfo.classList.add("vehicle-info");
 					tdInfo.innerHTML = '<div class="vehicleNo">' + c.vehicleNo + '</div>' +
 									   '<div class="vehicleName">' + c.vehicleName + '</div>' +
 									   '<div class="vehicleType">' + c.vehicleType + '</div>';

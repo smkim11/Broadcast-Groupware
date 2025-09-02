@@ -27,10 +27,10 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-flex align-items-center justify-content-between">
-                        <h4 class="mb-0">게시판</h4>
+                        <h4 class="mb-0" id="boardTitle"></h4>
                         <div class="page-title-right">
                             <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item" id="boardTitle"></li>
+                                <li class="breadcrumb-item">게시판</li>
                             </ol>
                         </div>
                     </div>
@@ -211,10 +211,6 @@
 	
 	                li.append(link);
 	                menuList.append(li);
-	
-	                if(index === 0) {
-	                    loadBoard(menu.boardId, menu.boardTitle);
-	                }
 	            });
 	        },
 	        error: function() {
@@ -246,7 +242,7 @@
 	    var formData = new FormData(this);
 	
 	    $.ajax({
-	        url: '/board/insertPost', 
+	        url: '/board/insertPost',
 	        type: 'POST',
 	        data: formData,
 	        processData: false,

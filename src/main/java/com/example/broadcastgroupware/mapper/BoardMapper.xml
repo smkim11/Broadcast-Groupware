@@ -56,6 +56,7 @@
     <select id="getBoardMenuList" resultType="com.example.broadcastgroupware.dto.BoardMenuDto">
         SELECT board_id AS boardId, board_title AS boardTitle, board_status AS boardStatus
         FROM board
+        WHERE board_status = 'Y'
         ORDER BY board_id ASC
     </select>
     
@@ -88,6 +89,20 @@
 		INSERT INTO board(board_title)
 		values(#{boardTitle})
 	</insert>
+	
+	<!-- 관리자- 게시판 명 수정 -->
+	<update id="modifyBoardName">
+		UPDATE board 
+		SET board_title = #{boardTitle}
+		WHERE board_id = #{boardId}
+	</update>
+	
+		<!-- 관리자- 게시판 상태값 수정 -->
+	<update id="modifyBoardStatus">
+		UPDATE board 
+		SET board_status = #{boardStatus}
+		WHERE board_id = #{boardId}
+	</update>
 	
 	<!-- 관리자 - 상단고정  -->
 	<update id="modifyFixed">
@@ -136,8 +151,8 @@
 
     <!-- 게시글 저장 -->
 	<insert id="savePost" useGeneratedKeys="true" keyProperty="postDto.postId">
-	    INSERT INTO post (board_id, post_title, post_content, post_password, user_id, create_date)
-	    VALUES (#{postDto.boardId}, #{postDto.postTitle}, #{postDto.postContent}, #{PostPassword}, #{userId}, NOW())
+	    INSERT INTO post (board_id, post_title, post_content, user_id, create_date)
+	    VALUES (#{postDto.boardId}, #{postDto.postTitle}, #{postDto.postContent}, #{userId}, NOW())
 	</insert>
 
     <!-- 복수 파일 저장 -->

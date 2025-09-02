@@ -103,6 +103,38 @@ public class BoardRestController {
 		return ResponseEntity.ok("success");
 	}
 	
+	// 관리자-게시판명 수정
+	@PostMapping("/modifyBoardName")
+	public ResponseEntity<?> modifyBoardName(@RequestParam("boardTitle") String boardTitle, 
+			@RequestParam("boardId") int boardId, HttpSession session){
+		
+		log.info("게시판 수정 아이디: {}", boardId);
+		log.info("게시판 수정 명: {}", boardTitle);
+		
+        UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
+        int userId = loginUser.getUserId();
+        
+		boardService.modifyBoardName(boardId, boardTitle);
+		
+		return ResponseEntity.ok("success");
+	}
+	
+	// 관리자-게시판 상태값 수정
+	@PostMapping("/modifyBoardStatus")
+	public ResponseEntity<?> modifyBoardStatus(@RequestBody Map<String, String> data) {
+	    int boardId = Integer.parseInt(data.get("boardId"));
+	    String boardStatus = data.get("boardStatus");
+	    
+	    //log.info("게시판 수정 아이디: {}", boardId);
+	    //log.info("게시판 수정 상태: {}", boardStatus);
+	    
+	    boardService.modifyBoardStatus(boardId, boardStatus);
+
+	    return ResponseEntity.ok("success");
+	}
+
+
+	
 	// 관리자- 상태값 변경
 	// 상단노출(긴급공지)
 	@PostMapping("/toggleFixed")
@@ -138,6 +170,8 @@ public class BoardRestController {
     @ResponseBody
     public String insertPost(HttpSession session,
                              @ModelAttribute PostDto postDto) throws IOException {
+    	
+    	// log.info("게시글 비밀번호: {}", postDto.getPostPassword());
 
         UserSessionDto loginUser = (UserSessionDto) session.getAttribute("loginUser");
         int userId = loginUser.getUserId();
@@ -150,7 +184,7 @@ public class BoardRestController {
                     + ", 사이즈: " + file.getSize()); */
             }
         } else {
-            System.out.println("files가 null입니다.");
+            log.info("files가 null입니다.", "");
         }
 
         return boardService.insertPost(postDto, userId);

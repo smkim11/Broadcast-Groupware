@@ -54,6 +54,16 @@ public class BoardService {
 		boardMapper.newBoard(boardTitle);
 	}
 	
+	// 관리자 - 게시판 이름 변경
+	public void modifyBoardName(int boardId, String boardTitle) {
+		boardMapper.modifyBoardName(boardId, boardTitle);
+	}
+	
+	// 관리자 - 게시판 상태값 변경
+	public void modifyBoardStatus(int boardId, String boardStatus) {
+		boardMapper.modifyBoardStatus(boardId, boardStatus);
+	}
+	
 	// 관리자 - 상단고정
 	public void modifyFixed(int postId, String topFixed) {
 		boardMapper.modifyFixed(postId, topFixed);
@@ -80,7 +90,7 @@ public class BoardService {
 
 		// 2. 파일 처리
 		if (files != null && !files.isEmpty()) {
-			String uploadDir = "C:/upload/"; // 로컬 C드라이브 경로
+			String uploadDir = "C:\\final\\"; // 로컬 C드라이브 경로
 
 			for (MultipartFile file : files) {
 				if (file.isEmpty()) continue;
@@ -161,7 +171,5 @@ public class BoardService {
 	public void deleteComment(int commentId) {
 		boardMapper.deleteComment(commentId);
 	}
-
-
 
 }

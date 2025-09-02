@@ -496,7 +496,9 @@ box-sizing: border-box;
 	flex: 1;
 	text-align: right;
 }
-
+.vehicle-info {
+	width: 7%;
+}
 
 </style>
 

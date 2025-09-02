@@ -31,6 +31,12 @@ public interface BoardMapper {
 	// 관리자-게시판 생성
 	void newBoard(String boardTitle);
 	
+	// 관리자-게시판명 수정
+	void modifyBoardName(int boardId, String boardTitle);
+	
+	// 관리자-게시판 상태값 수정
+	void modifyBoardStatus(int boardId, String boardStatus);
+	
 	// 관리자 - 상단고정
 	void modifyFixed(int postId, String topFixed);
 	// 관리자 - 게시글 노출 성정
@@ -72,6 +78,6 @@ public interface BoardMapper {
 	
 	// 댓글, 대댓글 삭제(비활성화)
 	void deleteComment(int commentId);
-	
+
 
 }
