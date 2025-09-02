@@ -34,7 +34,7 @@
 	<!--직전 비밀번호 조회-->
 	<select id="findPrevPw" resultType="string">
 		SELECT PASSWORD FROM password_history 
-		WHERE user_id=53 AND (user_id,create_date) IN
+		WHERE user_id=#{userId} AND (user_id,create_date) IN
 			(SELECT user_id, MAX(create_date) FROM password_history GROUP BY user_id)
 	</select>
 	
