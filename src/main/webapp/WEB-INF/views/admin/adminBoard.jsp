@@ -153,19 +153,19 @@ input:checked + .slider:before {
 </div>
 
            
-           <!-- 검색 -->
-           	<form action="/admin/adminBoard" method="get" id="searchForm" class="searchForm">
-           		<div id="search-main" class="search-main">
-           			<select id="searchType" name="searchType">
-           				<option value="분류">분류</option>
-           				<option value="제목">제목</option>
-           				<option value="작성자">작성자</option>
-           			</select>
-           			<input type="text" id="searchWord" name="searchWord" placeholder="검색어를 입력하세요">
-           			<button type="submit">검색</button>
-           		</div>
-           	</form>
-           
+	           <!-- 검색 -->
+	           	<form action="/admin/adminBoard" method="get" id="searchForm" class="searchForm">
+	           		<div id="search-main" class="search-main">
+	           			<select id="searchType" name="searchType">
+	           				<option value="분류">분류</option>
+	           				<option value="제목">제목</option>
+	           				<option value="작성자">작성자</option>
+	           			</select>
+	           			<input type="text" id="searchWord" name="searchWord" placeholder="검색어를 입력하세요">
+	           			<button type="submit">검색</button>
+	           		</div>
+	           	</form>
+
            
           </div>
 	</div>

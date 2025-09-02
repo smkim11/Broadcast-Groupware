@@ -51,7 +51,7 @@ public class BoardController {
 		String role = loginUser.getRole();
 		
 		if(!"admin".equals(role)) {
-			return "redirect:/home"; 
+			return "redirect:/home";
 		}
 		
 		int totalCount = boardService.boardCount(searchWord, searchType);
