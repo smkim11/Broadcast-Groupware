@@ -107,6 +107,7 @@
 			SUM(CASE WHEN attendance_outside IS NOT NULL THEN 1 ELSE 0 END) AS field
 		FROM attendance
 		WHERE user_id = #{userId}
-		AND attendance_date BETWEEN DATE_SUB(CURDATE(), INTERVAL (#{days} - 1) DAY) AND CURDATE()	
+		AND attendance_date BETWEEN DATE_SUB(CURDATE(), INTERVAL (#{days} - 1) DAY)
+		AND CURDATE()	
 	</select>
 </mapper>
