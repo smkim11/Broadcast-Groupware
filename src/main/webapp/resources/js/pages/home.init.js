@@ -1,117 +1,130 @@
 //============================근태============================
 (function(){
-  // (초보자용) 문서가 준비되면 실행
-  function ready(fn){ document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', fn) : fn(); }
+  // (초보자) DOM 준비되면 실행
+  function ready(fn){ document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn) : fn(); }
 
   ready(function(){
     const wrap = document.getElementById('att-donuts');
-    if(!wrap) return; // 근태 섹션이 없으면 종료
+    if (!wrap) return; // 섹션 없으면 종료
 
-    // (스프링 시큐리티 대비) CSRF 토큰/헤더 가져오기 - 없으면 빈값
+    // CSRF (GET이지만 전역정책 대비)
     const CSRF_TOKEN  = document.querySelector('meta[name="_csrf"]')?.content || '';
     const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
 
-    const ctx  = window.CTX || ''; // 컨텍스트 경로(있으면)
-    const days = 30;               // 기준 일수(요구: 30일)
-    
-    // 1) 최근 30일 요약 + 오늘 시간 호출
-    fetch(`${ctx}/api/attendance/summary?days=${days}`, {
+    // 컨텍스트 경로(예: /app). JSP에서 window.CTX 세팅해둠
+    const ctx    = window.CTX || '';
+    const days   = 30;                         // 기준 일수
+    const userId = wrap.dataset.userId || '';  // 관리자 화면이면 data-user-id 넣기
+
+    // 호출 URL 만들기 (ctx가 ''여도 안전)
+    const url = new URL(`${ctx}/api/attendance/summary`, window.location.origin);
+    url.searchParams.set('days', days);
+    if (userId) url.searchParams.set('userId', userId);
+
+    fetch(url.toString(), {
       method: 'GET',
       credentials: 'same-origin',
       headers: { [CSRF_HEADER]: CSRF_TOKEN }
     })
-    .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .catch(() => demo())                         // 백엔드 미구현 → 데모 데이터
-    .then(raw => renderAtt(normalize(raw)))      // ★ 호출명 변경
-    .catch(err => console.error('[att] render error:', err));
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(data => renderAtt(normalize(data)))
+    .catch(err => {
+      console.error('[att] fetch error:', err);
+      // 실패 시 기본값 표시
+      safeText('att-in-time',    '--:--');
+      safeText('att-out-time',   '--:--');
+      safeText('att-field-time', '-');
+    });
 
-    // 2) 응답 표준화(형태가 달라도 여기서 한 번에 정리)
+    // === 서버 응답을 화면용으로 정리(널이면 기본값) ===
     function normalize(p){
-      const d = Number(p?.days ?? days);
-      const c = p?.counts || p || {};
+      const c = p?.counts || {};
       const t = p?.today  || {};
       return {
-        days: d,
-        inCount   : Number(c?.checkin  ?? c?.in       ?? 0),
-        outCount  : Number(c?.checkout ?? c?.out      ?? 0),
-        fieldCount: Number(c?.field    ?? c?.outside  ?? 0),
-        inTime    : t?.checkinTime   ?? t?.in          ?? '--:--',
-        outTime   : t?.checkoutTime  ?? t?.out         ?? '--:--',
-        fieldTime : t?.fieldTime     ?? t?.outsideTime ?? '-'
+        days: Number(p?.days ?? days),
+        inCount   : Number(c.checkin  ?? 0),
+        outCount  : Number(c.checkout ?? 0),
+        fieldCount: Number(c.field    ?? 0),
+        inTime    : t.checkinTime  || '--:--',
+        outTime   : t.checkoutTime || '--:--',
+        fieldTime : t.fieldTime    || '-'     // 외근 시간 기본표시
       };
     }
 
-    // 3) 데모 데이터(화면 테스트 용)
-    function demo(){
-      return {
-        days: 30,
-        counts: { checkin: 12, checkout: 21, field: 5 },
-        today:  { checkinTime: '09:12', checkoutTime: '18:03', fieldTime: '14:10' }
+    // === 렌더 ===
+    function renderAtt(v){
+      safeText('att-in-time',    v.inTime);
+      safeText('att-out-time',   v.outTime);
+      safeText('att-field-time', v.fieldTime);
+
+      // 색상: CSS 변수 없을 때 대비 기본값 포함
+      const colorSuccess = cssVar('--bs-success', '#28a745');
+      const colorPrimary = cssVar('--bs-primary', '#0d6efd');
+      const colorWarning = cssVar('--bs-warning', '#ffc107');
+
+      // 중앙 텍스트(선택): "12/30" 형태 보여주기
+      drawDonut('#att-donut-in',    v.inCount,    v.days, colorSuccess, `${v.inCount}/${v.days}`);
+      drawDonut('#att-donut-out',   v.outCount,   v.days, colorPrimary, `${v.outCount}/${v.days}`);
+      drawDonut('#att-donut-field', v.fieldCount, v.days, colorWarning, `${v.fieldCount}/${v.days}`);
+    }
+
+    // === 작은 유틸 ===
+    function safeText(id, txt){ const el = document.getElementById(id); if (el) el.textContent = txt; }
+    function cssVar(name, fallback=''){
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return v || fallback;
+    }
+
+    // ───────────────── ApexCharts 도넛 ─────────────────
+    function drawDonut(targetSel, value, max, color, centerText){
+      const el = document.querySelector(targetSel);
+      if (!el) return;
+
+      const box = el.closest?.('.resv-donut') || el.parentElement || document.body;
+      const cs  = getComputedStyle(box);
+      const DONUT_HEIGHT = parseInt(cs.getPropertyValue('--donut-height')) || 110;
+      const DONUT_HOLE   = (cs.getPropertyValue('--donut-hole') || '69%').trim();
+
+      const done = Math.max(0, Math.min(Number(value||0), Number(max||0)));
+      const rest = Math.max(0, Number(max||0) - done);
+      const sDone = (done === 0 && rest > 0) ? 0.0001 : done; // 0% 렌더링 버그 회피
+
+      const gray = cssVar('--bs-gray-300', '#dee2e6');
+
+      const options = {
+        chart:   { type: 'donut', height: DONUT_HEIGHT, sparkline: { enabled: true } },
+        series:  [sDone, rest],
+        labels:  ['완료','남음'],
+        colors:  [color, gray],
+        dataLabels: { enabled: false },
+        stroke:     { width: 0 },
+        legend:     { show: false },
+        tooltip:    { enabled: false },
+        plotOptions:{ pie: { donut: { size: DONUT_HOLE, labels: { show: false } } } }
       };
+
+      if (el.__apex__) el.__apex__.destroy();
+      const chart = new ApexCharts(el, options);
+      chart.render();
+      el.__apex__ = chart;
+
+      // 중앙 텍스트 오버레이
+      let center = el.querySelector('.att-center');
+      if (!center) {
+        center = document.createElement('div');
+        center.className = 'att-center';
+        // 간단 스타일(필요시 CSS로 옮겨도 됨)
+        center.style.position = 'absolute';
+        center.style.inset = '0';
+        center.style.display = 'flex';
+        center.style.alignItems = 'center';
+        center.style.justifyContent = 'center';
+        center.style.fontWeight = '600';
+        el.style.position = 'relative';
+        el.appendChild(center);
+      }
+      center.textContent = centerText || '';
     }
-
-    // 4) 렌더링: 도넛 3개 + 오늘 시간 텍스트
-    function renderAtt(v){                         // ★ 함수명 변경
-      // (a) 아래 작은 글씨(오늘 시각) 채우기
-      document.getElementById('att-in-time').textContent    = v.inTime;
-      document.getElementById('att-out-time').textContent   = v.outTime;
-      document.getElementById('att-field-time').textContent = v.fieldTime;
-
-      // (b) 예약 카드처럼 각각 "완료/남음" 도넛으로 표현(중앙 숫자 라벨 사용)
-      drawDonut('#att-donut-in',    v.inCount,    v.days, getCssColor('--bs-success'));
-      drawDonut('#att-donut-out',   v.outCount,   v.days, getCssColor('--bs-primary'));
-      drawDonut('#att-donut-field', v.fieldCount, v.days, getCssColor('--bs-warning'));
-    }
-
-    // 부트스트랩 CSS 변수 칼라 읽기(다크 테마 대응)
-    function getCssColor(varName){
-      return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-    }
-
-    // 공용: 미니 도넛 그리기 (예약과 동일하게 중앙 숫자 라벨 사용)
-	function drawDonut(targetSel, value, max, color, centerText){
-	  const el  = document.querySelector(targetSel);
-	  if(!el) return;
-
-	  const box = el.closest?.('.resv-donut') || el.parentElement || document.body;
-	  const cs  = getComputedStyle(box);
-	  const DONUT_HEIGHT = parseInt(cs.getPropertyValue('--donut-height')) || 110;
-	  const DONUT_HOLE   = (cs.getPropertyValue('--donut-hole') || '69%').trim();
-
-	  // 완료/남음 계산
-	  const done = Math.max(0, Math.min(Number(value||0), Number(max||0)));
-	  const rest = Math.max(0, Number(max||0) - done);
-	  const sDone = (done === 0 && rest > 0) ? 0.0001 : done;
-
-	  const options = {
-	    chart:   { type: 'donut', height: DONUT_HEIGHT, sparkline: { enabled: true } },
-	    series:  [sDone, rest],
-	    labels:  ['완료','남음'],
-	    colors:  [color, getCssColor('--bs-gray-300') || '#dee2e6'],
-	    dataLabels: { enabled: false },
-	    stroke:     { width: 0 },                 // ★ 예약과 동일
-	    legend:     { show: false },
-	    tooltip:    { enabled: false },
-	    plotOptions:{ pie: { donut: {
-	      size: DONUT_HOLE,                       // ★ 예약과 동일 두께
-	      labels: { show: false }                 // ★ Apex 중앙 라벨 끔(두께 영향 제거)
-	    } } }
-	  };
-
-	  if (el.__apex__) el.__apex__.destroy();
-	  const chart = new ApexCharts(el, options);
-	  chart.render();
-	  el.__apex__ = chart;
-
-	  // 중앙 텍스트(출근/퇴근/외근) 오버레이
-	  let center = el.querySelector('.att-center');
-	  if (!center) {
-	    center = document.createElement('div');
-	    center.className = 'att-center';
-	    el.appendChild(center);
-	  }
-	  center.textContent = centerText || '';
-	}
   });
 })();
 

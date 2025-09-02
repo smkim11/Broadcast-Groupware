@@ -2,8 +2,10 @@ package com.example.broadcastgroupware.mapper;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.example.broadcastgroupware.domain.Attendance;
 import com.example.broadcastgroupware.dto.AttendanceListDto;
@@ -34,4 +36,8 @@ public interface AttendanceMapper {
 	void updateAttendanceInside(Attendance attendance);
 	// 퇴근 안누른사람 정시퇴근 처리
 	void updateNotOutUser(int userId);
+	
+	// home페이지 근태 갯수 및 시간 조회
+	// 최근 N일 카운트
+	Map<String,Object> selectCountsInDays(int userId, int days);
 }

@@ -3,8 +3,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<meta name="ctx" content="${pageContext.request.contextPath}">
 <meta charset="UTF-8">
+<script>window.CTX = document.querySelector('meta[name="ctx"]')?.content || '';</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 	<c:if test="${not empty sessionScope.loginUser}">
         <script>
             const role = '<c:out value="${sessionScope.loginUser.role}" />';

@@ -98,4 +98,15 @@
 	<update id="updateNotOutUser">
 		UPDATE attendance SET attendance_out='18:00:00' WHERE user_id= #{userId} AND attendance_date=DATE(NOW())
 	</update>
+	
+	<!-- home 페이지에서 최근 근태 출근,퇴근,외근 별 카운트(오늘 포함) -->
+	<select id="selectCountsInDays" resultType="map">
+		SELECT
+			SUM(CASE WHEN attendance_in 	 IS NOT NULL THEN 1 ELSE 0 END) AS checkin,
+			SUM(CASE WHEN attendance_out 	 IS NOT NULL THEN 1 ELSE 0 END) AS checkout,
+			SUM(CASE WHEN attendance_outside IS NOT NULL THEN 1 ELSE 0 END) AS field
+		FROM attendance
+		WHERE user_id = #{userId}
+		AND attendance_date BETWEEN DATE_SUB(CURDATE(), INTERVAL (#{days} - 1) DAY) AND CURDATE()	
+	</select>
 </mapper>
