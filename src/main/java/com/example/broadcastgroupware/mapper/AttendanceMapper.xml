@@ -74,6 +74,16 @@
 		WHERE attendance_in is not null and attendance_out IS NULL AND attendance_date = date(NOW())
 	</select>
 	
+	<!--로그인한 직원의 휴가기록 조회-->
+	<select id="selectVacationList" resultType="map">
+		SELECT vf.vacation_form_type vacationFormType, vf.vacation_form_half_type vacationFormHalfType, 
+			vf.vacation_form_start_date vacationFormStartDate, vf.vacation_form_end_date vacationFormEndDate
+		FROM vacation_history vh INNER JOIN approval_line al ON al.approval_line_id = vh.approval_line_id
+		INNER JOIN approval_document ad ON al.approval_document_id = ad.approval_document_id
+		INNER JOIN vacation_form vf ON vf.approval_document_id = ad.approval_document_id
+		WHERE ad.user_id=#{userId}
+	</select>
+	
 	<!--출근기록-->
 	<insert id="insertAttendanceIn" parameterType="com.example.broadcastgroupware.domain.Attendance">
 		INSERT INTO attendance(user_id, attendance_in) VALUES(#{userId},now());

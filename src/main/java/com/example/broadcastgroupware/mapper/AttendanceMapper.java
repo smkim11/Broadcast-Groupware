@@ -26,6 +26,8 @@ public interface AttendanceMapper {
 	List<Integer> selectNotOutUser();
 	// 직책별 팀,부서,전체 근태
 	List<HashMap<String,Object>> selectAttendanceListByRank(AttendanceListDto attendanceListDto);
+	// 로그인한 직원의 휴가기록 조회
+	List<HashMap<String,Object>> selectVacationList(int userId);
 	// 출근 기록
 	void insertAttendanceIn(Attendance attendance);
 	// 퇴근 기록

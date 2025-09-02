@@ -53,6 +53,11 @@ public class AttendanceService {
 		return attendanceMapper.selectNotOutUser();
 	}
 	
+	// 로그인한 직원의 휴가기록 조회
+	public List<HashMap<String,Object>> selectVacationList(int userId){
+		return attendanceMapper.selectVacationList(userId);
+	}
+		
 	// 출근 기록
 	public void insertAttendanceIn(Attendance attendance) {
 		attendanceMapper.insertAttendanceIn(attendance);

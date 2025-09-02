@@ -45,6 +45,7 @@ public class AttendanceController {
 		model.addAttribute("weekWorkHours",attendanceService.selectWeekWorkHours(user.getUserId()));
 		model.addAttribute("totalWorkDay",attendanceService.selectTotalWorkDay(user.getUserId()));
 		model.addAttribute("attendanceList",attendanceService.selectAttendanceList(user.getUserId()));
+		model.addAttribute("vacationList",attendanceService.selectVacationList(user.getUserId()));
 		model.addAttribute("loginUserId",user.getUserId());
 	    return "user/attendance";  
 	}

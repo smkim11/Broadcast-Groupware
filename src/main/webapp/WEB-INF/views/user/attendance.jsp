@@ -139,8 +139,28 @@
 	            // fullcalendar에서 start와 end는 (yyyy-MM-dd'T'HH:mm:ss)형식으로 넣어줘야 한다
 	            start: "${list.attendanceDate}T${list.attendanceOutside}",
 	            end: "${list.attendanceDate}T${list.attendanceInside}",
-	            className: "bg-success"
+	            className: "bg-info"
 	        }<c:if test="${!loop.last}">,</c:if>
+	    </c:forEach>,
+	    <c:forEach var="vacationList" items="${vacationList}" varStatus="loop">
+	    	<c:choose>
+	    		<c:when test="${vacationList.vacationFormType == '연차'}">
+			    	{
+						title:"휴가",
+						start: "${vacationList.vacationFormStartDate}T00:00:00",
+						end: "${vacationList.vacationFormEndDate}T23:59:59",
+						className: "bg-success"
+			    	}<c:if test="${!loop.last}">,</c:if>
+		    	</c:when>
+		    	<c:when test="${vacationList.vacationFormType == '반차'}">
+			    	{
+						title:"${vacationList.vacationFormHalfType} ${vacationList.vacationFormType}",
+						start: "${vacationList.vacationFormStartDate}T00:00:00",
+						end: "${vacationList.vacationFormEndDate}T23:59:59",
+						className: "bg-success"
+			    	}<c:if test="${!loop.last}">,</c:if>
+		    	</c:when>
+	    	</c:choose>
 	    </c:forEach>
 	];
     // 실시간 시계 1초마다 실행
