@@ -130,7 +130,7 @@
                    			<div class="col-12">
                    				<div class="mb-3">
                    					<label class="form-label">새로운 비밀번호</label>
-                   					<input class="form-control" type="password" name="newPw" id="newPw" required/>
+                   					<input class="form-control" type="password" name="newPw" id="newPw" placeholder="새로운 비밀번호" required/>
                                     <div class="invalid-feedback">새로운 비밀번호를 입력하세요.</div>
                    				</div>
                    			</div>
@@ -138,7 +138,7 @@
                    				<div class="mb-3">
                    					<label class="form-label">비밀번호 확인</label>
                    					<input class="form-control" type="password" name="newPw2" id="newPw2" placeholder="비밀번호 확인" required/>
-                                    <div class="invalid-feedback">비밀번호가 다릅니다.</div>
+                                    <div class="invalid-feedback">비밀번호를 한번 더 입력하세요.</div>
                    				</div>
                    			</div>
 		      			</div>
