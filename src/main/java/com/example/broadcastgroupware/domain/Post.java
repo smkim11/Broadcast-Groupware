@@ -9,7 +9,7 @@ public class Post {
 	private int userId;
 	private String postTitle;
 	private String postContent;
-	private String password;
+	private String postPassword;
 	private String postStatus;
 	private String topFixed;
 	private String createDate;

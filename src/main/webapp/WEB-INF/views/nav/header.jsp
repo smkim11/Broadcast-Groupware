@@ -452,25 +452,28 @@
 
     </body>
    <!-- </nav> -->
-		<script>
-		$(document).ready(function(){
-		    $.ajax({
-		        url: '/board/menu',
-		        method: 'GET',
-		        success: function(data){
-		            var menuList = $('#board-menu-list');
-		            menuList.empty();
-		            data.forEach(function(menu){
-		                var li = $('<li></li>');
-		                var link = $('<a></a>').attr('href', '/board/' + menu.boardId).text(menu.boardTitle);
-		                li.append(link);
-		                menuList.append(li);
-		            });
-		        },
-		        error: function(){
-		            console.error('게시판 메뉴를 불러오는 데 실패했습니다.');
-		        }
-		    });
-		});
-		</script>
+
+<script>
+$(document).ready(function(){
+    $.ajax({
+        url: '/board/menu',
+        method: 'GET',
+        success: function(data){
+            var menuList = $('#board-menu-list');
+            menuList.empty();
+            data.forEach(function(menu){
+                // 단순 링크만 생성
+                var li = $('<li></li>');
+                var link = $('<a></a>').attr('href', '/board/' + menu.boardId).text(menu.boardTitle);
+                li.append(link);
+                menuList.append(li);
+            });
+        },
+        error: function(){
+            console.error('게시판 메뉴를 불러오는 데 실패했습니다.');
+        }
+    });
+});
+</script>
+
 </html>

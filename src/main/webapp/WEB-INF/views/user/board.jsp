@@ -105,134 +105,135 @@
 </div>
 
 <script>
-var currentBoardId = null;
-var currentPage = 1;
-var userRole = '${loginUser.role}';
+	var currentBoardId = null;
+	var currentPage = 1;
+	var userRole = '${loginUser.role}';
+	
+	// 게시판 메뉴 클릭 시 호출
+	window.loadBoard = function(boardId, boardTitle) {
+	    currentBoardId = boardId;
+	    currentPage = 1;
+	    $('#boardTitle').text(boardTitle);
+	
+	    // 공지사항게시판 관리자만 글쓰기 버튼
+	    if (boardId === 1 && userRole !== 'admin') {
+	        $('#insertPostModal').hide();
+	    } else {
+	        $('#insertPostModal').show();
+	    }
+	
+	    loadPosts(); 
+	};
+	
+	// 글 리스트 로드
+	function loadPosts() {
+	    if (!currentBoardId) return;
+	
+	    var formData = $('#searchForm').serialize();
+	    $.ajax({
+	        url: '/board/' + currentBoardId + '/posts',
+	        type: 'GET',
+	        data: $('#searchForm').serialize() + '&currentPage=' + currentPage,
+	        success: function(data) {
+	            var tbody = $('#post-list tbody');
+	            tbody.empty();
+	
+	            var posts = data.posts;
+	            var pageDto = data.pageDto;
+	
+	            if (!posts || posts.length === 0) {
+	                tbody.append('<tr><td colspan="4">게시글이 없습니다.</td></tr>');
+	                $('#pagination').empty();
+	                return;
+	            }
+	
+	            posts.forEach(function(post) {
+	                tbody.append('<tr>'
+	                    + '<td>' + post.postId + '</td>'
+	                    +'<td><a href="/post/detail?postId=' + post.postId + '&boardId=' + currentBoardId + '" target="_blank">' + post.title + '</a></td>'
+	                    + '<td>' + post.userName + '</td>'
+	                    + '<td>' + post.createDate + '</td>'
+	                    + '</tr>');
+	            });
+	
+	            loadPagination(pageDto);
+	        },
+	        error: function() {
+	            console.error('게시글을 불러오는 데 실패했습니다.');
+	        }
+	    });
+	}
+	
+	// 페이징 생성
+	function loadPagination(pageDto) {
+	    if (!pageDto) return;
+	    var container = $('#pagination');
+	    container.empty();
+	
+	    // 이전 블럭
+	    if (pageDto.startPage > 1) {
+	        container.append('<a href="javascript:void(0);" onclick="goPage(' + (pageDto.startPage - 1) + ')">&lt;</a>');
+	    }
+	
+	    // 현재 블럭 페이지 번호
+	    for (var i = pageDto.startPage; i <= pageDto.endPage; i++) {
+	        if (i === pageDto.currentPage) {
+	            container.append('<span class="active">' + i + '</span>');
+	        } else {
+	            container.append('<a href="javascript:void(0);" onclick="goPage(' + i + ')">' + i + '</a>');
+	        }
+	    }
+	
+	    // 다음 블럭
+	    if (pageDto.endPage < pageDto.lastPage) {
+	        container.append('<a href="javascript:void(0);" onclick="goPage(' + (pageDto.endPage + 1) + ')">&gt;</a>');
+	    }
+	}
+	
+	function goPage(page) {
+	    currentPage = page;
+	    loadPosts();
+	}
+	
+	// 검색 submit
+	$('#searchForm').on('submit', function(e) {
+	    e.preventDefault();
+	    currentPage = 1;
+	    loadPosts();
+	});
 
-// 게시판 메뉴 클릭 시 호출
-window.loadBoard = function(boardId, boardTitle) {
-    currentBoardId = boardId;
-    currentPage = 1;
-    $('#boardTitle').text(boardTitle);
+	// 메뉴 로드 및 첫 게시판 자동 선택
+	$(document).ready(function(){
+	    $.ajax({
+	        url: '/board/menu',
+	        method: 'GET',
+	        success: function(data){
+	            var menuList = $('#board-menu-list');
+	            menuList.empty();
+	
+	            data.forEach(function(menu){
+	                var li = $('<li></li>');
+	                var link = $('<a href="javascript:void(0);"></a>').text(menu.boardTitle);
+	
+	                link.on('click', function(e){
+	                    e.preventDefault();
+	                    loadBoard(menu.boardId, menu.boardTitle); 
+	                });
+	
+	                li.append(link);
+	                menuList.append(li);
+	            });
+	
+	            if (data.length > 0) {
+	                loadBoard(data[0].boardId, data[0].boardTitle); 
+	            }
+	        },
+	        error: function(){
+	            console.error('게시판 메뉴를 불러오는 데 실패했습니다.');
+	        }
+	    });
+	});
 
-    // 공지사항게시판 관리자만 글쓰기 버튼
-    if (boardId === 1 && userRole !== 'admin') {
-        $('#insertPostModal').hide();
-    } else {
-        $('#insertPostModal').show();
-    }
-
-    loadPosts(); 
-};
-
-// 글 리스트 로드
-function loadPosts() {
-    if (!currentBoardId) return;
-
-    var formData = $('#searchForm').serialize();
-    $.ajax({
-        url: '/board/' + currentBoardId + '/posts',
-        type: 'GET',
-        data: $('#searchForm').serialize() + '&currentPage=' + currentPage,
-        success: function(data) {
-            var tbody = $('#post-list tbody');
-            tbody.empty();
-
-            var posts = data.posts;
-            var pageDto = data.pageDto;
-
-            if (!posts || posts.length === 0) {
-                tbody.append('<tr><td colspan="4">게시글이 없습니다.</td></tr>');
-                $('#pagination').empty();
-                return;
-            }
-
-            posts.forEach(function(post) {
-                tbody.append('<tr>'
-                    + '<td>' + post.postId + '</td>'
-                    + '<td><a href="/post/detail?postId=' + post.postId + '&boardId=' + currentBoardId + '">' + post.title + '</a></td>'
-                    + '<td>' + post.userName + '</td>'
-                    + '<td>' + post.createDate + '</td>'
-                    + '</tr>');
-            });
-
-            loadPagination(pageDto);
-        },
-        error: function() {
-            console.error('게시글을 불러오는 데 실패했습니다.');
-        }
-    });
-}
-
-// 페이징 생성
-function loadPagination(pageDto) {
-    if (!pageDto) return;
-    var container = $('#pagination');
-    container.empty();
-
-    // 이전 블럭
-    if (pageDto.startPage > 1) {
-        container.append('<a href="javascript:void(0);" onclick="goPage(' + (pageDto.startPage - 1) + ')">&lt;</a>');
-    }
-
-    // 현재 블럭 페이지 번호
-    for (var i = pageDto.startPage; i <= pageDto.endPage; i++) {
-        if (i === pageDto.currentPage) {
-            container.append('<span class="active">' + i + '</span>');
-        } else {
-            container.append('<a href="javascript:void(0);" onclick="goPage(' + i + ')">' + i + '</a>');
-        }
-    }
-
-    // 다음 블럭
-    if (pageDto.endPage < pageDto.lastPage) {
-        container.append('<a href="javascript:void(0);" onclick="goPage(' + (pageDto.endPage + 1) + ')">&gt;</a>');
-    }
-}
-
-function goPage(page) {
-    currentPage = page;
-    loadPosts();
-}
-
-// 검색 submit
-$('#searchForm').on('submit', function(e) {
-    e.preventDefault();
-    currentPage = 1;
-    loadPosts();
-});
-
-// 메뉴 로드 및 첫 게시판 자동 선택
-$(document).ready(function() {
-    $.ajax({
-        url: '/board/menu',
-        method: 'GET',
-        success: function(data) {
-            var menuList = $('#board-menu-list');
-            menuList.empty();
-
-            data.forEach(function(menu, index) {
-                var li = $('<li></li>');
-                var link = $('<a href="javascript:void(0);"></a>').text(menu.boardTitle);
-
-                link.on('click', function(e) {
-                    e.preventDefault();
-                    loadBoard(menu.boardId, menu.boardTitle);
-                });
-
-                li.append(link);
-                menuList.append(li);
-            });
-
-            // 첫 게시판 자동 선택
-            if (data.length > 0) {
-                loadBoard(data[0].boardId, data[0].boardTitle);
-            }
-        },
-        error: function() {
-            console.error('게시판 메뉴를 불러오는 데 실패했습니다.');
-        }
-    });
 
     // 모달 열기
     $('#insertPostModal').on('click', function(e) {
@@ -272,8 +273,6 @@ $(document).ready(function() {
             }
         });
     });
-
-});
 
 </script>
 

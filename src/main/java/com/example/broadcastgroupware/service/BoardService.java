@@ -129,6 +129,14 @@ public class BoardService {
 	public List<Post> postDetail(int postId) {
 		return boardMapper.postDetail(postId);
 	}
+	
+	// 게시글 삭제
+	public boolean deletePost(int postId, String postPassword) {
+	
+		int deletedCount = boardMapper.deletePost(postId, postPassword);
+		
+		return deletedCount > 0;
+	}
 
 	// 댓글
 	public List<CommentDto> selectComment(int postId) {
@@ -171,5 +179,6 @@ public class BoardService {
 	public void deleteComment(int commentId) {
 		boardMapper.deleteComment(commentId);
 	}
+
 
 }

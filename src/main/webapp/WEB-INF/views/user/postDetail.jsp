@@ -298,19 +298,25 @@ a.btn:last-of-type:hover {
 				</div>
 				
 				<c:if test="${boardId == 1 and userRole == 'admin'}">
-				    <a href="" class="btn btn-outline-primary waves-effect waves-light">삭제</a>
-				    <a href="" class="btn btn-outline-primary waves-effect waves-light">수정</a>
+				    <button data-postid="${postId}" class="deletePostBtn btn btn-outline-primary waves-effect waves-light">삭제</button>
+				    <button data-postid="${postId}" class="modifyPostBtn btn btn-outline-primary waves-effect waves-light">수정</button>
 				</c:if>
 				
 				<c:forEach var="c" items="${detail}">
 				    <c:if test="${boardId != 1 and loginUser.userId == c.userId}">
-				        <a href="/board/delete?postId=${c.postId}" class="btn btn-outline-primary waves-effect waves-light">삭제</a>
-				        <a href="/board/edit?postId=${c.postId}" class="btn btn-outline-primary waves-effect waves-light">수정</a>
+				        <button data-postid="${postId}" class="deletePostBtn btn btn-outline-primary waves-effect waves-light">삭제</button>
+				        <button data-postid="${postId}" class="modifyPostBtn btn btn-outline-primary waves-effect waves-light">수정</button>
 				    </c:if>
 				</c:forEach>
 
-				<a href="" class="btn btn-outline-primary waves-effect waves-light">닫기</a>
+				<button onclick="window.close()" class="btn btn-outline-primary waves-effect waves-light">닫기</button>
 
+			</div>
+			
+			<div id="passwordModal" style="display:none;">
+			    <input type="password" id="deletePassword" placeholder="비밀번호 입력">
+			    <button id="confirmDelete">삭제 확인</button>
+			    <button id="cancelDelete">취소</button>
 			</div>
         </div>
     </div>
@@ -320,6 +326,44 @@ a.btn:last-of-type:hover {
 	    var fileId = $(this).data("id");
 	    console.log("다운로드 파일 id", fileId);
 	    window.location.href = "/file/download?fileId=" + fileId;
+	});
+
+	
+	//게시글 삭제
+	$('.deletePostBtn').on('click', function() {
+	    var postId = $(this).data('postid');
+	    $('#passwordModal').data('postid', postId).show();
+	});
+	
+	$('#cancelDelete').on('click', function() {
+	    $('#passwordModal').hide();
+	});
+	
+	$('#confirmDelete').on('click', function() {
+	    var postId = $('#passwordModal').data('postid');
+	    var password = $('#deletePassword').val();
+	    
+	    //console.log('삭제할 게시글 번호: ', postId);
+	    //console.log('삭제할 게시글 암호: ', password);
+	
+	    $.ajax({
+	        url: '/board/deletePost',
+	        type: 'POST',
+	        data: { postId: postId, postPassword: password },
+	        success: function(res) {
+	            if(res.success){
+	                alert('게시글 삭제 완료');
+	                window.close();
+	            } else {
+	                alert('비밀번호가 틀렸습니다.');
+	            }
+	            $('#passwordModal').hide();
+	        },
+	        error: function() {
+	            alert('삭제 중 오류 발생');
+	            $('#passwordModal').hide();
+	        }
+	    });
 	});
 
 	
@@ -338,7 +382,6 @@ a.btn:last-of-type:hover {
 	            return;
 	        }
 
-	        
 	        $.ajax({
 	            url: '/board/comment/insert',
 	            type: 'POST',
@@ -483,7 +526,11 @@ $(document).ready(function() {
 		        data: JSON.stringify({ commentId: commentId }),
 		        success: function(res){
 		            alert('삭제되었습니다.');
-		            location.reload();
+		            if(window.opener && !window.opener.closed){
+		                window.opener.location.reload();
+		            }
+		            
+		            window.close();
 		        },
 		        error: function(err){
 		            console.error(err);

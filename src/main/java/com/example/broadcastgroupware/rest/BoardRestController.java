@@ -164,8 +164,7 @@ public class BoardRestController {
 
 	}
 
-	
-    
+	// 게시글 등록
     @PostMapping("/insertPost")
     @ResponseBody
     public String insertPost(HttpSession session,
@@ -189,6 +188,26 @@ public class BoardRestController {
 
         return boardService.insertPost(postDto, userId);
     }
+    
+    
+    
+    // 게시글 삭제
+    @PostMapping("/deletePost")
+    @ResponseBody
+    public Map<String, Boolean> deletePost(@RequestParam int postId, @RequestParam String postPassword) {
+    	
+    	log.info("삭제할 게시글: {}", postId);
+    	log.info("게시글 암호: {}", postPassword);
+    	
+        boolean result = boardService.deletePost(postId, postPassword);
+
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("success", result);
+
+        return response;
+    }
+
+
     
     // 최초댓글
     @PostMapping("/comment/insert")

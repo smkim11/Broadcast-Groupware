@@ -110,7 +110,8 @@
 	    SET top_fixed = #{topFixed}
 	    WHERE post_id = #{postId}
 	</update>
-	<!-- 게시글 저장 -->
+	
+	<!-- 게시글 상태 수정 -->
 	<update id="modifyPostStatus">
 	    UPDATE post
 	    SET post_status = #{postStatus}
@@ -128,6 +129,7 @@
 	    LEFT JOIN user u ON p.user_id = u.user_id
 	    LEFT JOIN board b ON p.board_id = b.board_id
 	    WHERE b.board_id = #{boardId}
+	    AND p.post_status = 'Y'
 		<if test="pageDto.searchType != null and pageDto.searchWord != null and pageDto.searchWord != ''">
 		    <trim prefix="AND (" suffix=")" prefixOverrides="OR">
 		        <if test="pageDto.searchType.contains('title')">
@@ -151,9 +153,15 @@
 
     <!-- 게시글 저장 -->
 	<insert id="savePost" useGeneratedKeys="true" keyProperty="postDto.postId">
-	    INSERT INTO post (board_id, post_title, post_content, user_id, create_date)
-	    VALUES (#{postDto.boardId}, #{postDto.postTitle}, #{postDto.postContent}, #{userId}, NOW())
+	    INSERT INTO post (board_id, post_title, post_content, post_password, user_id, create_date)
+	    VALUES (#{postDto.boardId}, #{postDto.postTitle}, #{postDto.postContent}, #{postDto.postPassword}, #{userId}, NOW())
 	</insert>
+	
+	<!-- 게시글 삭제 -->
+	<update id="deletePost">
+		UPDATE post SET post_status = 'N'
+		WHERE post_id = #{postId} AND post_password = #{postPassword}
+	</update>
 
     <!-- 복수 파일 저장 -->
 	<insert id="saveFiles" parameterType="list">
