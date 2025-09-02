@@ -1,5 +1,8 @@
 package com.example.broadcastgroupware.service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -54,7 +57,10 @@ public class ApprovalQueryService {
         Map<String, Object> broadcastForm = approvalQueryMapper.selectBroadcastFormDetail(approvalDocumentId);
         Map<String, Object> vacationForm = approvalQueryMapper.selectVacationFormDetail(approvalDocumentId);
 
-        // 모든 인원 수 선택된 팀은 팀 배지로 표시, 그 팀 구성원은 개인 배지에서 제외
+        // 결재선의 서명 경로를 화면용으로 정리
+        prepareSignatureUrls(approvalDocumentId, approvalLines);
+        
+        // 참조: 팀 전원 포함 시 팀 배지로, 나머지는 개인 배지로 분리
         Map<String, List<Map<String, Object>>> collapsed = collapseReferences(referenceLines);
         
         Map<String, Object> bundle = new HashMap<>();
@@ -91,7 +97,7 @@ public class ApprovalQueryService {
         boolean isDrafter = (drafterUserId != null && drafterUserId == loginUserId);  // 본인 문서
         boolean firstApproved = "승인".equals(firstStatus);				   			  // 최초 결재자: '승인' 전
         boolean isEditable = isDrafter && !firstApproved &&
-                ("임시저장".equals(status) || "진행 중".equals(status));	   			      // 문서 상태: '임시저장' or '진행 중'
+                ("임시저장".equals(status) || "진행 중".equals(status));	   			  // 문서 상태: '임시저장' or '진행 중'
 
         // 4) 뷰에서 바로 쓸 수 있도록 플래그/타입을 번들에 주입해 반환
         bundle.put("docType", docType);
@@ -100,8 +106,84 @@ public class ApprovalQueryService {
         bundle.put("isEditable", isEditable);
         return bundle;
     }
-
     
+    
+    // 파일 시스템 기준 루트/사본 폴더 (표시용 URL 산출에만 사용)
+    private static final String FINAL_STORAGE_PATH = "C:/final";
+    private static final String SIGNATURE_STORAGE_PATH = FINAL_STORAGE_PATH + "/signatures/approvals";
+    
+    // 결재선의 서명 경로를 화면 표시용으로 가공
+    private void prepareSignatureUrls(int documentId, List<Map<String, Object>> lines) {
+        if (lines == null) return;
+
+        for (Map<String, Object> al : lines) {
+            Object uidObj = al.get("userId");
+            Object stObj = al.get("approvalLineStatus");
+            
+            // 승인된 결재자 -> 문서별 사본 경로 우선 노출
+            if (uidObj != null && stObj != null) {
+                int uid = (uidObj instanceof Number) ? ((Number) uidObj).intValue()
+                                                     : Integer.parseInt(uidObj.toString());
+                String st = stObj.toString();
+
+                if ("승인".equals(st)) {
+                    String approvalUrl = findApprovalSignatureUrl(documentId, uid);
+                    if (approvalUrl != null) {
+                        al.put("approvalSignatureUrl", approvalUrl);
+                    }
+                }
+            }
+
+            // 개인 서명 원본 경로 -> 표시용 URL로 치환
+            Object sig = al.get("signatureUrl");
+            if (sig instanceof String s && !s.isBlank()) {
+                String publicUrl = toPublicUrlFromPath(s);
+                if (publicUrl != null) {
+                    al.put("signatureUrl", publicUrl);
+                }
+            }
+        }
+    }
+
+    // 파일 시스템 경로(C:\final\..., file:///C:/final/...)를 
+    // 정적 리소스 매핑(/final/**)에 맞춘 웹 경로(/final/...)로 변환
+    private String toPublicUrlFromPath(String fullFsPath) {
+        if (fullFsPath == null || fullFsPath.isBlank()) return null;
+
+        String norm = fullFsPath.trim();
+
+        // file:/// 접두 제거
+        if (norm.regionMatches(true, 0, "file:///", 0, "file:///".length())) {
+            norm = norm.substring("file:///".length());
+        }
+
+        // 슬래시 정규화
+        norm = norm.replace("\\", "/").replaceAll("/{2,}", "/");
+
+        // C:/final/ 하위만 /final/... 로 노출
+        String lower = norm.toLowerCase();
+        String root = "c:/final/";
+        if (lower.startsWith(root)) {
+            String tail = norm.substring(root.length()).replaceAll("^/+", "");
+            return "/final/" + tail;
+        }
+        return null;
+    }
+
+    // 문서별 서명 사본 URL 찾기
+    private String findApprovalSignatureUrl(int documentId, int userId) {
+        String base = SIGNATURE_STORAGE_PATH + "/" + documentId;
+        String[] exts = {"png", "jpg", "jpeg", "webp"};
+        for (String ext : exts) {
+            Path cand = Paths.get(base, userId + "." + ext);
+            if (Files.exists(cand)) {
+                return "/final/signatures/approvals/" + documentId + "/" + userId + "." + ext;
+            }
+        }
+        return null;
+    }
+    
+
     // 개인 참조를 팀 기준으로 집계하여 팀 목록과 나머지 개인 목록으로 분류
     private Map<String, List<Map<String, Object>>> collapseReferences(List<Map<String, Object>> referenceLines) {
         Map<String, List<Map<String, Object>>> result = new HashMap<>();

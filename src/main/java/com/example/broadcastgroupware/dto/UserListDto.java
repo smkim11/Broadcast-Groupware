@@ -11,6 +11,6 @@ public class UserListDto {
 	private String email;			// 이메일
 	private int teamId;				// 팀 아이디
 	private String teamName;		// 팀 이름
-	private int department;			// 부서 아이디
+	private int departmentId;		// 부서 아이디
 	private String departmentName;	// 부서 이름
 }

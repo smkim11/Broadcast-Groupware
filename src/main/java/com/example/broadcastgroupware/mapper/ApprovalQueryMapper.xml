@@ -300,6 +300,16 @@
 	    	AND approval_line_status IS NULL
 	</select>
 	
+	<!-- 결재자 최신 서명 파일의 전체 경로 -->
+	<select id="selectLatestSignatureByUser" parameterType="int" resultType="string">
+	    SELECT CONCAT(user_images_path, '/', user_images_name, '.', user_images_ext) AS signatureUrl
+	    FROM user_images
+	    WHERE user_id = #{userId}
+	    	AND user_images_type = '서명'
+	    ORDER BY update_date DESC
+	    LIMIT 1
+	</select>
+		
 	
 	<!-- ======== 받은 문서 조회 (로그인한 사용자가 결재자인 문서) ======== -->
 

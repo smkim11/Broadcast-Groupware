@@ -75,6 +75,7 @@ public class ApprovalQueryController {
         model.addAttribute("referenceIndividuals", bundle.get("referenceIndividuals"));  // 팀/개인 분리 목록
         model.addAttribute("docType", bundle.get("docType"));
         model.addAttribute("isEditable", bundle.get("isEditable"));
+        model.addAttribute("loginUserId", loginUser.getUserId());
         
         // 문서 결재 가능 여부 계산
         // true일 경우 JSP에서 승인/반려 버튼 노출

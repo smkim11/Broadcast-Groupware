@@ -67,8 +67,11 @@ public interface ApprovalQueryMapper {
     // 다음 활성화될 차수 (status IS NULL 중 가장 작은 차수)
     Integer selectNextSequenceToActivate(int approvalDocumentId);
     
+    // 결재자 최신 서명 파일의 전체 경로
+    String selectLatestSignatureByUser(@Param("userId") int userId);
+    
 
-	 // ===== 받은 문서함 조회 (목록 조회) =====
+	// ===== 받은 문서함 조회 (목록 조회) =====
     
     // 사용자가 현재 '대기'인 문서
 	List<ApprovalDocumentDto> selectMyPendingApprovals(@Param("userId") int userId);
@@ -79,7 +82,6 @@ public interface ApprovalQueryMapper {
 	// 종료 (최종 승인/반려) + 필터
 	List<ApprovalDocumentDto> selectMyCompletedApprovals(@Param("userId") int userId,
             											@Param("status") String status);
-
     // 참조 목록 문서
     List<ApprovalDocumentDto> selectReferencedDocuments(@Param("userId") int userId);
     
