@@ -277,6 +277,20 @@ a.btn:last-of-type:hover {
     border: none;
 }
 
+.dropbtn {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+.dropbtn:hover {
+    background-color: #e0e0e0;
+}
+.dropdown-content a:hover {
+    background-color: #ddd;
+}
+
 </style>
 
 </head>
@@ -315,15 +329,24 @@ a.btn:last-of-type:hover {
 			        </c:forEach>
 	            </div>
 	            <div class="article-body">
-	            	<c:forEach var="c" items="${detail}">
-	            		<c:forEach var="f" items="${fileList}">
-			                <div class="file">${f.fileName}<button type="button" class="fileDownload" data-id="${f.fileId}">파운로드</button></div>
-			            </c:forEach>
-			            <div class="content">
-			                <div class="content-main">${c.postContent}</div>
-			            </div>
-					</c:forEach>
+					<c:forEach var="c" items="${detail}">
+					    <div class="content">
+					        <div class="attachment-dropdown" style="position: relative; display: inline-block; float: right; margin-top: 5px;">
+					            <button class="dropbtn">📎 첨부파일</button>
+					            <div class="dropdown-content" style="display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 1;">
+					                <c:forEach var="f" items="${fileList}">
+					                    <a href="/file/download?fileId=${f.fileId}" style="display: block; padding: 5px 10px; text-decoration: none; color: #333;">
+					                        ${f.fileName}
+					                    </a>
+					                </c:forEach>
+					            </div>
+					        </div>
+					        
+					        <div class="content-main">${c.postContent}</div>
 					
+					        <div style="clear: both;"></div>
+					    </div>
+					</c:forEach>
 										
 					<div class="comment">
 					    <p>댓글</p>
@@ -485,12 +508,34 @@ a.btn:last-of-type:hover {
         </div>
     </div>
 </div>
+
+
 <script>
-	$(document).on("click", ".fileDownload", function(){
-	    var fileId = $(this).data("id");
-	    console.log("다운로드 파일 id", fileId);
+	// 첨부파일 
+	document.querySelectorAll('.dropbtn').forEach(function(btn) {
+	    btn.addEventListener('click', function(event) {
+	        event.stopPropagation();
+	        const dropdown = this.nextElementSibling;
+	        const isVisible = dropdown.style.display === 'block';
+	
+	        document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
+	
+	        dropdown.style.display = isVisible ? 'none' : 'block';
+	    });
+	});
+	
+	window.addEventListener('click', function() {
+	    document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
+	});
+	
+
+	$(document).on("click", ".dropdown-content a, .fileDownload", function(e){
+	    e.preventDefault(); 
+	    var fileId = $(this).data("id") || $(this).attr("href").split("fileId=")[1];
+	    console.log("다운로드 파일 id:", fileId);
 	    window.location.href = "/file/download?fileId=" + fileId;
 	});
+
 	
 	// 수정 버튼 클릭 시 → 게시글 내용 모달에 셋팅
 	$(document).on("click", ".modifyPostBtn", function () {
@@ -623,49 +668,49 @@ a.btn:last-of-type:hover {
 	});
 	
     // 대댓글 등록
-$(document).ready(function() {
-    $('.secondForm').hide();
-
-    // 댓글쓰기 버튼 클릭
-    $(document).on('click', '.second', function() {
-        $(this).siblings('.secondForm').toggle();
-    });
-
-    // 대댓글 등록
-    $(document).on('click', '.secondForm button', function() {
-        var form = $(this).closest('.secondForm');
-        var commentContent = form.find('textarea[name="commentContent"]').val().trim();
-        var commentParent = $(this).closest('.secondComment').find('input[name="commentId"]').val();
-        var postId = '${detail[0].postId}';
-        var userId = $('#userId').val();
-
-        if(commentContent === '') {
-            alert('댓글을 입력해주세요.');
-            return;
-        }
-
-        $.ajax({
-            url: '/board/cecondComment/insert',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({	
-				userId: userId,
-                postId: postId,
-                commentParent: commentParent,
-                commentContent: commentContent
-            }),
-            success: function(res) {
-                alert('대댓글이 등록되었습니다.');
-                form.find('textarea[name="commentContent"]').val('');
-                location.reload();
-            },
-            error: function(err) {
-                console.error(err);
-                alert('대댓글 등록 실패');
-            }
-        });
-    });
-});
+	$(document).ready(function() {
+	    $('.secondForm').hide();
+	
+	    // 댓글쓰기 버튼 클릭
+	    $(document).on('click', '.second', function() {
+	        $(this).siblings('.secondForm').toggle();
+	    });
+	
+	    // 대댓글 등록
+	    $(document).on('click', '.replySubmit', function() {
+	        var form = $(this).closest('.secondForm');
+	        var commentContent = form.find('textarea[name="commentContent"]').val().trim();
+	        var commentParent = $(this).closest('.secondComment').find('input[name="commentId"]').val();
+	        var postId = '${detail[0].postId}';
+	        var userId = $('#userId').val();
+	
+	        if(commentContent === '') {
+	            alert('댓글을 입력해주세요.');
+	            return;
+	        }
+	
+	        $.ajax({
+	            url: '/board/cecondComment/insert',
+	            type: 'POST',
+	            contentType: 'application/json',
+	            data: JSON.stringify({	
+					userId: userId,
+	                postId: postId,
+	                commentParent: commentParent,
+	                commentContent: commentContent
+	            }),
+	            success: function(res) {
+	                alert('대댓글이 등록되었습니다.');
+	                form.find('textarea[name="commentContent"]').val('');
+	                location.reload();
+	            },
+	            error: function(err) {
+	                console.error(err);
+	                alert('대댓글 등록 실패');
+	            }
+	        });
+	    });
+	});
 
 
 	$(document).ready(function(){
