@@ -29,14 +29,22 @@
 			timestampdiff(day,user_join_date,NOW())%365,'일') FROM user WHERE user_id=#{userId}
 	</select>
 	
-	<!--직책별 팀,부서,전체 근태-->
+	<!--직책별 팀,부서,전체 근태 &lt; == '<' , &gt; == '>'-->
 	<select id="selectAttendanceListByRank" resultType="map" parameterType="com.example.broadcastgroupware.dto.AttendanceListDto">
 		SELECT d.department_name departmentName, t.team_name teamName, u.full_name fullName, u.user_rank userRank,
 			(SELECT date_format(sec_to_time(sum(timestampdiff(second,attendance_in,attendance_out)) OVER()),'%H시간 %i분') monthWorkHours FROM attendance         
 			WHERE year(attendance_date) = #{year} and month(attendance_date) = #{month} AND user_id = u.user_id
 			ORDER BY attendance_date DESC LIMIT 0,1) monthWorkHours,
-			(SELECT COUNT(*) FROM attendance WHERE hour(attendance_in)>=9 AND user_id=u.user_id
-			AND year(attendance_date) = #{year} and month(attendance_date) = #{month}) lateness
+			((SELECT COUNT(*) FROM attendance WHERE hour(attendance_in)>=9 AND user_id=u.user_id
+				AND year(attendance_date) = #{year} and month(attendance_date) = #{month})-
+			(SELECT COUNT(*) FROM vacation_history vh INNER JOIN approval_line al ON al.approval_line_id = vh.approval_line_id
+			INNER JOIN approval_document ad ON al.approval_document_id = ad.approval_document_id
+			INNER JOIN vacation_form vf ON vf.approval_document_id = ad.approval_document_id
+			INNER JOIN user us ON us.user_id = ad.user_id 
+			INNER JOIN attendance a ON a.user_id=us.user_id
+			WHERE vf.vacation_form_half_type = '오전' AND year(vf.vacation_form_start_date) = #{year} AND
+				MONTH(vf.vacation_form_start_date)=#{month} AND ad.user_id=u.user_id AND a.attendance_date=vf.vacation_form_start_date
+				AND hour(a.attendance_in) &lt; 13)) lateness
 		FROM user u 
 		INNER JOIN deployment_history dh ON u.user_id = dh.user_id
 		INNER JOIN team t ON t.team_id = dh.team_id
