@@ -368,7 +368,7 @@ a.btn:last-of-type:hover {
 					                    <div class="secondForm" style="display:none;">
 					                        <textarea rows="2" name="commentContent" placeholder="댓글입력"></textarea>
 					                        <input type="hidden" name="parentCommentId" value="${co.commentId}">
-					                        <a class="replySubmit ">등록</a>
+					                        <a class="replySubmit">등록</a>
 					                    </div>
 					                </c:otherwise>
 					            </c:choose>
