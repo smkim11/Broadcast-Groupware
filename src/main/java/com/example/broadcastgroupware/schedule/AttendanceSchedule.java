@@ -19,7 +19,7 @@ public class AttendanceSchedule {
 	
 	// 출근 후 퇴근을 안누르고간 직원들 정시퇴근처리
 	@Scheduled(cron = "0 59 23 * * *")
-	public void AttendanceSchedule() {
+	public void AttendanceOutSchedule() {
 		List<Integer> userList = attendanceService.selectNotOutUser();
 		for(int userId:userList) {
 			attendanceService.updateNotOutUser(userId);
