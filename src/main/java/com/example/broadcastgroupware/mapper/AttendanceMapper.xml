@@ -44,7 +44,22 @@
 			INNER JOIN attendance a ON a.user_id=us.user_id
 			WHERE vf.vacation_form_half_type = '오전' AND year(vf.vacation_form_start_date) = #{year} AND
 				MONTH(vf.vacation_form_start_date)=#{month} AND ad.user_id=u.user_id AND a.attendance_date=vf.vacation_form_start_date
-				AND hour(a.attendance_in) &lt; 13)) lateness
+				AND hour(a.attendance_in) &lt; 13)) lateness,
+			(SELECT SUM(
+				CASE WHEN vf.vacation_form_type = '반차' THEN 0.5
+				   else DATEDIFF(
+				        LEAST(vf.vacation_form_end_date, LAST_DAY(STR_TO_DATE(CONCAT(#{year}, '-', #{month}, '-01'), '%Y-%m-%d'))),
+				        GREATEST(vf.vacation_form_start_date, STR_TO_DATE(CONCAT(#{year}, '-', #{month}, '-01'), '%Y-%m-%d'))
+				    ) + 1
+				  end
+				) AS usedVacation
+			FROM vacation_form vf
+			INNER JOIN approval_document ad 
+			  ON vf.approval_document_id = ad.approval_document_id
+			WHERE ad.user_id = u.user_id
+			  AND vf.vacation_form_end_date >= STR_TO_DATE(CONCAT(#{year}, '-', #{month}, '-01'), '%Y-%m-%d')
+			  AND vf.vacation_form_start_date &lt;= LAST_DAY(STR_TO_DATE(CONCAT(#{year}, '-', #{month}, '-01'), '%Y-%m-%d'))
+			) usedVacation
 		FROM user u 
 		INNER JOIN deployment_history dh ON u.user_id = dh.user_id
 		INNER JOIN team t ON t.team_id = dh.team_id

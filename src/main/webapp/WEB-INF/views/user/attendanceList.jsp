@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -35,15 +36,32 @@
 	            		<c:choose>
 	            			<c:when test="${ald.role == 'admin' or ald.userRank == '국장' }">
 	            				<h4 class="mb-0">직원 근태</h4>
+	            				<div class="page-title-right">
+									<ol class="breadcrumb m-0">
+										<li class="breadcrumb-item">근태</li>
+										<li class="breadcrumb-item active">직원 근태</li>
+									</ol>
+					            </div>
 	            			</c:when>
 	            			<c:when test="${ald.role != 'admin' and ald.userRank == '팀장' }">
 	            				<h4 class="mb-0">팀원 근태</h4>
+	            				<div class="page-title-right">
+									<ol class="breadcrumb m-0">
+										<li class="breadcrumb-item">근태</li>
+										<li class="breadcrumb-item active">팀원 근태</li>
+									</ol>
+					            </div>
 	            			</c:when>
 	            			<c:when test="${ald.role != 'admin' and ald.userRank == '부서장' }">
 	            				<h4 class="mb-0">부서원 근태</h4>
+	            				<div class="page-title-right">
+									<ol class="breadcrumb m-0">
+										<li class="breadcrumb-item">근태</li>
+										<li class="breadcrumb-item active">부서원 근태</li>
+									</ol>
+					            </div>
 	            			</c:when>
 	            		</c:choose>
-                        
                     </div>
 	                <div class="card">
 	                    <div class="card-body">
@@ -71,7 +89,17 @@
 		                                <td>${list.fullName } ${list.userRank }</td>
 		                                <td>${list.monthWorkHours }</td>
 		                                <td>${list.lateness }회</td>
-		                                <td></td>
+		                                <td>
+		                                	<c:choose>
+		                                		<c:when test="${list.usedVacation == null }">
+		                                			0일
+		                                		</c:when>
+		                                		<c:when test="${list.usedVacation != null }">
+		                                			<!-- 소수점뒤에 숫자가 있으면 표시 없으면 정수로 표시 -->
+		                                			<fmt:formatNumber value="${list.usedVacation }" type="number" maxFractionDigits="1"/>일
+		                                		</c:when>
+		                                	</c:choose>
+		                                </td>
 		                            </tr>
 	                            </c:forEach>
 	                            </tbody>
