@@ -85,7 +85,7 @@
 			        <div class="d-flex align-items-center justify-content-between mb-1">
 			        <div class="d-flex align-items-center mb-2">
 			          <h4 class="card-title mb-1">근태</h4>
-			          <span id="resv-range-label" class="title-inline-note ms-2">최근 30일</span>
+			          <span id="resv-range-label" class="title-inline-note ms-2">30일 기준</span>
 			        </div>
 			        </div>
 			
@@ -114,7 +114,7 @@
 				      <div id="att-donut-field"></div>
 				      <div class="att-center">외근</div>
 				    </div>
-				    <div class="small text-muted mt-1"><span id="att-field-time">'--:--'</span></div>
+				    <div class="small text-muted mt-1"><span id="att-field-time">--:--</span></div>
 				  </div>
 				</div>
 			  </div>

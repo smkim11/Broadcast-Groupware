@@ -195,7 +195,8 @@
         </form>
     </div>
 </div>
-
+<div><jsp:include page ="../nav/footer.jsp"></jsp:include></div>
+<div><jsp:include page ="../nav/javascript.jsp"></jsp:include></div>
 <script>
 	var currentBoardId = null;
 	var currentPage = 1;
@@ -318,36 +319,42 @@
 	});
 
 	// 메뉴 로드 및 첫 게시판 자동 선택
-	$(document).ready(function(){
-	    $.ajax({
-	        url: '/board/menu',
-	        method: 'GET',
-	        success: function(data){
-	            var menuList = $('#board-menu-list');
-	            menuList.empty();
-	
-	            data.forEach(function(menu){
-	                var li = $('<li></li>');
-	                var link = $('<a href="javascript:void(0);"></a>').text(menu.boardTitle);
-	
-	                link.on('click', function(e){
-	                    e.preventDefault();
-	                    loadBoard(menu.boardId, menu.boardTitle); 
-	                });
-	
-	                li.append(link);
-	                menuList.append(li);
-	            });
-	
-	            if (data.length > 0) {
-	                loadBoard(data[0].boardId, data[0].boardTitle); 
-	            }
-	        },
-	        error: function(){
-	            console.error('게시판 메뉴를 불러오는 데 실패했습니다.');
-	        }
-	    });
-	});
+	$(document).ready(function () {
+  var ctx = '${pageContext.request.contextPath}';
+
+  // URL에서 boardId 추출 (컨텍스트 제거)
+  var path = location.pathname;
+  if (ctx && path.indexOf(ctx) === 0) path = path.slice(ctx.length);
+  var m = path.match(/^\/board\/([^/]+)/);
+  var idFromUrl = m ? m[1] : null;
+
+  if (!idFromUrl) return;
+
+  // 현재 보드 설정
+  currentBoardId = idFromUrl;
+
+  // 페이지 상단 제목만 세팅 (사이드바는 header.jsp가 이미 렌더링함)
+  var $navA = $('#board-menu-list a[href="' + ctx + '/board/' + currentBoardId + '"]');
+  if ($navA.length) {
+    $('#boardTitle').text($navA.text());
+  } else {
+    // 혹시 사이드바 렌더보다 먼저 실행될 수 있으니 백업 플로우
+    $.getJSON(ctx + '/board/menu', function (list) {
+      var found = list.find(function (x) { return String(x.boardId) === String(currentBoardId); });
+      if (found) $('#boardTitle').text(found.boardTitle);
+    });
+  }
+
+  // 글쓰기 버튼 권한 처리
+  if (String(currentBoardId) === '1' && '${loginUser.role}' !== 'admin') {
+    $('#insertPostModal').hide();
+  } else {
+    $('#insertPostModal').show();
+  }
+
+  // 글 목록 로드
+  loadPosts();
+});
 
 
     // 모달 열기

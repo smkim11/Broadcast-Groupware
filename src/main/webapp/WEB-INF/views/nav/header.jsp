@@ -283,11 +283,12 @@
                             </li>
 
                             <li>
-                                <a href="/user/chat" class=" waves-effect">
+                                <a href="/user/chat" class="waves-effect">
                                     <i class="uil-comments-alt"></i>
                                     <span>채팅</span>
                                 </a>
                             </li>
+                            
                             <li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
                                     <i class="uil-store"></i>
@@ -304,13 +305,13 @@
 								                <a href="/user/cuttingroom">편집실</a>
 								            </li>
 								         </ul>
+								         </li>
 								            <li>
 								                <a href="/user/car">차량</a>
 								            </li>
-								        
-							    </li>
 								</ul>
-                             </li>     
+                             </li>   
+                               
                              <li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
                                     <i class="uil-comments-alt"></i>
@@ -336,8 +337,7 @@
                                     <i class="uil-store"></i>
                                     <span>게시판</span>
                                 </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                	<li id="board-menu-list"></li>
+                                <ul class="sub-menu" aria-expanded="false" id="board-menu-list">
 								        <c:choose>
 									        <c:when test="${loginUser.role == 'admin'}">
 									            <li>
@@ -434,7 +434,7 @@
 								    </li>
 								</ul>
                              </li>       
-                            
+                            </ul>
                     </div>
                     <!-- Sidebar -->
                 </div>
@@ -454,26 +454,76 @@
    <!-- </nav> -->
 
 <script>
-$(document).ready(function(){
-    $.ajax({
-        url: '/board/menu',
-        method: 'GET',
-        success: function(data){
-            var menuList = $('#board-menu-list');
-            menuList.empty();
-            data.forEach(function(menu){
-                // 단순 링크만 생성
-                var li = $('<li></li>');
-                var link = $('<a></a>').attr('href', '/board/' + menu.boardId).text(menu.boardTitle);
-                li.append(link);
-                menuList.append(li);
-            });
-        },
-        error: function(){
-            console.error('게시판 메뉴를 불러오는 데 실패했습니다.');
-        }
-    });
-});
+$(function () {
+	  var ctx = '${pageContext.request.contextPath}';    // 컨텍스트
+	  $.ajax({
+	    url: ctx + '/board/menu',
+	    method: 'GET',
+	    success: function (data) {
+	      var $ul = $('#board-menu-list');
+	      $ul.empty();
+
+	      data.forEach(function (menu) {
+	        $('<li/>').append(
+	          $('<a/>', {
+	            href: ctx + '/board/' + menu.boardId,   // 링크에 컨텍스트 포함
+	            text: menu.boardTitle,
+	            'data-board-id': menu.boardId
+	          })
+	        ).appendTo($ul);
+	      });
+
+	      var $parentLi = $ul.closest('li');
+	      var $parentA  = $parentLi.children('a.has-arrow');
+
+	      // ----- 현재 경로 계산 (컨텍스트 제거) -----
+	      var path = location.pathname;
+	      if (ctx && path.indexOf(ctx) === 0) path = path.slice(ctx.length);
+	      var isBoard = /^\/board(\/|$)/.test(path);
+	      var curId   = (path.match(/^\/board\/([^/?#]+)/) || [])[1];
+
+	      // ----- 초기화 -----
+	      $ul.find('a').removeClass('active');
+	      $ul.find('li').removeClass('mm-active');
+	      $ul.removeClass('mm-show').removeAttr('style');
+	      $parentA.attr('aria-expanded', 'false');
+	      $parentLi.removeClass('mm-active');
+
+	      // ----- /board일 때만 펼치고 현재 항목 파랗게 -----
+	      if (isBoard) {
+	        $parentLi.addClass('mm-active');
+	        $parentA.attr('aria-expanded', 'true');
+	        $ul.addClass('mm-show').css('display', 'block');
+
+	        if (curId) {
+	          var $curA = $ul.find('a[href="' + ctx + '/board/' + curId + '"]');
+	          $curA.addClass('active').closest('li').addClass('mm-active');
+	        }
+	      }
+
+	      // 클릭 시 즉시 하이라이트(페이지 이동 전 미리 표시)
+	      $ul.off('click.markActive')
+	         .on('click.markActive', 'a[href^="' + ctx + '/board/"]', function () {
+	           $ul.find('a').removeClass('active');
+	           $ul.find('li').removeClass('mm-active');
+	           $(this).addClass('active').closest('li').addClass('mm-active');
+	         });
+
+	      // 다른 루트 메뉴 클릭하면 '게시판' 접기
+	      $('#side-menu').off('click.hideBoard')
+	        .on('click.hideBoard', '> li > a.has-arrow', function () {
+	          if (!$(this).is($parentA)) {
+	            $ul.removeClass('mm-show').removeAttr('style');
+	            $parentA.attr('aria-expanded', 'false');
+	            $parentLi.removeClass('mm-active');
+	          }
+	        });
+	    },
+	    error: function () {
+	      console.error('게시판 메뉴를 불러오는 데 실패했습니다.');
+	    }
+	  });
+	});
 </script>
 
 </html>

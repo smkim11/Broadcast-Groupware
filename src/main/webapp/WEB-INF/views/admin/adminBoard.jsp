@@ -520,7 +520,8 @@ $(document).ready(function() {
 
 
 </script>
-
+<div><jsp:include page ="../nav/footer.jsp"></jsp:include></div>
+<div><jsp:include page ="../nav/javascript.jsp"></jsp:include></div>
 </body>
 <!-- Sweet Alerts js -->
 <script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
