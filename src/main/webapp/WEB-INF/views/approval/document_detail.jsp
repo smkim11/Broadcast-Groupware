@@ -7,6 +7,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Document Detail</title>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
+<link href="${ctx}/resources/css/custom-approval.css?v=20250903" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <div>
@@ -32,10 +34,10 @@
 			    </div>
 			</div>
 			
-			<div class="appr-row mb-2">
+			<div class="row g-2 align-items-stretch appr-row-fixed mb-2">
 			    <!-- 좌측: 제목 카드 -->
-			    <div class="title-col min-w-0">
-			        <div class="card border bg-light title-card">
+			    <div class="col-12 col-xl">
+			        <div class="card border bg-light h-100">
 			            <div class="card-body d-flex align-items-center justify-content-center py-3 px-3">
 			                <h2 class="fs-2 mb-0 fw-semibold lh-sm text-center w-100 text-truncate">
 			                    <c:out value="${document.approvalDocumentTitle}"/>
@@ -43,59 +45,80 @@
 			            </div>
 			        </div>
 			    </div>
-			
+						
 			    <!-- 우측: 결재 3칸 -->
 			    <div class="col-12 col-xl-auto">
-			        <div class="d-flex gap-2 justify-content-start justify-content-xl-end flex-wrap">
+			        <div class="d-flex gap-2 flex-row flex-xl-column">
 			            <c:forEach var="al" items="${approvalLines}" varStatus="st">
 			                <c:if test="${st.index lt 3}">
-			                    <div class="card border-2" style="width:160px;">
-			                        <div class="card-header py-1 text-center bg-light">
-			                            <strong>결재 ${st.index + 1}차</strong>
+			                    <div class="card border-2 approval-tile">
+			                    
+			                    	<!-- 결재칸 헤더 -->
+			                        <div class="card-header bg-light text-center py-1">
+			                            <c:choose>
+				                            <c:when test="${empty al.userId}">
+				                                &nbsp; <%-- 결재자 미지정 시 공란 --%>
+				                            </c:when>
+				                            <c:otherwise>
+				                                <strong class="d-inline-block text-truncate text-truncate-140"
+				                                        title="${al.fullName}${not empty al.userRank ? ' (' : ''}${al.userRank}${not empty al.userRank ? ')' : ''}">
+				                                    <c:out value="${al.fullName}"/>
+				                                    <c:if test="${not empty al.userRank}"> (<c:out value="${al.userRank}"/>)</c:if>
+				                                </strong>
+				                            </c:otherwise>
+				                        </c:choose>
 			                        </div>
-			                        <div class="card-body p-2 d-flex flex-column justify-content-center align-items-center text-center gap-2" style="min-height:110px;">
-			                            <div class="fw-semibold text-truncate" style="max-width:140px;">
-			                                <c:choose>
-			                                    <%-- 사용자 본인 & '대기'인 경우에만 클릭 가능 --%>
-			                                    <c:when test="${al.userId == loginUserId && al.approvalLineStatus eq '대기'}">
-			                                        <a href="javascript:void(0);"
-			                                           class="text-decoration-underline"
-			                                           onclick="openApproveModal(${document.approvalDocumentId}, ${al.userId}, '${al.signatureUrl}')">
-			                                            <c:out value="${al.fullName}"/>
-			                                            <c:if test="${not empty al.userRank}"> (<c:out value="${al.userRank}"/>)</c:if>
-			                                        </a>
-			                                    </c:when>
-			                                    <c:otherwise>
-			                                        <c:out value="${al.fullName}"/>
-			                                        <c:if test="${not empty al.userRank}"> (<c:out value="${al.userRank}"/>)</c:if>
-			                                    </c:otherwise>
-			                                </c:choose>
-			                            </div>
-			                            
-			                            <div>
-			                                <c:choose>
-			                                    <c:when test="${al.approvalLineStatus eq '승인'}">
-			                                        <c:choose>
-			                                            <c:when test="${not empty al.approvalSignatureUrl}">
-			                                                <div class="mt-1">
-			                                                    <img src="${al.approvalSignatureUrl}" style="height:26px;" alt="signature">
-			                                                </div>
-			                                            </c:when>
-			                                            <c:when test="${not empty al.signatureUrl}">
-			                                                <div class="mt-1">
-			                                                    <img src="${al.signatureUrl}" style="height:26px;" alt="signature">
-			                                                </div>
-			                                            </c:when>
-			                                            <c:otherwise>
-			                                                <span class="badge bg-success px-3 py-2">승인</span>
-			                                            </c:otherwise>
-			                                        </c:choose>
-			                                    </c:when>
-			                                    <c:when test="${al.approvalLineStatus eq '반려'}">
-			                                        <span class="badge bg-danger px-3 py-2">반려</span>
-			                                    </c:when>
-			                                </c:choose>
-			                            </div>
+			                        
+			                        <!-- 결재칸 -->
+			                        <div class="card-body">
+		                                <c:choose>
+		                                	<%-- 결재자가 존재하지 않을 경우 --%>
+				                            <c:when test="${empty al.userId}">
+				                                <div class="text-muted">미지정</div>
+				                            </c:when>
+			                                
+		                                    <%-- 결재자가 존재할 경우 --%>
+		                                    <c:otherwise>
+		                                    	<c:choose>
+		                                    		<%-- 승인: 서명 이미지 + 서명일 --%>
+		                                            <c:when test="${al.approvalLineStatus eq '승인'}">
+				                                        <c:choose>
+				                                            <c:when test="${not empty al.approvalSignatureUrl}">
+				                                                    <img src="${al.approvalSignatureUrl}" class="approval-signature" alt="signature">
+				                                            </c:when>
+				                                            <c:when test="${not empty al.signatureUrl}">
+				                                                    <img src="${al.signatureUrl}" class="approval-signature" alt="signature">
+				                                            </c:when>
+				                                        </c:choose>
+			
+				                                        <%-- 서명일 표시 --%>
+				                                        <c:if test="${not empty al.approvalLineUpdateDate}">
+				                                            <div class="small text-muted mt-1">
+				                                                ${fn:substring(al.approvalLineUpdateDate, 0, 10)}
+				                                            </div>
+				                                        </c:if>
+			                                    	</c:when>
+			                                    
+				                                    <%-- 반려 시 --%>
+				                                    <c:when test="${al.approvalLineStatus eq '반려'}">
+													    <span role="img" aria-label="반려" style="font-size:3rem; line-height:1;">❌</span>
+													</c:when>
+				                                    
+				                                    <%-- 사용자 본인 & '대기'인 경우에만 결재 모달창 표시 --%>
+				                                    <c:otherwise>
+				                                        <c:if test="${al.userId == loginUserId}">
+				                                            <a href="javascript:void(0);"
+				                                               class="text-decoration-underline"
+				                                               onclick="openApproveModal(${document.approvalDocumentId}, ${al.userId}, '${al.signatureUrl}')">
+				                                                결재
+				                                            </a>
+				                                        </c:if>
+				                                    </c:otherwise>
+				                                    
+					                            </c:choose>
+					                        </c:otherwise>
+					                        
+				                        </c:choose>
 			                            
 			                        </div>
 			                    </div>
@@ -105,9 +128,9 @@
 			            <!-- placeholder로 3칸 맞추기 -->
 			            <c:forEach begin="${fn:length(approvalLines)}" end="2" var="i">
 			                <div class="card border-2" style="width:160px;">
-			                    <div class="card-header py-1 text-center bg-light">
-			                        <strong>결재 ${i + 1}차</strong>
-			                    </div>
+				                <div class="card-header py-1 text-center bg-light">
+				                    &nbsp;
+				                </div>
 			                    <div class="card-body p-2 d-flex flex-column justify-content-center align-items-center text-center gap-2" style="min-height:110px;">
 			                        <div class="text-muted">미지정</div>
 			                    </div>
@@ -145,10 +168,6 @@
 			                    <td><c:out value="${document.departmentName}"/> / <c:out value="${document.teamName}"/></td>
 			                    <th class="bg-light text-center">기안자</th>
 			                    <td><c:out value="${document.fullName}"/> (<c:out value="${document.userRank}"/>)</td>
-			                </tr>
-			                <tr>
-			                    <th class="bg-light text-center">제목</th>
-			                    <td colspan="3"><c:out value="${document.approvalDocumentTitle}"/></td>
 			                </tr>
 			                
 				            <!-- 타입별 폼 -->
@@ -378,7 +397,7 @@
 			    </div>
 			</div>
 			
-			<!-- 수정/삭제 + 결재하기 CTA -->
+			<!-- 수정/삭제 -->
 			<div class="mt-3 d-flex align-items-center">
 			    <a href="${pageContext.request.contextPath}/approval/document/main" class="btn btn-outline-secondary">목록</a>
 			
@@ -411,7 +430,7 @@
 			                        <div id="approveModalSigFallback" class="text-muted">서명 이미지를 불러올 수 없습니다.</div>
 			                    </div>
 			                    <div class="mb-2">
-			                        <label class="form-label">사유(선택)</label>
+			                        <label class="form-label">승인/반려 사유</label>
 			                        <input type="text" class="form-control" name="comment" placeholder="승인/반려 사유 입력(선택)">
 			                    </div>
 			                    <input type="hidden" name="documentId" value="${document.approvalDocumentId}">
@@ -422,8 +441,8 @@
 			                </div>
 			                <div class="modal-footer">
 			                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
-			                    <button type="submit" class="btn btn-danger" onclick="setDecision('REJECT')">반려</button>
-			                    <button type="submit" class="btn btn-success" onclick="setDecision('APPROVE')">승인</button>
+			                    <button type="submit" class="btn btn-outline-danger" onclick="setDecision('REJECT')">반려</button>
+			                    <button type="submit" class="btn btn-outline-success" onclick="setDecision('APPROVE')">승인</button>
 			                </div>
 			            </form>
 			        </div>
@@ -443,27 +462,31 @@
 </div>
 
 <script>
+	// 결재 모달
     function openApproveModal(docId, userId, signatureUrl) {
         const img = document.getElementById('approveModalSignature');
-        const fb  = document.getElementById('approveModalSigFallback');
+        const fb = document.getElementById('approveModalSigFallback');
         
-     // onerror: 이미지 로드 실패 시 폴백 표시
+     	// onerror: 이미지 로드 실패 시 폴백 문구 표시
         img.onerror = function () {
             img.style.display = 'none';
             fb.style.display  = 'block';
         };
         
+        // 유효한 signatureUrl 이 있으면 이미지 표시 / 없으면 폴백 문구 표시
         if (signatureUrl && signatureUrl.trim() !== '') {
             img.src = signatureUrl;
             img.style.display = 'inline';
-            fb.style.display  = 'none';
+            fb.style.display = 'none';
         } else {
             img.style.display = 'none';
-            fb.style.display  = 'block';
+            fb.style.display = 'block';
         }
         const m = new bootstrap.Modal(document.getElementById('approveModal'));
         m.show();
     }
+	
+	// 승인/반려 버튼
     function setDecision(dec) {
         document.getElementById('approveModalDecision').value = dec;
     }

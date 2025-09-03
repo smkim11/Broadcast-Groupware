@@ -167,6 +167,7 @@
 	        al.approval_line_sequence   AS approvalLineSequence,
 	        al.approval_line_status     AS approvalLineStatus,
 	        al.approval_line_comment    AS approvalLineComment,
+	        al.update_date              AS approvalLineUpdateDate,
 	        u.full_name                 AS fullName,
 	        u.user_rank                 AS userRank,
 	        sig.signatureUrl            AS signatureUrl
