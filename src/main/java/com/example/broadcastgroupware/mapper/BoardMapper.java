@@ -3,6 +3,7 @@ package com.example.broadcastgroupware.mapper;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.example.broadcastgroupware.domain.Comment;
 import com.example.broadcastgroupware.domain.File;
@@ -11,6 +12,7 @@ import com.example.broadcastgroupware.dto.BoardMenuDto;
 import com.example.broadcastgroupware.dto.BoardPageDto;
 import com.example.broadcastgroupware.dto.BoardPostDto;
 import com.example.broadcastgroupware.dto.CommentDto;
+import com.example.broadcastgroupware.dto.PostDetailDto;
 import com.example.broadcastgroupware.dto.PostDto;
 @Mapper
 public interface BoardMapper {
@@ -85,5 +87,8 @@ public interface BoardMapper {
 	// 댓글, 대댓글 삭제(비활성화)
 	void deleteComment(int commentId);
 
+	// home 페이지 공지사항 리스트
+	 List<PostDetailDto> selectHomeTopPosts(@Param("limit") int limit,
+             							    @Param("boardId") Integer boardId);
 
 }

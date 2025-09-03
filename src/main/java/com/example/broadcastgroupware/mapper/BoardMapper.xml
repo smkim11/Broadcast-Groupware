@@ -265,5 +265,43 @@
     	UPDATE comment SET comment_status = 'N'
     	WHERE comment_id = #{commentId}
     </update>
+    
+    
+       <!-- 홈 카드용 Top N (누적)
+       - 게시글/게시판 활성(Y)만
+       - 상단고정(top_fixed='Y') 우선 → 최신순
+       - boardId 파라미터가 있으면 해당 보드만, 없으면 전체
+       - 응답 필드: postId, postTitle, userName, createDate (+ 참고용 몇 개)
+	  -->
+	  <select id="selectHomeTopPosts"
+	          parameterType="map"
+	          resultType="com.example.broadcastgroupware.dto.PostDetailDto">
+	    SELECT
+	      p.post_id      AS postId,
+	      p.user_id      AS userId,
+	      p.post_title   AS postTitle,
+	      p.post_content AS postContent,
+	      p.post_status  AS postStatus,
+	      DATE_FORMAT(p.create_date, '%Y-%m-%dT%H:%i:%s') AS createDate,
+	
+	      u.full_name    AS userName,
+	      u.user_rank    AS userRank,
+	      
+	      COALESCE(p.top_fixed, 'N') AS topFixed
+	
+	    FROM post p
+	    LEFT JOIN board b ON b.board_id = p.board_id
+	    LEFT JOIN `user` u ON u.user_id = p.user_id
+	
+	    WHERE p.post_status = 'Y'
+	      AND (b.board_status = 'Y' OR b.board_id IS NULL)
+	      <if test="boardId != null and boardId != 0">
+	        AND p.board_id = #{boardId}
+	      </if>
+	
+	    ORDER BY (COALESCE(p.top_fixed, 'N') = 'Y') DESC,
+	             p.create_date DESC
+	    LIMIT #{limit}
+	  </select>
 
 </mapper>

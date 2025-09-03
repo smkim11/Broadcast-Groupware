@@ -18,6 +18,12 @@
 
 
 /* ============ 공통 ============ */
+.resv-donut{ position:relative; cursor:pointer; }
+.resv-donut .donut-center-link{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:46%; height:46%; border-radius:50%; display:block;
+}
+
 #koj-chat-fab, #koj-chat-panel { z-index: 2147483647; }
 /* 떠있는 버튼: 원형 + 회색 */
 #koj-chat-fab{

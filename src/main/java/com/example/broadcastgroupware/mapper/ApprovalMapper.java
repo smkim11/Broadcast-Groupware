@@ -1,6 +1,7 @@
 package com.example.broadcastgroupware.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -55,6 +56,7 @@ public interface ApprovalMapper {
     int updateDocumentStatus(@Param("approvalDocumentId") int approvalDocumentId,
             				@Param("status") String status);
     
-    
+    // home화면 문서 현황 조회
+    Map<String, Object> selectHomeDocCounts(@Param("userId") int userId);
     
 }

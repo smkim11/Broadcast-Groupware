@@ -12,4 +12,6 @@ public class PostDetailDto {
 	private String createDate;
 	private String userName;
 	private String userRank;
+	
+	private String topFixed;
 }

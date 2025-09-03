@@ -148,5 +148,34 @@
 	        update_date = NOW()
 	    WHERE approval_document_id = #{approvalDocumentId}
 	</update>
+	
+	<!-- 문서 홈 요약: 미결/진행/완료(누적) -->
+	<select id="selectHomeDocCounts" parameterType="int" resultType="map">
+	  SELECT
+	    <!-- 미결함: 내가 결재해야 하는 문서 (현재 대기) -->
+	    (
+	      SELECT COUNT(*)
+	      FROM approval_line al
+	      JOIN approval_document ad ON ad.approval_document_id = al.approval_document_id
+	      WHERE al.user_id = #{userId}
+	        AND al.approval_line_status = '대기'
+	    ) AS pending,
+	
+	    <!-- 진행함: 내가 상신했고 진행 중인 문서-->
+	    (
+	      SELECT COUNT(*)
+	      FROM approval_document ad
+	      WHERE ad.user_id = #{userId}
+	        AND ad.approval_document_status = '진행중'
+	    ) AS progress,
+	
+	    <!-- 완료함: 내가 상신해서 끝난 문서(완료/반려/종료 등) -->
+	    (
+	      SELECT COUNT(*)
+	      FROM approval_document ad
+	      WHERE ad.user_id = #{userId}
+	        AND ad.approval_document_status = '승인'
+	    ) AS done
+	</select>
 
 </mapper>

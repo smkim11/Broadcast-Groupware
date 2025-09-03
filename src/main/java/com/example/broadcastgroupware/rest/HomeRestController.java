@@ -1,25 +1,45 @@
 package com.example.broadcastgroupware.rest;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.SessionAttribute; // 세션에서 loginUser 꺼낼 때 필요
 
 import com.example.broadcastgroupware.domain.Attendance;
+import com.example.broadcastgroupware.dto.PostDetailDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
+import com.example.broadcastgroupware.mapper.ApprovalMapper;
 import com.example.broadcastgroupware.mapper.AttendanceMapper;
+import com.example.broadcastgroupware.mapper.BoardMapper;
+import com.example.broadcastgroupware.mapper.ReservationMapper;
+import com.example.broadcastgroupware.mapper.VacationMapper;
 
 @RestController
-@RequestMapping("/api/attendance")
+@RequestMapping("/api")
 public class HomeRestController {
 
     private final AttendanceMapper attendanceMapper;
+    private final VacationMapper vacationMapper;
+    private final ApprovalMapper approvalMapper;
+    private final ReservationMapper reservationMapper;
+    private final BoardMapper boardMapper;
 
-    // 생성자 주입 (스프링이 AttendanceMapper를 넣어줌)
-    public HomeRestController(AttendanceMapper attendanceMapper) {
+    // 생성자 주입
+    public HomeRestController(AttendanceMapper attendanceMapper,
+    						  VacationMapper vacationMapper,
+    						  ApprovalMapper approvalMapper,
+    						  ReservationMapper reservationMapper,
+    						  BoardMapper boardMapper) {
         this.attendanceMapper = attendanceMapper;
+        this.vacationMapper = vacationMapper;
+        this.approvalMapper = approvalMapper;
+        this.reservationMapper = reservationMapper;
+        this.boardMapper = boardMapper;
     }
 
     /**
@@ -27,7 +47,7 @@ public class HomeRestController {
      * - 기본은 "세션의 로그인 사용자" 기준
      * - 관리자 화면에서 특정 유저를 보고 싶으면 ?userId=... 로 넘기면 됨
      */
-    @GetMapping("/summary")
+    @GetMapping("/attendance/summary")
     public ResponseEntity<Map<String, Object>> summary(
             @RequestParam(defaultValue = "30") int days,                 // 최근 N일
             @RequestParam(required = false) Integer userId,              // (선택) 관리자용: 특정 사용자
@@ -90,5 +110,80 @@ public class HomeRestController {
         }
         // 이미 "HH:mm" 이면 그대로
         return t.length() >= 5 ? t.substring(0, 5) : t;
+    }
+    
+    // 휴가 현황
+    // /api/vacation/home-summary
+    @GetMapping("/vacation/home-summary")
+    public ResponseEntity<Map<String,Object>> vacationHomeSummary(
+        @RequestParam(required=false) Integer year,
+        @RequestParam(required=false) Integer userId,
+        @SessionAttribute(name="loginUser", required=false) UserSessionDto loginUser
+    ) {
+        int y = (year != null) ? year : java.time.Year.now().getValue();
+        Integer target = (userId != null) ? userId
+                         : (loginUser != null ? loginUser.getUserId() : null);
+        if (target == null || target <= 0) return ResponseEntity.badRequest().build();
+
+        Map<String,Object> p = new java.util.HashMap<>();
+        p.put("userId", target);
+        p.put("year", y);
+
+        Map<String,Object> r = vacationMapper.selectVacationHomeSummary(p);
+        if (r == null) r = java.util.Map.of("year", y, "total", 0, "remaining", 0, "approvalPending", 0);
+
+        return ResponseEntity.ok(r);
+    }
+    
+    // 문서현황
+    @GetMapping("/docs/home-summary")
+    public ResponseEntity<Map<String, Object>> docsHomeSummary(
+            @SessionAttribute(name = "loginUser", required = false) UserSessionDto me) {
+
+        if (me == null) return ResponseEntity.status(401).build();
+
+        Map<String, Object> m = approvalMapper.selectHomeDocCounts(me.getUserId());
+        int pending  = ((Number) (m.getOrDefault("pending", 0))).intValue();
+        int progress = ((Number) (m.getOrDefault("progress", 0))).intValue();
+        int done     = ((Number) (m.getOrDefault("done", 0))).intValue();
+
+        return ResponseEntity.ok(Map.of(
+                "counts", Map.of(
+                        "PENDING",  pending,
+                        "PROGRESS", progress,
+                        "DONE",     done
+                )
+        ));
+    }
+    
+    // 예약 현황
+    @GetMapping("/reservations/home-summary")
+    public ResponseEntity<Map<String, Object>> reservationsHomeSummary(
+            @SessionAttribute(name = "loginUser", required = false) UserSessionDto me
+            /* @RequestParam(name="days", required=false) Integer days  // 받아도 무시 */) {
+
+        if (me == null) return ResponseEntity.status(401).build();
+
+        Map<String, Object> m = reservationMapper.selectHomeReservationTotals(me.getUserId());
+        int meeting = ((Number)((m != null) ? m.getOrDefault("meeting", 0) : 0)).intValue();
+        int edit    = ((Number)((m != null) ? m.getOrDefault("edit",    0) : 0)).intValue();
+        int vehicle = ((Number)((m != null) ? m.getOrDefault("vehicle", 0) : 0)).intValue();
+
+        // JS는 totals.MEETING / totals.EDIT / totals.VEHICLE 를 읽습니다.
+        return ResponseEntity.ok(Map.of(
+            "totals", Map.of(
+                "MEETING", meeting,
+                "EDIT",    edit,
+                "VEHICLE", vehicle
+            )
+        ));
+    }
+    
+    // 누적 TopN: /api/notices/home-top?limit=4&boardId=1
+    @GetMapping("/notices/home-top")
+    public List<PostDetailDto> homeTop(@RequestParam(defaultValue = "4") int limit,
+                                       @RequestParam(required = false) Integer boardId){
+        int safe = (limit <= 0 || limit > 10) ? 4 : limit;
+        return boardMapper.selectHomeTopPosts(safe, boardId);
     }
 }

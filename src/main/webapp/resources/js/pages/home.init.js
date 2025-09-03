@@ -149,7 +149,6 @@
       method:'GET', credentials:'same-origin', headers:{ [CSRF_HEADER]: CSRF_TOKEN }
     })
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .catch(() => demo(y))                   // 실패/미구현 → 데모
     .then(data => render(normalize(data, y)))
     .catch(err => console.error('[vacation] render error:', err));
 
@@ -177,10 +176,6 @@
       });
     }
 
-    // 4) 데모 데이터
-    function demo(year){
-      return { year, total:16, remaining:10, approvalPending:0 };
-    }
   });
 })();
 
@@ -202,7 +197,6 @@
       method:'GET', credentials:'same-origin', headers:{ [CSRF_HEADER]: CSRF_TOKEN }
     })
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .catch(() => demo())         // 실패/미구현 → 데모
     .then(payload => render(payload))
     .catch(err => console.error('[docs] render error:', err));
 
@@ -213,9 +207,9 @@
 
       // 행 배열(표시 순서 고정)
       const rows = [
-        { key:'PROGRESS', label:'진행함',  icon:'mdi-archive-outline',  href:'/docs?status=in_progress' },
-        { key:'PENDING',  label:'미결함',  icon:'mdi-archive-outline',  href:'/docs?status=pending'     },
-        { key:'DONE',     label:'완료함',  icon:'mdi-archive-outline',  href:'/docs?status=done'        }
+        { key:'PENDING',  label:'대기함',  icon:'mdi-archive-outline',  href:'/approval/received/pending'     },
+        { key:'PROGRESS', label:'진행함',  icon:'mdi-archive-outline',  href:'/approval/documents/in-progress' },
+        { key:'DONE',     label:'완료함',  icon:'mdi-archive-outline',  href:'/approval/documents/completed'        }
       ];
 
       rowsEl.innerHTML = rows.map(r => rowHtml(r, counts[r.key] || 0)).join('');
@@ -255,10 +249,6 @@
       return out;
     }
 
-    // 3) 데모 데이터
-    function demo(){
-      return { counts: { PROGRESS:3, PENDING:3, DONE:3 } };
-    }
 
     // 간단 XSS 방지
     function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -269,7 +259,6 @@
 
 /* ================== 예약 ================== */
 (function(){
-  // DOMContentLoaded 유틸
   function ready(fn){ document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', fn) : fn(); }
 
   ready(function(){
@@ -278,96 +267,111 @@
       edit   : document.getElementById('donut-edit'),
       vehicle: document.getElementById('donut-vehicle')
     };
-    // 도넛 컨테이너 없으면 종료
     if (!el.meeting || !el.edit || !el.vehicle) return;
 
     const CSRF_TOKEN  = document.querySelector('meta[name="_csrf"]')?.content || '';
     const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
 
+    // ★ 추가: 공통 이동 유틸 + 바인딩 함수
+    function go(href){
+      if (!href) return;
+      window.location.href = href; // 새 탭이면: window.open(href, '_blank');
+    }
+    function wireClick(boxEl){
+      if (!boxEl) return;
+      const href = boxEl.dataset.href;
+      if (!href) return;
+
+      // 도넛 아무 곳이나 클릭 → 이동
+      boxEl.addEventListener('click', function(){ go(href); });
+
+      // 중앙 숫자 클릭 안정화를 위한 투명 앵커(중복 생성 방지)
+      if (!boxEl.querySelector('.donut-center-link')){
+        const a = document.createElement('a');
+        a.className = 'donut-center-link';
+        a.href = href;
+        a.setAttribute('aria-label','상세 목록으로 이동');
+        boxEl.appendChild(a);
+      }
+    }
+
     // 1) 데이터 로드
-    fetch((window.CTX||'') + '/api/reservations/home-summary?days=7', {
+    fetch((window.CTX||'') + '/api/reservations/home-summary', {
       method:'GET', credentials:'same-origin', headers:{ [CSRF_HEADER]: CSRF_TOKEN }
     })
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .catch(() => demoPayload())     // 백엔드 미구현/에러 → 데모
     .then(payload => {
-      // totals를 우선, 없으면 series 맨 마지막 값으로 추론
       const getToday = key => {
         if (payload.totals && payload.totals[key] != null) return payload.totals[key];
         const s = (payload.series||[]).find(x => x.key === key || x.name === key);
         return s && Array.isArray(s.data) && s.data.length ? s.data[s.data.length-1] : 0;
       };
 
-      renderDonut(el.meeting, getToday('MEETING'), '회의실', '#0d6efd'); // primary
-      renderDonut(el.edit,    getToday('EDIT'   ), '편집실', '#6f42c1'); // purple
-      renderDonut(el.vehicle, getToday('VEHICLE'), '차량'  , '#20c997'); // teal
+      renderDonut(el.meeting, getToday('MEETING'), '회의실', '#0d6efd');
+      renderDonut(el.edit,    getToday('EDIT'   ), '편집실', '#6f42c1');
+      renderDonut(el.vehicle, getToday('VEHICLE'), '차량'  , '#20c997');
+
+      // ★ 추가: 렌더 후 클릭 연결
+      wireClick(el.meeting);
+      wireClick(el.edit);
+      wireClick(el.vehicle);
     })
     .catch(err => console.error('[resv.donut] render fail:', err));
 
-	// 2) 도넛 렌더러 (예약/근태 공통 크기 변수 사용)
-	function renderDonut(target, count, label, color){
-	  const box = target.closest?.('.resv-donut') || target.parentElement || document.body;
-	  const cs  = getComputedStyle(box);
-	  const DONUT_HEIGHT   = parseInt(cs.getPropertyValue('--donut-height')) || 110;
-	  const DONUT_HOLE     = (cs.getPropertyValue('--donut-hole') || '69%').trim();
-	  const VALUE_FONTSIZE = (cs.getPropertyValue('--donut-font') || '20px').trim();
+    // 2) 도넛 렌더러
+    function renderDonut(target, count, label, color){
+      const box = target.closest?.('.resv-donut') || target.parentElement || document.body;
+      const cs  = getComputedStyle(box);
+      const DONUT_HEIGHT   = parseInt(cs.getPropertyValue('--donut-height')) || 110;
+      const DONUT_HOLE     = (cs.getPropertyValue('--donut-hole') || '69%').trim();
+      const VALUE_FONTSIZE = (cs.getPropertyValue('--donut-font') || '20px').trim();
 
-	  const opt = {
-	    chart:   { type: 'donut', height: DONUT_HEIGHT, sparkline: { enabled: true } },
-	    series:  [Number(count) || 0],
-	    labels:  [label],
-	    colors:  [color],
-	    legend:  { show: false },
-	    tooltip: { enabled: false },
-	    dataLabels: { enabled: false },
-	    stroke:   { width: 0 },                 // ★ 틈(하얀 경계) 제거 → 근태와 동일
-	    plotOptions: { pie: { donut: {
-	      size: DONUT_HOLE,                     // ★ 공통 두께
-	      labels: {
-	        show: true,                         // 중앙 숫자
-	        name:  { show: false },
-	        value: {
-	          show: true,
-	          fontSize: VALUE_FONTSIZE,
-	          fontWeight: 700,
-	          color: '#212529',
-	          formatter: () => String(Number(count) || 0)
-	        },
-	        total: { show: false }              // 레이아웃 영향 제거
-	      }
-	    } } }
-	  };
+      // ★ 추가: box의 링크를 가져와 차트 이벤트에서도 이동
+      const href = box?.dataset?.href || '';
 
-	  if (target.__apex__) target.__apex__.destroy();
-	  const chart = new ApexCharts(target, opt);
-	  chart.render();
-	  target.__apex__ = chart;
-	}
-
-    // 3) 데모 페이로드(백엔드 준비 전 임시 표시)
-    function demoPayload(){
-      // 최근 7일 라벨과 랜덤 값
-      const today = new Date();
-      const days = [...Array(7)].map((_,i)=>{
-        const d = new Date(today); d.setDate(today.getDate() - (6-i));
-        return d.toISOString().slice(0,10); // YYYY-MM-DD
-      });
-      const rnd = (min,max)=> Math.floor(Math.random()*(max-min+1))+min;
-      const m = days.map(()=> rnd(1,6));
-      const e = days.map(()=> rnd(0,4));
-      const v = days.map(()=> rnd(0,3));
-      return {
-        totals: { MEETING: m.at(-1), EDIT: e.at(-1), VEHICLE: v.at(-1) },
-        labels: days,
-        series: [
-          { key:'MEETING', name:'회의실', data: m },
-          { key:'EDIT'   , name:'편집실', data: e },
-          { key:'VEHICLE', name:'차량'  , data: v }
-        ]
+      const opt = {
+        chart:   {
+          type: 'donut',
+          height: DONUT_HEIGHT,
+          sparkline: { enabled: true },
+          // ★ 추가: ApexCharts 자체 클릭 이벤트 (조각/배경 클릭 모두 커버)
+          events: {
+            click: function(){ if (href) go(href); },
+            dataPointSelection: function(){ if (href) go(href); }
+          }
+        },
+        series:  [Number(count) || 0],
+        labels:  [label],
+        colors:  [color],
+        legend:  { show: false },
+        tooltip: { enabled: false },
+        dataLabels: { enabled: false },
+        stroke:   { width: 0 },
+        plotOptions: { pie: { donut: {
+          size: DONUT_HOLE,
+          labels: {
+            show: true,
+            name:  { show: false },
+            value: {
+              show: true,
+              fontSize: VALUE_FONTSIZE,
+              fontWeight: 700,
+              color: '#212529',
+              formatter: () => String(Number(count) || 0)
+            },
+            total: { show: false }
+          }
+        } } }
       };
+
+      if (target.__apex__) target.__apex__.destroy();
+      const chart = new ApexCharts(target, opt);
+      chart.render();
+      target.__apex__ = chart;
     }
   });
 })();
+
 
 // ================================= 일정 ==================================
 document.addEventListener('DOMContentLoaded', async function () {
@@ -436,10 +440,16 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   // 공지사항 카드처럼 행 형태로 렌더 (최대 4개) → 문서 카드 스타일로 변경
+  // 아이콘: fs-1로 크기 키우기, mb-2로 아래 여백
+  // 아이콘 아래 텍스트
   function renderTop4(list){
     if (!list.length){
-      wrap.innerHTML = `<div class="text-muted">이번 달 일정이 없습니다.</div>`;
-      return;
+      wrap.innerHTML = `
+	  <div class="d-flex flex-column align-items-center justify-content-center text-center py-4"> 
+	         <i class="uil uil-github-alt fs-1 mb-2" aria-hidden="true"></i>
+	         <div class="text-muted" style="margin-top:0.34rem">이번 달 일정이 없습니다.</div>
+	       </div>`;
+	  return;
     }
 
     wrap.innerHTML = list.slice(0,4).map(ev=>{
@@ -528,97 +538,133 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 
 
-// ======================================= 공지사항 =============================
-// ============================ [공지사항] ============================
+// ============================공지사항 ============================
 (function(){
   function ready(fn){ document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', fn) : fn(); }
 
   ready(function(){
-    const rowsEl = document.getElementById('home-notice-rows');
-    if(!rowsEl) return;
+    const card    = document.getElementById('home-notice-card');   // data-board-id 읽기
+    const rowsEl  = document.getElementById('home-notice-rows');
+    const emptyEl = document.getElementById('home-notice-empty');
+    if (!rowsEl) return;
 
+    // 컨텍스트/CSRF
+    const ctx = (window.CTX
+      || document.querySelector('meta[name="ctx"]')?.content
+      || document.body.getAttribute('data-context-path')
+      || '').trim();
     const CSRF_TOKEN  = document.querySelector('meta[name="_csrf"]')?.content || '';
     const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
-    const ctx = window.CTX || '';
 
-    // 1) 데이터 로드 (없으면 데모)
-    fetch(`${ctx}/api/notices?limit=6`, {
+    // 특정 보드만 보기(옵션)
+    const boardIdAttr = card?.getAttribute('data-board-id');
+    const boardId = boardIdAttr && boardIdAttr.trim() ? Number(boardIdAttr) : null;
+
+    const LIMIT = 4;
+
+    // ---- 데이터 로드
+    const params = new URLSearchParams({ limit: String(LIMIT) });
+    if (boardId) params.set('boardId', String(boardId));
+
+    fetch(`${ctx}/api/notices/home-top?` + params.toString(), {
       method:'GET', credentials:'same-origin', headers:{ [CSRF_HEADER]: CSRF_TOKEN }
     })
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .catch(() => demo())                // 백엔드 미구현/에러 → 데모
-    .then(payload => render(normalize(payload)))
-    .catch(err => console.error('[notice] render error:', err));
+    .then(list => render(list))
+    .catch(err => { console.error('[home-notice] fetch fail:', err); showEmpty(); });
 
-    // 2) 표준화: 어떤 응답이 와도 [{title,dateStr,timeStr,badgeLabel,badgeClass,href}] 로 변환
-    function normalize(p){
-      let list = [];
-      if (Array.isArray(p?.items)) list = p.items;
-      else if (Array.isArray(p))   list = p;
-      else if (p?.content && Array.isArray(p.content)) list = p.content; // 페이징 형태 대응
+	// ---- 렌더 (컬럼: n-badge | n-title | n-date | n-time)
+	function render(list){
+	  if (!Array.isArray(list) || list.length === 0) { showEmpty(); return; }
+	  emptyEl?.classList.add('d-none');
 
-      const pad = n => String(n).padStart(2,'0');
+	  rowsEl.innerHTML = list.slice(0, LIMIT).map(row => {
+	    // row: postId, postTitle, userName, createDate, topFixed('Y'/'N')
+	    const href   = detailUrl(row);
+	    const title  = esc(row.postTitle || '제목 없음');
+	    const dStr   = fmtDate(row.createDate); // yyyy.MM.dd
+	    const tStr   = fmtTime(row.createDate); // HH:mm
 
-      return list.map(n => {
-        const title = n.title || n.subject || n.name || '제목 없음';
-        const category = n.category || n.board || n.boardName || n.type || ''; // 게시판/분류
-        const urgent = !!(n.urgent || n.isUrgent || n.priority==='HIGH' || n.level==='EMERGENCY' || n.emergency===true);
+	    // ★ topFixed 'Y'면 긴급, 아니면 일반 배지 (항상 표시)
+	    const top = (row.topFixed || 'N'); // null 안전
+	    const badgeHtml = (top === 'Y')
+	      ? `<span class="badge bg-danger">긴급</span>`
+	      : `<span class="badge bg-secondary">일반</span>`;
 
-        const whenRaw = n.createdAt || n.created_at || n.regDate || n.writeDate || n.date || n.updatedAt;
-        const d = whenRaw ? new Date(whenRaw) : null;
-        const dateStr = d ? `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}` : '';
-        const timeStr = d ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : '';
+	    return `
+	      <a class="n-row text-reset text-decoration-none"
+	         role="listitem"
+	         href="${escAttr(href)}"
+			 target="_blank"                      
+			 rel="noopener noreferrer" 
+	         data-href="${escAttr(href)}"
+	         title="${escAttr(row.postTitle||'')}">
+	        <div class="n-badge">${badgeHtml}</div>
+	        <div class="n-title" title="${escAttr(row.postTitle||'')}">${title}</div>
+	        <div class="n-date">${esc(dStr)}</div>
+	        <div class="n-time">${esc(tStr)}</div>
+	      </a>`;
+	  }).join('');
 
-        const href = n.href || n.url || (n.id!=null ? `/board/notice/${n.id}` : '#');
+	  // 자식 클릭 오동작 방지용
+	  rowsEl.addEventListener('click', function(e){
+	    const a = e.target.closest('a.n-row');
+	    if (!a) return;
 
-        return {
-          title,
-          dateStr, timeStr, href,
-          badgeLabel: urgent ? '긴급' : (category || '공지'),
-          badgeClass: urgent ? 'bg-danger' : 'bg-secondary'
-        };
-      });
+	    // ★ 새 탭 조건이면 브라우저 기본 동작 유지
+	    const tgt = a.getAttribute('target');
+	    if (tgt === '_blank' || e.ctrlKey || e.metaKey || e.button === 1) {
+	      return; // 기본 동작 = 새 탭 열림
+	    }
+
+	    // 같은 탭으로 강제 이동이 필요할 때만 남겨둠 (원하면 이 부분 삭제 가능)
+	    e.preventDefault();
+	    window.location.href = a.getAttribute('href');
+	  });
+
+	  // "더보기" 링크 세팅
+	  const moreLink = card?.querySelector('[data-role="more-link"]');
+	  if (moreLink) moreLink.href = moreUrl();
+	}
+
+
+    function showEmpty(){
+      rowsEl.innerHTML = '';
+      emptyEl?.classList.remove('d-none');
     }
 
-    // 3) 렌더: 최대 4행
-    function render(list){
-      if (!list.length){
-        rowsEl.innerHTML = `<div class="text-muted">공지사항이 없습니다.</div>`;
-        return;
-      }
-      rowsEl.innerHTML = list.slice(0,4).map(r => rowHtml(r)).join('');
+    // ---- 라우팅
+    function detailUrl(row){
+		const bid = (row.boardId != null ? row.boardId : boardId);
+		  let url = `${ctx}/post/detail?postId=${encodeURIComponent(row.postId)}`;
+		  if (bid != null) url += `&boardId=${encodeURIComponent(bid)}`;
+		  return url;
+    }
+    function moreUrl(){
+      return boardId ? `${ctx}/board/${boardId}/list`
+                     : `${ctx}/post/list`;
     }
 
-    function rowHtml(r){
-      return `
-        <a class="n-row" role="listitem" href="${escAttr(r.href)}">
-          <div class="n-badge"><span class="badge ${r.badgeClass}">${esc(r.badgeLabel)}</span></div>
-          <div class="n-title" title="${escAttr(r.title)}">${esc(r.title)}</div>
-          <div class="n-date">${esc(r.dateStr)}</div>
-          <div class="n-time">${esc(r.timeStr)}</div>
-        </a>`;
+    // ---- 유틸
+    function fmtDate(iso){
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return String(iso).slice(0,10).replaceAll('-','.');
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0');
+      return `${y}.${m}.${da}`;
     }
-
-    // 4) 데모 데이터 (API 준비 전 화면 테스트용)
-    function demo(){
-      const now = new Date();
-      const iso = d => new Date(d).toISOString();
-      return {
-        items: [
-          { id: 101, title:'정전 점검으로 오늘 20시 서버 점검', urgent:true, regDate: iso(now) },
-          { id: 102, title:'9월 연차 사용 안내', boardName:'인사', regDate: iso(now) },
-          { id: 103, title:'보안 패치 완료 공지', boardName:'시스템', regDate: iso(now) },
-          { id: 104, title:'사내 메일 점검 안내', boardName:'IT지원', regDate: iso(now) },
-          { id: 105, title:'추석 연휴 근무표 안내', boardName:'총무', regDate: iso(now) }
-        ]
-      };
+    function fmtTime(iso){
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '';
+      const h=String(d.getHours()).padStart(2,'0'), mi=String(d.getMinutes()).padStart(2,'0');
+      return `${h}:${mi}`;
     }
-
-    // XSS 안전 이스케이프
     function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
     function escAttr(s){ return esc(s).replace(/'/g,'&#39;'); }
   });
 })();
+
 
 
 // ============================ [시청률] ============================
@@ -749,57 +795,105 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 //================================= 긴급 공지 나오면 애니메이션 =====================
 document.addEventListener('DOMContentLoaded', function () {
-  const SPEED = 100;
+  // ====== 설정값 ======
+  const SPEED = 100;                  // 스크롤 속도(px/s)
+  const HIDE_HOURS = 12;              // 닫은 후 숨김 지속시간(시간)
 
-  const DEMO_NOTICES = [
-    { id: 101, title: '정전 점검으로 오늘 20시 서버 점검', label: '긴급', createdAt: '2025.08.28 19:50', url: '/board/notice/101' },
-    { id: 102, title: '사내 메일 장애 복구 안내',           label: '긴급', createdAt: '2025.08.28 18:30', url: '/board/notice/102' },
-    { id: 103, title: '보안 패치 완료 공지',                 label: '긴급시스템', createdAt: '2025.08.28 11:50', url: '/board/notice/103' },
-  ];
-
-  const list = DEMO_NOTICES.filter(it => String(it.label).toUpperCase().includes('긴급'));
-  if (!list.length) return;
-
-  // 테스트 중엔 숨김 이력 무시 (주석 풀면 다시 동작)
-  // const dismissedAt = +localStorage.getItem('urgentTickerDismissedAt') || 0;
-  // if (Date.now() - dismissedAt < 12*60*60*1000) return;
-
+  // ====== 엘리먼트 ======
   const root  = document.getElementById('urgent-ticker');
-  if (!root) return;
-
+  if (!root) return;                  // 루트 없으면 종료
   const track = root.querySelector('.ticker-track');
   const view  = root.querySelector('.ticker-viewport');
 
-  root.classList.remove('hide');
-  track.innerHTML = list.map(it => {
-    const label = it.label ? `[${it.label}] ` : '';
-    const dt    = it.createdAt ? ` · ${it.createdAt}` : '';
-    const text  = `${label}${it.title}${dt}`;
-    return `<a class="item" href="${escAttr(it.url||'#')}" title="${escAttr(text)}">${esc(text)}</a>`;
-  }).join('');
+  // (옵션) 특정 보드만 긴급 공지를 띄우고 싶으면 루트에 data-board-id="숫자" 달기
+  const boardIdAttr = root.getAttribute('data-board-id');
+  const boardId = boardIdAttr && boardIdAttr.trim() ? Number(boardIdAttr) : null;
 
+  // ====== 컨텍스트/CSRF (프로젝트 공통) ======
+  const CTX = (window.CTX
+    || document.querySelector('meta[name="ctx"]')?.content
+    || document.body.getAttribute('data-context-path')
+    || '').trim();
+  const CSRF_TOKEN  = document.querySelector('meta[name="_csrf"]')?.content || '';
+  const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+
+  // ====== 닫힘 유지(12시간) 체크 ======
+  const dismissedAt = +localStorage.getItem('urgentTickerDismissedAt') || 0;
+  if (Date.now() - dismissedAt < HIDE_HOURS * 60 * 60 * 1000) return;
+
+  // ====== 데이터 로드: 누적 TopN에서 topFixed='Y'만 추림 ======
+  // - 백엔드 응답 필드: postId, postTitle, createDate, topFixed('Y'/'N') ...
+  // - 여기선 topFixed==='Y'인 것만 사용 (긴급)
+  const LIMIT = 20; // 여유 있게 가져와서 그 중 긴급만 사용
+  const params = new URLSearchParams({ limit: String(LIMIT) });
+  if (boardId) params.set('boardId', String(boardId));
+
+  fetch(`${CTX}/api/notices/home-top?` + params.toString(), {
+    method: 'GET',
+    credentials: 'same-origin',
+    headers: { [CSRF_HEADER]: CSRF_TOKEN }
+  })
+  .then(r => r.ok ? r.json() : Promise.reject(r.status))
+  .then(rows => {
+    const urgent = Array.isArray(rows) ? rows.filter(r => (r.topFixed || 'N') === 'Y') : [];
+    if (!urgent.length) return;       // 긴급 없으면 티커 노출 안 함
+
+    // 보여주기
+    root.classList.remove('hide');
+
+    // 항목 렌더
+    track.innerHTML = urgent.map(row => {
+      const text = `[긴급] ${row.postTitle || ''} · ${fmtDateTime(row.createDate)}`;
+      return `<a class="item" href="${escAttr(detailUrl(row))}" title="${escAttr(text)}">${esc(text)}</a>`;
+    }).join('');
+
+    // 애니메이션 적용
+    applyAnim();
+  })
+  .catch(err => console.error('[urgent-ticker] fetch fail:', err));
+
+  // ====== 애니메이션/이벤트 ======
   function applyAnim(){
+    // 트랙 전체 너비 + 뷰포트 너비 만큼 이동 시간 계산
     const w  = track.scrollWidth;
     const vw = view.clientWidth;
     const dist = w + vw;
     const sec  = Math.max(10, dist / SPEED);
-    // duration만 바꾸면 안 먹는 경우가 있어서 전체 shorthand로 지정
-    track.style.animation = `ticker-rtl ${sec}s linear infinite`;		// ltr: 왼쪽 rtl: 오른쪽
+    // duration만 바꾸면 안 먹는 경우가 있어 shorthand 사용
+    track.style.animation = `ticker-rtl ${sec}s linear infinite`; // rtl: 오른쪽→왼쪽
   }
-  applyAnim();
   window.addEventListener('resize', throttle(applyAnim, 150));
 
   root.addEventListener('mouseenter', ()=> root.classList.add('paused'));
   root.addEventListener('mouseleave', ()=> root.classList.remove('paused'));
+
   root.querySelector('.ticker-close')?.addEventListener('click', ()=>{
     root.classList.add('hide');
     localStorage.setItem('urgentTickerDismissedAt', String(Date.now()));
   });
 
+  // ====== 라우트 & 유틸 ======
+  function detailUrl(row){
+    // 보드 지정 시 보드 라우트, 아니면 전역 포스트 라우트
+    return boardId ? `${CTX}/board/${boardId}/post/${row.postId}`
+                   : `${CTX}/post/${row.postId}`;
+  }
+  function fmtDateTime(iso){
+    if (!iso) return '';
+    const d = new Date(iso); // 'YYYY-MM-DDTHH:mm:ss' 기대
+    if (Number.isNaN(d.getTime())) {
+      // 파싱 실패 시 대충 보정: 'YYYY-MM-DD HH:mm' 형태를 'YYYY.MM.DD HH:mm'로
+      return String(iso).replace('T',' ').slice(0,16).replace(/-/g,'.');
+    }
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), da = String(d.getDate()).padStart(2,'0');
+    const h = String(d.getHours()).padStart(2,'0'), mi = String(d.getMinutes()).padStart(2,'0');
+    return `${y}.${m}.${da} ${h}:${mi}`;
+  }
   function throttle(fn, wait){ let t=0; return ()=>{ const n=Date.now(); if(n-t>wait){ t=n; fn(); } }; }
   function esc(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
   function escAttr(s){ return esc(s).replace(/"/g,'&quot;'); }
 });
+
 
 
 

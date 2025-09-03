@@ -1,6 +1,7 @@
 package com.example.broadcastgroupware.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 
@@ -12,4 +13,9 @@ public interface VacationMapper {
 	void updateVacation(int userId);
 	// 결재 승인된 휴가 반영
 	void updateUseVacation();
+	
+	
+	//home 페이지 휴가현황 조회
+	Map<String, Object> selectVacationHomeSummary(Map<String, Object> p);
+	
 }

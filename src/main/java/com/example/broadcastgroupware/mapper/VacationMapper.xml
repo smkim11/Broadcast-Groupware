@@ -26,4 +26,31 @@
 													INNER JOIN approval_line al ON al.approval_line_id = vh.approval_line_id
 													INNER JOIN approval_document ad ON al.approval_document_id = ad.approval_document_id))
 	</update>
+	
+	<!-- 홈 요약(총/사용/잔여/결재중) : vacation은 즉시값, 결재중은 승인대기 문서 기준 -->
+	<select id="selectVacationHomeSummary" parameterType="map" resultType="map">
+	  SELECT
+	    #{year} AS year,
+	
+	    <!-- 총/사용/잔여: vacation 테이블의 누적 값을 그대로 사용 -->
+	    COALESCE(v.vacation_annual_total, 0)                           AS total,
+	    COALESCE(v.vacation_annual_use,   0)                           AS used,
+	    COALESCE(v.vacation_annual_total, 0) - COALESCE(v.vacation_annual_use, 0)
+	                                                                   AS remaining,
+	
+	    <!-- 결재중(대기) 개수: 휴가 폼 + 결재선에서 상태가 대기(IN PROGRESS)인 건수 -->
+	    (
+	      SELECT COUNT(*)
+	      FROM approval_line al
+	      JOIN approval_document ad  ON ad.approval_document_id = al.approval_document_id
+	      JOIN vacation_form    vf   ON vf.approval_document_id = ad.approval_document_id
+	      WHERE ad.user_id = v.user_id
+	        AND al.approval_line_status IN ('대기')
+	        AND YEAR(ad.create_date) = #{year}     
+	    ) AS pendingCount
+	
+	  FROM vacation v
+	  WHERE v.user_id = #{userId}
+	</select>
+	
 </mapper>

@@ -135,19 +135,19 @@
 				
 				      <!-- 내용 : 칩 2개 + 타일 1개 -->
 				      <div class="d-flex align-items-stretch gap-2 mt-2" id="vac-rows">
-				        <div class="vac-chip flex-fill text-center" id="vac-total" role="button" data-href="/vacation/summary">
+				        <div class="vac-chip flex-fill text-center" id="vac-total" role="button" data-href="${pageContext.request.contextPath}/attendance">
 				          <i class="bx bxs-plane-alt vac-chip-icon" aria-hidden="true"></i>  <!-- ✈ 전체 -->
 				          <div class="vac-chip-label">전체</div>
 				          <div class="vac-chip-value">0</div>
 				        </div>
-				        <div class="vac-chip flex-fill text-center" id="vac-remaining" role="button" data-href="/vacation/summary">
+				        <div class="vac-chip flex-fill text-center" id="vac-remaining" role="button" data-href="${pageContext.request.contextPath}/attendance">
 				         <i class="bx bx-hourglass vac-chip-icon" aria-hidden="true"></i>  
 				          <div class="vac-chip-label">잔여</div>
 				          <div class="vac-chip-value">0</div>
 				        </div>
-				        <div class="vac-tile flex-fill text-center" id="vac-approval" role="button" data-href="/vacation/approvals">
+				        <div class="vac-tile flex-fill text-center" id="vac-approval" role="button" data-href="${pageContext.request.contextPath}/approval/documents/in-progress">
 				          <i class="mdi mdi-file-check-outline vac-tile-icon" aria-hidden="true"></i>
-				          <div class="vac-tile-label">결재</div>
+				          <div class="vac-tile-label">결재중</div>
 				          <div class="vac-tile-value">0</div>
 				        </div>
 				      </div>
@@ -161,8 +161,6 @@
                          <div class="card-body">
                              <div class="d-flex align-items-center mb-2">
 					      		<h4 class="card-title mb-1">문서</h4>
-					    			<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
-					    			 <a href="/reservations" class="title-inline-note ms-auto">전체 보기</a>
 							</div>
 							 <div id="doc-rows" class="doc-rows mt-2" role="list" aria-label="문서 상태별 개수"></div>
                          </div>
@@ -175,21 +173,20 @@
 					    <div class="card-body">
 					    <div class="d-flex align-items-center mb-2">
 					      <h4 class="card-title mb-1">예약</h4>
-					    	<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
 						</div>
 					
 					      <!-- ▽ 도넛 3개가 가로로 나란히 -->
 					     <div class="row text-center g-2" id="resv-donuts">
 					  <div class="col-4">
-					    <div id="donut-meeting" class="resv-donut"></div>
+					    <div id="donut-meeting" class="resv-donut" data-href="${pageContext.request.contextPath}/user/meetingroom"></div>
 					    <div class="small text-muted mt-1">회의실</div>
 					  </div>
 					  <div class="col-4">
-					    <div id="donut-edit" class="resv-donut"></div>
+					    <div id="donut-edit" class="resv-donut" data-href="${pageContext.request.contextPath}/user/cuttingroom"></div>
 					    <div class="small text-muted mt-1">편집실</div>
 					  </div>
 					  <div class="col-4">
-					    <div id="donut-vehicle" class="resv-donut"></div>
+					    <div id="donut-vehicle" class="resv-donut"  data-href="${pageContext.request.contextPath}/user/car"></div>
 					    <div class="small text-muted mt-1">차량</div>
 					  </div>
 					</div>
@@ -224,10 +221,11 @@
       <div class="col-3">
         <div class="card">
           <div class="card-body" id="home-agenda-card">
+          <a href="${pageContext.request.contextPath}/calendar" 
+         class="stretched-link" 
+         aria-label="일정 페이지로 이동"></a>
               <div class="d-flex align-items-center mb-2">
 	      		<h4 class="card-title mb-1">일정</h4>
-	    			<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
-	    			 <a href="/calendar" class="title-inline-note ms-auto">전체 보기</a>
 			 </div>
            <div id="home-agenda-rows" class="agenda-rows mt-2" role="list" aria-label="일정 목록"></div>
           </div>
@@ -259,8 +257,7 @@
           <div class="card-body" id="home-notice-card">
             <div class="d-flex align-items-center mb-2">
 	      		<h4 class="card-title mb-1">공지사항</h4>
-	    			<span id="resv-range-label" class="title-inline-note ms-2">7일 기준</span>
-	    			 <a href="/calendar" class="title-inline-note ms-auto">전체 보기</a>
+	    			 <a href="/board/1" class="title-inline-note ms-auto">전체 보기</a>
 			 </div>
             <div id="home-notice-rows" class="notice-rows mt-2" role="list" aria-label="공지 목록"></div>
           </div>

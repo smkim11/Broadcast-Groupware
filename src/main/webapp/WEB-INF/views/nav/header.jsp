@@ -461,18 +461,27 @@ $(function () {
 	    method: 'GET',
 	    success: function (data) {
 	      var $ul = $('#board-menu-list');
-	      $ul.empty();
-
-	      data.forEach(function (menu) {
-	        $('<li/>').append(
-	          $('<a/>', {
-	            href: ctx + '/board/' + menu.boardId,   // 링크에 컨텍스트 포함
-	            text: menu.boardTitle,
-	            'data-board-id': menu.boardId
-	          })
-	        ).appendTo($ul);
-	      });
-
+	   // 1) 비우기 전에 "관리자 전용" 항목을 찾아서 보관
+		//	    - href가 /admin/adminBoard 로 끝나는 항목을 안전하게 보존
+			var $keep = $(); // 비어있는 jQuery 집합
+			var $adminLi = $ul.find('a[href$="/admin/adminBoard"]').closest('li');
+			if ($adminLi.length) $keep = $keep.add($adminLi.clone(true));
+		
+			// 2) 동적 항목 비우고(기존 로직) 보존본 먼저 복원
+			$ul.empty();
+			$ul.append($keep);
+		
+			// 3) 서버가 내려준 게시판 목록 다시 채우기(기존 로직 유지)
+			data.forEach(function (menu) {
+			  $('<li/>').append(
+			    $('<a/>', {
+			      href: ctx + '/board/' + menu.boardId,
+			      text: menu.boardTitle,
+			      'data-board-id': menu.boardId
+			    })
+			  ).appendTo($ul);
+			});
+			const IS_ADMIN = (document.getElementById('loginRole')?.value || '').toLowerCase().includes('admin');
 	      var $parentLi = $ul.closest('li');
 	      var $parentA  = $parentLi.children('a.has-arrow');
 

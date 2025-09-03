@@ -116,6 +116,7 @@ public interface ReservationMapper {
 	int modifyRoomStatusToY(List<Integer> roomStatusNList);
 
 
-
+	// home 페이지 예약 현황
+	Map<String, Object> selectHomeReservationTotals(@Param("userId") int userId);
 	
 }
