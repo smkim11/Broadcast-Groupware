@@ -124,7 +124,8 @@
 	    SELECT p.post_id AS postId,
 	           p.post_title AS title,
 	           u.full_name AS userName,
-	           p.create_date AS createDate
+	           p.create_date AS createDate,
+	           p.top_fixed AS topFixed
 	    FROM post p
 	    LEFT JOIN user u ON p.user_id = u.user_id
 	    LEFT JOIN board b ON p.board_id = b.board_id

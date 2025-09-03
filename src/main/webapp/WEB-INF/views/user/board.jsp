@@ -241,12 +241,22 @@
 	            }
 	
 	            posts.forEach(function(post) {
-	                tbody.append('<tr>'
-	                    + '<td>' + post.postId + '</td>'
-	                    +'<td><a href="/post/detail?postId=' + post.postId + '&boardId=' + currentBoardId + '" target="_blank">' + post.title + '</a></td>'
-	                    + '<td>' + post.userName + '</td>'
-	                    + '<td>' + post.createDate + '</td>'
-	                    + '</tr>');
+
+	            	if(post.topFixed == 'Y') {
+		                tbody.append('<tr class="table-danger">'
+			                    + '<td>' + '긴급' + '</td>'
+			                    +'<td><a href="/post/detail?postId=' + post.postId + '&boardId=' + currentBoardId + '" target="_blank">' + post.title + '</a></td>'
+			                    + '<td>' + post.userName + '</td>'
+			                    + '<td>' + post.createDate + '</td>'
+			                    + '</tr>');
+	            	} else {
+		                tbody.append('<tr>'
+		                    + '<td>' + post.postId + '</td>'
+		                    +'<td><a href="/post/detail?postId=' + post.postId + '&boardId=' + currentBoardId + '" target="_blank">' + post.title + '</a></td>'
+		                    + '<td>' + post.userName + '</td>'
+		                    + '<td>' + post.createDate + '</td>'
+		                    + '</tr>');
+	            	}
 	            });
 	
 	            loadPagination(pageDto);
