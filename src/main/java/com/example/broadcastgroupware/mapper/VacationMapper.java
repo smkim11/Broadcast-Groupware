@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import com.example.broadcastgroupware.domain.VacationHistory;
 
 @Mapper
 public interface VacationMapper {
@@ -17,5 +20,12 @@ public interface VacationMapper {
 	
 	//home 페이지 휴가현황 조회
 	Map<String, Object> selectVacationHomeSummary(Map<String, Object> p);
+	
+	// 휴가 이력 등록
+	int insertVacationHistory(VacationHistory vh);
+
+	// 휴가 사용일수 누적
+    int addUsedVacationDaysByDoc(@Param("approvalDocumentId") int approvalDocumentId,
+                                 @Param("dayCount") double dayCount);
 	
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.broadcastgroupware.domain.VacationHistory;
 import com.example.broadcastgroupware.mapper.VacationMapper;
 
 @Service
@@ -29,4 +30,17 @@ public class VacationService {
 	public void updateUseVacation() {
 		vacationMapper.updateUseVacation();
 	}
+	
+	// 최종 승인된 휴가 반영
+	@Transactional
+    public void applyApprovedVacation(int approvalDocumentId, int approvalLineId, double dayCount) {
+        // 휴가 이력 저장
+        VacationHistory history = new VacationHistory();
+        history.setApprovalLineId(approvalLineId);
+        history.setVacationHistoryDay(dayCount);
+        vacationMapper.insertVacationHistory(history);
+
+        // 사용일수 누적
+        vacationMapper.addUsedVacationDaysByDoc(approvalDocumentId, dayCount);
+    }
 }

@@ -17,10 +17,13 @@ import com.example.broadcastgroupware.mapper.ApprovalQueryMapper;
 public class ApprovalProcessService {
     private final ApprovalMapper approvalMapper;
     private final ApprovalQueryMapper approvalQueryMapper;
+    private final VacationService vacationService;
 
-    public ApprovalProcessService(ApprovalMapper approvalMapper, ApprovalQueryMapper approvalQueryMapper) {
+    public ApprovalProcessService(ApprovalMapper approvalMapper, ApprovalQueryMapper approvalQueryMapper,
+    								VacationService vacationService) {
         this.approvalMapper = approvalMapper;
         this.approvalQueryMapper = approvalQueryMapper;
+        this.vacationService = vacationService;
     }
 
     // 결재 처리 (승인/반려)
@@ -63,10 +66,46 @@ public class ApprovalProcessService {
                 approvalMapper.updateDocumentStatus(documentId, "진행 중");
             } else {
                 approvalMapper.updateDocumentStatus(documentId, "승인");    // 최종 승인
+                
+                // 휴가 문서라면: 휴가 이력 저장 + 사용일 누적
+                if (isVacationDoc(documentId)) {
+                    Integer myApprovalLineId = (Integer) myLine.get("approvalLineId");
+
+                    // 휴가 일수 계산 (반차=0.5, 그 외 = 시작~종료 일수 기준)
+                    Map<String, Object> vf = approvalQueryMapper.selectVacationFormDetail(documentId);
+                    double dayCount = computeVacationDays(vf);  // 아래 메서드 참고
+
+                    // 휴가 이력 등록 + 사용일 업데이트
+                    vacationService.applyApprovedVacation(documentId, myApprovalLineId, dayCount);
+                }
+            
             }
         } else {
             approvalMapper.updateDocumentStatus(documentId, "반려");
         }
+    }
+    
+    
+    // 휴가 문서 여부
+    private boolean isVacationDoc(int documentId) {
+    	Map<String, Object> vf = approvalQueryMapper.selectVacationFormDetail(documentId);
+    	return vf != null && !vf.isEmpty();
+    }
+    
+    // 휴가 사용일수 계산: 반차=0.5, 그 외 = 날짜 차이 + 1
+    private double computeVacationDays(Map<String, Object> vf) {
+    	// 휴가 유형 조회: '반차'면 0.5일 처리
+    	String type = String.valueOf(vf.getOrDefault("vacationFormType", "")).trim();
+    	if ("반차".equals(type)) return 0.5;
+    	
+    	// 시작일~종료일 포함 휴가 일수 계산
+    	String s = String.valueOf(vf.get("vacationFormStartDate"));
+    	String e = String.valueOf(vf.get("vacationFormEndDate"));
+    	java.time.LocalDate start = java.time.LocalDate.parse(s);
+    	java.time.LocalDate end = java.time.LocalDate.parse(e);
+    	
+    	long days = java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
+    	return (double) days;
     }
     
     

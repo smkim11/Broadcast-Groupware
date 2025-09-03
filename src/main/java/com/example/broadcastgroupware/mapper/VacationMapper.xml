@@ -53,4 +53,21 @@
 	  WHERE v.user_id = #{userId}
 	</select>
 	
+	
+	<!-- 휴가 이력 INSERT -->
+    <insert id="insertVacationHistory" parameterType="com.example.broadcastgroupware.domain.VacationHistory">
+        INSERT INTO vacation_history 
+        	(approval_line_id, vacation_history_day, create_date)
+        VALUES 
+        	(#{approvalLineId}, #{vacationHistoryDay}, NOW())
+    </insert>
+
+    <!-- 휴가 사용일수 누적 -->
+    <update id="addUsedVacationDaysByDoc">
+        UPDATE vacation v
+        JOIN approval_document ad 
+        	ON ad.user_id = v.user_id
+        SET v.vacation_annual_use = v.vacation_annual_use + #{dayCount}
+        WHERE ad.approval_document_id = #{approvalDocumentId}
+    </update>
 </mapper>

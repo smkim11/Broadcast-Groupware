@@ -285,8 +285,10 @@
 	
 	<!-- 해당 문서에서 사용자의 결재선 (차수/상태) -->
 	<select id="selectUserApprovalLine" parameterType="map" resultType="map">
-	    SELECT approval_line_sequence AS approvalLineSequence,
-	           approval_line_status   AS approvalLineStatus
+	    SELECT
+	    	approval_line_id        AS approvalLineId,  
+	    	approval_line_sequence  AS approvalLineSequence,
+	        approval_line_status    AS approvalLineStatus
 	    FROM approval_line
 	    WHERE approval_document_id = #{approvalDocumentId}
 	    	AND user_id = #{userId}
