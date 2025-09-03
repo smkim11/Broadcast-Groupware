@@ -31,7 +31,13 @@
 			<div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-flex align-items-center justify-content-between">
-                        <h4 class="mb-0">근태</h4>
+                        <h4 class="mb-0">내 근태</h4>
+                        <div class="page-title-right">
+							<ol class="breadcrumb m-0">
+								<li class="breadcrumb-item">근태</li>
+								<li class="breadcrumb-item active">내 근태</li>
+							</ol>
+			            </div>
                         <input type="hidden" name="loginUserId" id="loginUserId" value="${loginUserId}">
                     </div>
                 </div>
