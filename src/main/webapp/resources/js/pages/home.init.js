@@ -33,7 +33,7 @@
       // 실패 시 기본값 표시
       safeText('att-in-time',    '--:--');
       safeText('att-out-time',   '--:--');
-      safeText('att-field-time', '-');
+      safeText('att-field-time', '--:--');
     });
 
     // === 서버 응답을 화면용으로 정리(널이면 기본값) ===
@@ -47,7 +47,7 @@
         fieldCount: Number(c.field    ?? 0),
         inTime    : t.checkinTime  || '--:--',
         outTime   : t.checkoutTime || '--:--',
-        fieldTime : t.fieldTime    || '-'     // 외근 시간 기본표시
+        fieldTime : t.fieldTime    || '--:--'     // 외근 시간 기본표시
       };
     }
 
@@ -63,9 +63,9 @@
       const colorWarning = cssVar('--bs-warning', '#ffc107');
 
       // 중앙 텍스트(선택): "12/30" 형태 보여주기
-      drawDonut('#att-donut-in',    v.inCount,    v.days, colorSuccess, `${v.inCount}/${v.days}`);
-      drawDonut('#att-donut-out',   v.outCount,   v.days, colorPrimary, `${v.outCount}/${v.days}`);
-      drawDonut('#att-donut-field', v.fieldCount, v.days, colorWarning, `${v.fieldCount}/${v.days}`);
+      drawDonut('#att-donut-in',    v.inCount,    v.days, colorSuccess);
+      drawDonut('#att-donut-out',   v.outCount,   v.days, colorPrimary);
+      drawDonut('#att-donut-field', v.fieldCount, v.days, colorWarning);
     }
 
     // === 작은 유틸 ===

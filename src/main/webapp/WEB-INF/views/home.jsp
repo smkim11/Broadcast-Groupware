@@ -79,6 +79,9 @@
 			  <div class="col-md-6 col-xl-3">
 			    <div class="card" id="card-att">
 			      <div class="card-body">
+			            <a href="${pageContext.request.contextPath}/attendance" 
+         class="stretched-link" 
+         aria-label="근태 페이지로 이동"></a>
 			        <div class="d-flex align-items-center justify-content-between mb-1">
 			        <div class="d-flex align-items-center mb-2">
 			          <h4 class="card-title mb-1">근태</h4>
@@ -111,7 +114,7 @@
 				      <div id="att-donut-field"></div>
 				      <div class="att-center">외근</div>
 				    </div>
-				    <div class="small text-muted mt-1"><span id="att-field-time">-</span></div>
+				    <div class="small text-muted mt-1"><span id="att-field-time">'--:--'</span></div>
 				  </div>
 				</div>
 			  </div>
@@ -236,8 +239,8 @@
   <div class="card" id="card-rating">
     <div class="card-body">
       <div class="d-flex align-items-center mb-2">
-        <h4 class="card-title mb-1">시청률</h4>
-        <span class="title-inline-note ms-2">1일 기준</span>
+        <h4 class="card-title mb-1">방송목록</h4>
+        <span class="title-inline-note ms-2">월~금</span>
         <a href="/ratings" class="title-inline-note ms-auto">전체 보기</a>
       </div>
 

@@ -283,4 +283,51 @@
 	        #{id}
 	    </foreach>
 	</update>
+	
+	<!-- ===========home페이지 일자별 개수, 카운트 쿼리 -->
+	<!-- 회의실/편집실 일자별 예약 개수  -->
+	<select id="selectRoomCountsLastNDays" parameterType="map" resultType="map">
+		WITH RECURSIVE d(dt) AS (	<!-- 쟈귀 합수 cte -->
+			SELECT DATE_SUB(CURDATE(), INTERVAL #{days} - 1 DAY)
+			UNION ALL
+			SELECT DATE_ADD(dt, INTERVAL 1 DAY) 
+			FROM d 
+			WHERE dt &lt; CURDATE()
+			)
+		SELECT
+			d.dt									   AS dt,										<!-- 날짜(YYYY-MM-DD) -->
+			COALESCE(COUNT(rr.room_reservation_id), 0) AS cnt	<!-- 해당 날짜 예약건수 -->
+		FROM d
+		LEFT JOIN room_reservation rr
+				ON DATE(rr.room_reservation_start_time) = d.dt
+		LEFT JOIN room r
+				ON r.room_id = rr.room_id
+				AND r.room_type = #{roomType}		<!-- 회의실 또는 편집실 -->
+		GROUP BY d.dt
+		ORDER BY d.dt
+	</select>
+	
+	<!-- 차량 일자별 예약 개수 -->
+	<select id="selectVehicleCountsLastNDays" parameterType="int" resultType="map">
+		WITH RECURSIVE d(dt) AS (	<!-- 재귀함수 cte -->
+			SELECT DATE_SUB(CURDATE(), INTERVAL #{days} - 1 DAY)
+			UNION ALL
+			SELECT DATE_ADD(dt, INTERVAL 1 DAY)
+			FROM d
+			WHERE dt &lt; CURDATE()
+			)
+		SELECT
+			d.dt										 AS dt,
+			COALESCE(COUNT(vr.vehicle_reservation_id),0) AS cnt
+		FROM d
+		LEFT JOIN vehicle_reservation vr
+				ON DATE(vr.vehicle_reservaion_start_time) = d.dt
+		GROUP BY d.dt
+		ORDER BY d.dt
+	</select>
+	
+	<!-- 오늘 건수(도넛그래프 중앙 숫자) -->
+	<!--  -->
+	<select id="selectRoomCountToday"></select>
+	
 </mapper>
