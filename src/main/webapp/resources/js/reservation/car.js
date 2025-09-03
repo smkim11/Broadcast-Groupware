@@ -746,7 +746,9 @@
 						                icon: "success",
 						                confirmButtonText: "확인",
 						                confirmButtonColor: "#34c38f"
-						            })
+						            }).then(() => {
+								            location.reload();
+								        });
 
 						            tr.remove();
 						        } catch (err) {

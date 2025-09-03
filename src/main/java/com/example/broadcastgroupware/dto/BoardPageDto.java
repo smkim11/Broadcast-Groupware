@@ -23,26 +23,34 @@ public class BoardPageDto {
 
 	// 생성자
 	public BoardPageDto(int currentPage, int rowPerPage, int totalCount, String searchWord, String searchType){
-		this.currentPage = currentPage;
-		this.rowPerPage = rowPerPage;
-		this.totalCount = totalCount;
-		this.searchWord = searchWord;
-		this.searchType = searchType;
+	    this.totalCount = totalCount;
+	    this.rowPerPage = rowPerPage;
+	    this.searchWord = searchWord;
+	    this.searchType = searchType;
 
-		// LIMIT 시작점
-		this.beginRow = (currentPage - 1) * rowPerPage;
+	    // 전체 마지막 페이지
+	    this.lastPage = (int) Math.ceil((double) totalCount / rowPerPage);
+	    if(this.lastPage == 0) this.lastPage = 1;
 
-		// 전체 마지막 페이지
-		this.lastPage = (int) Math.ceil((double) totalCount / rowPerPage);
+	    // currentPage 제한
+	    if (currentPage < 1) currentPage = 1;
+	    if (currentPage > lastPage) currentPage = lastPage;
+	    this.currentPage = currentPage;
 
-		// 현재 블럭 계산
-		int currentBlock = (currentPage - 1) / blockSize;
-		this.startPage = currentBlock * blockSize + 1;
-		this.endPage = Math.min(startPage + blockSize - 1, lastPage);
+	    // LIMIT 시작점
+	    this.beginRow = (currentPage - 1) * rowPerPage;
 
-		// 이전, 다음 여부 계산
-		this.hasPrev = (startPage > 1);
-		this.hasNext = (endPage < lastPage);
+	    // 현재 블럭 계산
+	    int currentBlock = (currentPage - 1) / blockSize;
+	    this.startPage = currentBlock * blockSize + 1;
+
+	    // endPage 계산
+	    this.endPage = Math.min(startPage + blockSize - 1, lastPage);
+
+	    // 이전, 다음 여부 계산
+	    this.hasPrev = (startPage > 1);
+	    this.hasNext = (endPage < lastPage);
 	}
+
 
 }

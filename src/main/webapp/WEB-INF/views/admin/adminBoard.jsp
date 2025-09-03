@@ -55,6 +55,58 @@ input:checked + .slider {
 input:checked + .slider:before {
     transform: translateX(26px);
 }
+
+/* 검색 */
+/* 검색 폼 전체 영역 */
+.searchForm {
+    margin-top: 15px;
+}
+
+/* 검색 영역 박스 */
+.search-main {
+    display: flex;
+    align-items: center;
+    gap: 8px; 
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+/* 셀렉트박스 */
+.search-main select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    font-size: 14px;
+}
+
+/* 입력창 */
+.search-main input[type="text"] {
+    flex: 1; /* 가로 공간 꽉 채움 */
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* 검색 버튼 */
+.search-main button {
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+
+#insertPostModal {
+    display: inline-block; /* 버튼 기본 표시 유지 */
+}
+
+/* 버튼 우측 정렬 */
+.button-container {
+    display: flex;
+    justify-content: flex-end; /* 우측 정렬 */
+    margin-bottom: 1rem; /* 필요 시 여백 */
+}
+
+
 </style>
 
 <body>
@@ -78,8 +130,8 @@ input:checked + .slider:before {
                </div>
            </div>
            
-			<div>
-				<button id="adminBoard" class="adminBoard">게시판 관리</button>
+			<div class="button-container">
+				<button id="adminBoard" class="adminBoard btn btn-outline-primary waves-effect waves-light">게시판 관리</button>
 			</div>
            
 			<table class="table table-striped">
@@ -126,46 +178,67 @@ input:checked + .slider:before {
 			</table>
            <!-- <a href="" id="insertBoardModal" class="btn btn-outline-primary waves-effect waves-light">게시판 등록</a>  -->
            
-<div class="pagination" style="display:flex; gap:8px;">
-
-    <!-- 이전 블럭 -->
-    <c:if test="${pageDto.hasPrev}">
-        <a href="?currentPage=${pageDto.startPage - 1}&searchType=${param.searchType}&searchWord=${param.searchWord}">&lt;</a>
-    </c:if>
-
-    <!-- 현재 블럭 페이지 번호 -->
-    <c:forEach begin="${pageDto.startPage}" end="${pageDto.endPage}" var="i">
-        <c:choose>
-            <c:when test="${i == pageDto.currentPage}">
-                <span style="font-weight:bold; text-decoration:underline;">${i}</span>
-            </c:when>
-            <c:otherwise>
-                <a href="?currentPage=${i}&searchType=${param.searchType}&searchWord=${param.searchWord}">${i}</a>
-            </c:otherwise>
-        </c:choose>
-    </c:forEach>
-
-    <!-- 다음 블럭 -->
-    <c:if test="${pageDto.hasNext}">
-        <a href="?currentPage=${pageDto.endPage + 1}&searchType=${param.searchType}&searchWord=${param.searchWord}">&gt;</a>
-    </c:if>
-
-</div>
-
+           	<!-- 검색 -->
+	  		<div class="row mt-3">
+			    <div class="col-12">
+		           	<form action="/admin/adminBoard" method="get" id="searchForm" class="searchForm d-flex justify-content-center">
+		           		<div id="search-main" class="search-main">
+		           			<select id="searchType" name="searchType">
+		           				<option value="분류">분류</option>
+		           				<option value="제목">제목</option>
+		           				<option value="작성자">작성자</option>
+		           			</select>
+		           			<input type="text" id="searchWord" class="form-control" style="max-width: 360px;" name="searchWord" placeholder="검색어를 입력하세요">
+		           			<button type="submit" class="btn btn-primary ms-2">검색</button>
+		           		</div>
+		           	</form>
+		         </div>
+		    </div>   
            
-	           <!-- 검색 -->
-	           	<form action="/admin/adminBoard" method="get" id="searchForm" class="searchForm">
-	           		<div id="search-main" class="search-main">
-	           			<select id="searchType" name="searchType">
-	           				<option value="분류">분류</option>
-	           				<option value="제목">제목</option>
-	           				<option value="작성자">작성자</option>
-	           			</select>
-	           			<input type="text" id="searchWord" name="searchWord" placeholder="검색어를 입력하세요">
-	           			<button type="submit">검색</button>
-	           		</div>
-	           	</form>
-
+			<nav class="mt-3">
+			   <ul class="pagination pagination-sm justify-content-center mb-0 pagination-rounded gap-1">
+			
+			    <!-- 이전 블럭 -->
+			    <c:url var="prevUrl" value="">
+			        <c:param name="currentPage" value="${pageDto.startPage - 1}"/>
+			        <c:param name="searchType" value="${param.searchType}"/>
+			        <c:param name="searchWord" value="${param.searchWord}"/>
+			    </c:url>
+			    <c:if test="${pageDto.hasPrev}">
+			        <a class="page-link" href="${prevUrl}" aria-label="이전">&lt;</a>
+			    </c:if>
+			
+			    <!-- 현재 블럭 페이지 번호 -->
+			    <c:forEach begin="${pageDto.startPage}" end="${pageDto.endPage}" var="i">
+			        <c:url var="pageUrl" value="">
+			            <c:param name="currentPage" value="${i}"/>
+			            <c:param name="searchType" value="${param.searchType}"/>
+			            <c:param name="searchWord" value="${param.searchWord}"/>
+			        </c:url>
+			        <c:choose>
+			            <c:when test="${i == pageDto.currentPage}">
+			                <!-- 현재 페이지는 링크 X, 강조 표시 -->
+			                <span class="page-link" style="font-weight:bold; text-decoration:underline;" aria-current="page">${i}</span>
+			            </c:when>
+			            <c:otherwise>
+			                <a class="page-link" href="${pageUrl}">${i}</a>
+			            </c:otherwise>
+			        </c:choose>
+			    </c:forEach>
+			
+			    <!-- 다음 블럭 -->
+			    <c:url var="nextUrl" value="">
+			        <c:param name="currentPage" value="${pageDto.endPage + 1}"/>
+			        <c:param name="searchType" value="${param.searchType}"/>
+			        <c:param name="searchWord" value="${param.searchWord}"/>
+			    </c:url>
+			    <c:if test="${pageDto.hasNext}">
+			        <a class="page-link" href="${nextUrl}" aria-label="다음">&gt;</a>
+			    </c:if>
+			
+				</ul>
+			</nav>
+           
            
           </div>
 	</div>

@@ -13,6 +13,89 @@
 #pagination a { margin: 0 2px; cursor: pointer; text-decoration: none; }
 #pagination span.active { font-weight: bold; }
 
+/* 검색 */
+/* 검색 폼 전체 영역 */
+.searchForm {
+    margin-top: 15px;
+}
+
+/* 검색 영역 박스 */
+.search-main {
+    display: flex;
+    align-items: center;
+    gap: 8px; 
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+/* 셀렉트박스 */
+.search-main select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    font-size: 14px;
+}
+
+/* 입력창 */
+.search-main input[type="text"] {
+    flex: 1; /* 가로 공간 꽉 채움 */
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* 검색 버튼 */
+.search-main button {
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+
+#insertPostModal {
+    display: inline-block; /* 버튼 기본 표시 유지 */
+}
+
+/* 버튼 우측 정렬 */
+.button-container {
+    display: flex;
+    justify-content: flex-end; /* 우측 정렬 */
+    margin-bottom: 1rem; /* 필요 시 여백 */
+}
+
+/* 테이블 */
+#post-list {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* 열 너비 고정 */
+}
+
+#post-list th, #post-list td {
+    border: 1px solid #ddd;
+    padding: 14px 8px;
+    word-wrap: break-word; /* 긴 내용 줄바꿈 */
+    text-align: center; /* 필요 시 중앙 정렬 */
+}
+
+/* 각 컬럼 고정 너비 지정 */
+#post-list th:nth-child(1), #post-list td:nth-child(1) {
+    width: 60px; /* 번호 */
+}
+
+#post-list th:nth-child(2), #post-list td:nth-child(2) {
+    width: 50%; /* 제목 */
+    text-align: center;
+}
+
+#post-list th:nth-child(3), #post-list td:nth-child(3) {
+    width: 20%; /* 작성자 */
+}
+
+#post-list th:nth-child(4), #post-list td:nth-child(4) {
+    width: 20%; /* 작성일 */
+}
+
+
 </style>
 </head>
 <body>
@@ -37,6 +120,11 @@
                 </div>
             </div>
             <input type="hidden" id="loginRole" value="${loginUser.role}">
+            
+            <div class="button-container">
+			    <a href="" id="insertPostModal" class="btn btn-outline-primary waves-effect waves-light">글쓰기</a>
+			</div>
+
 	
             <!-- 글 리스트 -->
             <table id="post-list" class="table table-striped">
@@ -53,21 +141,25 @@
                 </tbody>
             </table>
             
-           	<a href="" id="insertPostModal" class="btn btn-outline-primary waves-effect waves-light">글쓰기</a>
-
-            <!-- 페이징 -->
-            <div class="pagination" id="pagination"></div>
-
             <!-- 검색 -->
-            <form id="searchForm">
-                <select name="searchType" class="btn btn-light waves-effect">
-                    <option value="title">제목</option>
-                    <option value="userName">작성자</option>
-
-                </select>
-                <input type="text" name="searchWord" placeholder="검색어 입력">
-                <button type="submit" class="btn btn-light dropdown-toggle waves-effect show">검색</button>
-            </form>
+		   	<div class="row mt-3">
+			    <div class="col-12">
+		            <form id="searchForm" class="d-flex justify-content-center">
+			            <div id="search-main" class="search-main">
+			                <select name="searchType" id="searchType" class="btn btn-light waves-effect">
+			                    <option value="title">제목</option>
+			                    <option value="userName">작성자</option>
+			
+			                </select>
+			                <input type="text" name="searchWord" class="form-control" style="max-width: 360px;" placeholder="검색어 입력">
+			                <button type="submit" class="btn btn-primary ms-2">검색</button>
+		                </div>
+		            </form>
+		        </div>
+		    </div>   
+		    
+		    <!-- 페이징 -->
+            <div class="d-flex justify-content-center mt-3" id="pagination"></div> 
 
         </div>
     </div>
@@ -167,27 +259,50 @@
 	// 페이징 생성
 	function loadPagination(pageDto) {
 	    if (!pageDto) return;
+	
 	    var container = $('#pagination');
 	    container.empty();
 	
+	    var ul = $('<ul class="pagination pagination-sm justify-content-center mb-0 pagination-rounded gap-1"></ul>');
+	
 	    // 이전 블럭
-	    if (pageDto.startPage > 1) {
-	        container.append('<a href="javascript:void(0);" onclick="goPage(' + (pageDto.startPage - 1) + ')">&lt;</a>');
+	    if (pageDto.hasPrev) {
+	        ul.append(
+	            '<li class="page-item">' +
+	                '<a class="page-link" href="javascript:void(0);" onclick="goPage(' + Math.max(pageDto.startPage - 1, 1) + ')">&lt;</a>' +
+	            '</li>'
+	        );
 	    }
 	
-	    // 현재 블럭 페이지 번호
-	    for (var i = pageDto.startPage; i <= pageDto.endPage; i++) {
+	    // 페이지 번호
+	    var maxPage = Math.min(pageDto.endPage, pageDto.lastPage); // 안전하게 lastPage 제한
+	    for (var i = pageDto.startPage; i <= maxPage; i++) {
 	        if (i === pageDto.currentPage) {
-	            container.append('<span class="active">' + i + '</span>');
+	            ul.append(
+	                '<li class="page-item active">' +
+	                    '<span class="page-link" aria-current="page">' + i + '</span>' +
+	                '</li>'
+	            );
 	        } else {
-	            container.append('<a href="javascript:void(0);" onclick="goPage(' + i + ')">' + i + '</a>');
+	            ul.append(
+	                '<li class="page-item">' +
+	                    '<a class="page-link" href="javascript:void(0);" onclick="goPage(' + i + ')">' + i + '</a>' +
+	                '</li>'
+	            );
 	        }
 	    }
 	
 	    // 다음 블럭
-	    if (pageDto.endPage < pageDto.lastPage) {
-	        container.append('<a href="javascript:void(0);" onclick="goPage(' + (pageDto.endPage + 1) + ')">&gt;</a>');
+	    if (pageDto.hasNext) {
+	        var nextPage = Math.min(pageDto.endPage + 1, pageDto.lastPage); // lastPage 제한
+	        ul.append(
+	            '<li class="page-item">' +
+	                '<a class="page-link" href="javascript:void(0);" onclick="goPage(' + nextPage + ')">&gt;</a>' +
+	            '</li>'
+	        );
 	    }
+	
+	    container.append(ul);
 	}
 	
 	function goPage(page) {
@@ -266,6 +381,7 @@
             success: function(res) {
                 alert('게시글 등록 성공');
                 $('#postModal').hide();
+                $('#postForm')[0].reset();
                 loadPosts();
             },
             error: function() {

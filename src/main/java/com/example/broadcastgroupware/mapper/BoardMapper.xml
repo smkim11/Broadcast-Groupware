@@ -12,15 +12,15 @@
 		<where>
 			<if test="searchWord != null and searchWord != ''">
 				<choose>
-					<when test="searchType == 'title'">
-						AND p.post_title LIKE CONCAT('%', #{searchWord}, '%')
-					</when>
-					<when test="searchType == 'userName'">
-						AND u.full_name LIKE CONCAT('%', #{searchWord}, '%')
-					</when>
-					<when test="searchType == 'category'">
-						AND b.board_title LIKE CONCAT('%', #{searchWord}, '%')
-					</when>
+				    <when test="searchType == '제목'">
+				        AND p.post_title LIKE CONCAT('%', #{searchWord}, '%')
+				    </when>
+				    <when test="searchType == '작성자'">
+				        AND u.full_name LIKE CONCAT('%', #{searchWord}, '%')
+				    </when>
+				    <when test="searchType == '분류'">
+				        AND b.board_title LIKE CONCAT('%', #{searchWord}, '%')
+				    </when>
 				</choose>
 			</if>
 		</where>
@@ -37,15 +37,15 @@
 		ON p.user_id = u.user_id
 		<if test="searchWord  != null and searchWord != ''">
 			<choose>
-				<when test="searchType == 'title' and searchWord != null and searchWord != ''">
-					AND p.post_title LIKE CONCAT('%', #{searchWord}, '%')
-				</when>
-				<when test="searchType == 'userName' and searchWord != null and searchWord != ''">
-					AND u.full_name LIKE CONCAT('%', #{searchWord}, '%')
-				</when>
-				<when test="searchType == 'category'">
-					AND b.board_title LIKE CONCAT('%', #{searchWord}, '%')
-				</when>
+			    <when test="searchType == '제목'">
+			        AND p.post_title LIKE CONCAT('%', #{searchWord}, '%')
+			    </when>
+			    <when test="searchType == '작성자'">
+			        AND u.full_name LIKE CONCAT('%', #{searchWord}, '%')
+			    </when>
+			    <when test="searchType == '분류'">
+			        AND b.board_title LIKE CONCAT('%', #{searchWord}, '%')
+			    </when>
 			</choose>
 		</if>
 		ORDER BY p.post_id DESC

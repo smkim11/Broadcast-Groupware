@@ -164,6 +164,119 @@ a.btn:last-of-type:hover {
 .secondForm {
 	display: none;
 }
+
+/* 공통 모달 스타일 */
+.modal {
+    display: none;             /* 기본 숨김 */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); /* 반투명 배경 */
+    z-index: 9999;
+
+    display: flex;             /* flex 적용 */
+    justify-content: center;   /* 가로 중앙 */
+    align-items: center;       /* 세로 중앙 */
+}
+
+/* 모달 내용 박스 */
+.modal-content {
+    background-color: #fff;
+    padding: 20px 25px;
+    border-radius: 8px;
+    width: 200px;               /* 기본 너비 */
+    max-width: 40%;             /* 화면 작을 때 최대 너비 */
+    box-sizing: border-box;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+/* 모달 제목 */
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 20px;
+    text-align: center; /* 제목 중앙 정렬 */
+}
+
+/* 모달 input, textarea */
+.modal-content input[type="text"],
+.modal-content input[type="password"],
+.modal-content textarea {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* 모달 버튼 */
+.modal-content button {
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+/* 닫기 버튼 강조 */
+.modal-content button.cancel {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+}
+
+.modal-content button.cancel:hover {
+    background-color: #d5d5d5;
+}
+
+/* 확인 버튼 강조 */
+.modal-content button.confirm {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+}
+
+.modal-content button.confirm:hover {
+    background-color: #0056b3;
+}
+
+/* 모바일 대응: 화면 작을 때 너비 조정 */
+@media (max-width: 480px) {
+    .modal-content {
+        width: 90%;
+        padding: 15px 20px;
+    }
+}
+
+/* 버튼 */
+/* 버튼 영역을 flex로 좌우 배치 */
+.post-buttons {
+    display: flex;
+    justify-content: space-between; /* 좌우 정렬 */
+    margin-top: 15px;
+}
+
+/* 좌측 버튼 그룹 */
+.post-buttons .btn-left {
+    display: flex;
+    gap: 8px; /* 버튼 사이 간격 */
+}
+
+/* 우측 버튼 그룹 */
+.post-buttons .btn-right {
+    display: flex;
+    gap: 8px;
+}
+
+/* 삭제 버튼 빨간색 */
+.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+}
+
 </style>
 
 </head>
@@ -218,7 +331,7 @@ a.btn:last-of-type:hover {
 					    <!-- 최상위 댓글 입력 -->
 					    <div id="firstComment">
 					        <textarea rows="2" cols="50" name="commentContent" placeholder="댓글입력"></textarea>
-					        <button type="button" id="submitComment">등록</button>
+					        <button type="button" id="submitComment" class="btn btn-outline-primary waves-effect waves-light">등록</button>
 					    </div>
 					
 					    <!-- 댓글 리스트 -->
@@ -237,25 +350,25 @@ a.btn:last-of-type:hover {
 					
 					                    <!-- 본인 글 수정/삭제 -->
 					                    <c:if test="${loginUser.userId eq co.userId}">
-					                        <button type="button" class="editComment" data-id="${co.commentId}">수정</button>
-					                        <button type="button" class="deleteComment" data-id="${co.commentId}">삭제</button>
+					                        <a class="editComment" data-id="${co.commentId}">수정</a>
+					                        <a class="deleteComment" data-id="${co.commentId}">삭제</a>
 					                    </c:if>
 					
 					                    <!-- 댓글 수정 폼 (숨김) -->
 					                    <div class="editForm" style="display:none;">
 					                        <textarea rows="2" class="editContent">${co.commentContent}</textarea>
-					                        <button type="button" class="updateComment" data-id="${co.commentId}">수정 완료</button>
-					                        <button type="button" class="cancelEdit">취소</button>
+					                        <a class="updateComment" data-id="${co.commentId}">수정</a>
+					                        <a class="cancelEdit">취소</a>
 					                    </div>
 					
 					                    <!-- 대댓글 작성 버튼 -->
-					                    <button type="button" class="second">댓글쓰기</button>
+					                    <a class="second ">댓글쓰기</a>
 					
 					                    <!-- 대댓글 입력 폼 -->
 					                    <div class="secondForm" style="display:none;">
 					                        <textarea rows="2" name="commentContent" placeholder="댓글입력"></textarea>
 					                        <input type="hidden" name="parentCommentId" value="${co.commentId}">
-					                        <button type="button" class="replySubmit">등록</button>
+					                        <a class="replySubmit ">등록</a>
 					                    </div>
 					                </c:otherwise>
 					            </c:choose>
@@ -276,15 +389,15 @@ a.btn:last-of-type:hover {
 					
 					                            <!-- 본인 대댓글 수정/삭제 -->
 					                            <c:if test="${loginUser.userId eq r.userId}">
-					                                <button type="button" class="editReply" data-id="${r.commentId}">수정</button>
-					                                <button type="button" class="deleteReply" data-id="${r.commentId}">삭제</button>
+					                                <a class="editReply" data-id="${r.commentId}">수정</a>
+					                                <a class="deleteReply" data-id="${r.commentId}">삭제</a>
 					                            </c:if>
 					
 					                            <!-- 대댓글 수정 폼 (숨김) -->
 					                            <div class="editForm" style="display:none;">
 					                                <textarea rows="2" class="editContent">${r.commentContent}</textarea>
-					                                <button type="button" class="updateComment" data-id="${r.commentId}">수정 완료</button>
-					                                <button type="button" class="cancelEdit">취소</button>
+					                                <a class="updateComment" data-id="${r.commentId}">수정</a>
+					                                <a class="cancelEdit">취소</a>
 					                            </div>
 					                        </c:otherwise>
 					                    </c:choose>
@@ -297,55 +410,78 @@ a.btn:last-of-type:hover {
 
 				</div>
 				
-				<c:if test="${boardId == 1 and userRole == 'admin'}">
-				    <c:forEach var="c" items="${detail}">
-				        <button data-postid="${c.postId}"
-				                data-title="${c.postTitle}"
-				                data-content="${c.postContent}"
-				                class="deletePostBtn btn btn-outline-primary waves-effect waves-light">삭제</button>
-				        <button data-postid="${c.postId}"
-				                data-title="${c.postTitle}"
-				                data-content="${c.postContent}"
-				                class="modifyPostBtn btn btn-outline-primary waves-effect waves-light">수정</button>
-				    </c:forEach>
-				</c:if>
-				
-								
-				<c:forEach var="c" items="${detail}">
-				    <c:if test="${boardId != 1 and loginUser.userId == c.userId}">
-				        <button data-postid="${c.postId}"
-				                data-title="${c.postTitle}"
-				                data-content="${c.postContent}"
-				                class="deletePostBtn btn btn-outline-primary waves-effect waves-light">삭제</button>
-				        <button data-postid="${c.postId}"
-				                data-title="${c.postTitle}"
-				                data-content="${c.postContent}"
-				                class="modifyPostBtn btn btn-outline-primary waves-effect waves-light">수정</button>
-				    </c:if>
-				</c:forEach>
+			<!-- 버튼 영역 -->
+			<div class="post-buttons">
+			  <div class="btn-left">
+			      <c:if test="${boardId == 1 and userRole == 'admin'}">
+			          <c:forEach var="c" items="${detail}">
+			              <button data-postid="${c.postId}"
+			                      data-title="${c.postTitle}"
+			                      data-content="${c.postContent}"
+			                      class="deletePostBtn btn btn-danger">삭제</button>
+			          </c:forEach>
+			      </c:if>
+			
+			      <c:forEach var="c" items="${detail}">
+			          <c:if test="${boardId != 1 and loginUser.userId == c.userId}">
+			              <button data-postid="${c.postId}"
+			                      data-title="${c.postTitle}"
+			                      data-content="${c.postContent}"
+			                      class="deletePostBtn btn btn-danger">삭제</button>
+			          </c:if>
+			      </c:forEach>
+			  </div>
+			
+			  <div class="btn-right">
+			      <c:if test="${boardId == 1 and userRole == 'admin'}">
+			          <c:forEach var="c" items="${detail}">
+			              <button data-postid="${c.postId}"
+			                      data-title="${c.postTitle}"
+			                      data-content="${c.postContent}"
+			                      class="modifyPostBtn btn btn-outline-primary">수정</button>
+			          </c:forEach>
+			      </c:if>
+			
+			      <c:forEach var="c" items="${detail}">
+			          <c:if test="${boardId != 1 and loginUser.userId == c.userId}">
+			              <button data-postid="${c.postId}"
+			                      data-title="${c.postTitle}"
+			                      data-content="${c.postContent}"
+			                      class="modifyPostBtn btn btn-outline-primary">수정</button>
+			          </c:if>
+			      </c:forEach>
+			
+			      <button onclick="window.close()" class="btn btn-outline-primary">닫기</button>
+			    </div>
+			</div>
 
-
-				<button onclick="window.close()" class="btn btn-outline-primary waves-effect waves-light">닫기</button>
 
 			</div>
 			
 			<!-- 게시글 수정 모달 -->
-			<div id="modifyPostModal" style="display:none;">
-				<input type="hidden" id="modifyPostId">
-				<label>제목</label>
-				<input type="text" id="modifyTitle">
-				<label>내용</label>
-				<textarea id="modifyContent"></textarea>
-				<button id="confirmModify">수정</button>
-				<button id="cancelModify">닫기</button>
+			<div id="modifyPostModal" class="modal">
+			    <div class="modal-content">
+			        <h3>게시글 수정</h3>
+			        <input type="hidden" id="modifyPostId">
+			        <label>제목</label>
+			        <input type="text" id="modifyTitle">
+			        <label>내용</label>
+			        <textarea id="modifyContent"></textarea>
+			        <button id="confirmModify" class="confirm">수정</button>
+			        <button id="cancelModify" class="cancel">닫기</button>
+			    </div>
 			</div>
 			
 			<!-- 게시글 삭제 모달 -->
-			<div id="passwordModal" style="display:none;">
-			    <input type="password" id="deletePassword" placeholder="비밀번호 입력">
-			    <button id="confirmDelete">삭제 확인</button>
-			    <button id="cancelDelete">취소</button>
+			<div id="passwordModal" class="modal">
+			    <div class="modal-content">
+			        <h3>게시글 삭제</h3>
+			        <input type="password" id="deletePassword" placeholder="비밀번호 입력">
+			        <button id="confirmDelete" class="confirm">삭제 확인</button>
+			        <button id="cancelDelete" class="cancel">취소</button>
+			    </div>
 			</div>
+
         </div>
     </div>
 </div>
@@ -370,7 +506,7 @@ a.btn:last-of-type:hover {
 		$("#modifyTitle").val(title);
 		$("#modifyContent").val(content);
 
-		$("#modifyPostModal").show();
+		$("#modifyPostModal").css("display", "flex");
 	});
 
 	// 닫기 버튼
@@ -408,7 +544,7 @@ a.btn:last-of-type:hover {
 	// 게시글 삭제
 	$('.deletePostBtn').on('click', function() {
 	    var postId = $(this).data('postid');
-	    $('#passwordModal').data('postid', postId).show();
+	    $('#passwordModal').data('postid', postId).css('display','flex');
 	});
 	
 	$('#cancelDelete').on('click', function() {
@@ -429,7 +565,11 @@ a.btn:last-of-type:hover {
 	        success: function(res) {
 	            if(res.success){
 	                alert('게시글 삭제 완료');
-	                window.close();
+		            if(window.opener && !window.opener.closed){
+		                window.opener.location.reload();
+		            }
+		            
+		            window.close();
 	            } else {
 	                alert('비밀번호가 틀렸습니다.');
 	            }
@@ -602,11 +742,7 @@ $(document).ready(function() {
 		        data: JSON.stringify({ commentId: commentId }),
 		        success: function(res){
 		            alert('삭제되었습니다.');
-		            if(window.opener && !window.opener.closed){
-		                window.opener.location.reload();
-		            }
-		            
-		            window.close();
+		            location.reload();
 		        },
 		        error: function(err){
 		            console.error(err);
