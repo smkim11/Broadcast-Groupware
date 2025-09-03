@@ -42,7 +42,7 @@ public class MyPageRest {
 		}else if(myPageService.findPrevPw(userId).equals(passwordDto.getNewPw())) {
 			return "직전에 사용한 비밀번호입니다.";
 		}else if(!passwordDto.getNewPw().matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,13}$")) {
-		    return "비밀번호는 8자이상 13자이하이며, 숫자/특수문자를 포함해야 합니다.";
+		    return "비밀번호는 8~13자이며, 숫자·문자·특수문자를 포함해야 합니다.";
 		}
 		
 		myPageService.updatePassword(passwordDto);

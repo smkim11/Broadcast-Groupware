@@ -142,6 +142,12 @@
                    				</div>
                    			</div>
 		      			</div>
+						<div style="background-color: #f8f9fa; padding: 10px 15px; font-size: 0.85rem; color: #555; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
+						    <ul style="margin: 0; padding-left: 20px;">
+						        <li>기존 및 직전 비밀번호는 사용할 수 없습니다.</li>
+						        <li>비밀번호는 8~13자이며, 숫자·문자·특수문자를 포함해야 합니다.</li>
+						    </ul>
+						</div>
 		      			<div class="modal-footer">
 					        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
 					        <button type="submit" class="btn btn-outline-success">수정</button>
