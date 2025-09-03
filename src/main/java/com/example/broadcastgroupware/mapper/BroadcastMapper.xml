@@ -187,5 +187,47 @@
 	        #{id}
 	    </foreach>
 	</delete>
+	
+	<!-- 홈카드: 방송목록 Top N (최신 편성 순) -->
+	<select id="selectHomeTopBroadcasts" parameterType="map" resultMap="BroadcastMap">
+		  SELECT
+		    bs.broadcast_schedule_id                                      AS broadcast_schedule_id,
+		    ad.approval_document_id                                       AS approval_document_id,
+		
+		    bf.broadcast_form_id                                          AS broadcast_form_id,
+		    bf.broadcast_form_name                                        AS broadcast_form_name,
+		    bf.broadcast_form_capacity                                    AS broadcast_form_capacity,
+		
+		    bf.broadcast_form_start_date                                  AS start_date,
+		    bf.broadcast_form_end_date                                    AS end_date,
+		
+		    <!-- 시간은 HH:mm로 내려도 되고(문자열), 원본 TIME으로 내려도 됨
+		       BroadcastMap은 start_time/end_time 컬럼명을 매핑하고 있어 그대로 사용 -->
+		    TIME_FORMAT(bf.broadcast_form_start_time, '%H:%i')            AS start_time,
+		    TIME_FORMAT(bf.broadcast_form_end_time,   '%H:%i')            AS end_time,
+		
+		    ad.user_id                                                    AS user_id,
+		    u.full_name                                                   AS full_name,
+		
+		    bw.broadcast_monday, bw.broadcast_tuesday, bw.broadcast_wednesday,
+		    bw.broadcast_thursday, bw.broadcast_friday, bw.broadcast_saturday, bw.broadcast_sunday,
+		
+		    <!-- 회차 수는 여기선 불필요하면 제외 가능. 필요하면 유지 -->
+		    (SELECT COUNT(*) FROM broadcast_episode be
+		      WHERE be.broadcast_schedule_id = bs.broadcast_schedule_id)  AS episodes_count
+		
+		  FROM broadcast_schedule bs
+		  JOIN approval_line al  ON al.approval_line_id = bs.approval_line_id
+		  JOIN approval_document ad ON ad.approval_document_id = al.approval_document_id
+		  JOIN broadcast_form bf ON bf.approval_document_id = ad.approval_document_id
+		  LEFT JOIN broadcast_weekday bw ON bw.broadcast_form_id = bf.broadcast_form_id
+		  LEFT JOIN `user` u ON u.user_id = ad.user_id
+		
+		  <!-- 필터가 필요하면 여기 if문 추가 (예: 진행중인 편성만 등) -->
+		
+		  ORDER BY bs.broadcast_schedule_id DESC
+		  LIMIT #{limit}
+	</select>
+	
     
 </mapper>

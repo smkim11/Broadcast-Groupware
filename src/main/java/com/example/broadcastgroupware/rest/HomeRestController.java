@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.SessionAttribute; // 세션에서 loginUser 꺼낼 때 필요
 
 import com.example.broadcastgroupware.domain.Attendance;
+import com.example.broadcastgroupware.dto.BroadcastFormDto;
 import com.example.broadcastgroupware.dto.PostDetailDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.mapper.ApprovalMapper;
 import com.example.broadcastgroupware.mapper.AttendanceMapper;
 import com.example.broadcastgroupware.mapper.BoardMapper;
+import com.example.broadcastgroupware.mapper.BroadcastMapper;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
 import com.example.broadcastgroupware.mapper.VacationMapper;
 
@@ -28,18 +30,21 @@ public class HomeRestController {
     private final ApprovalMapper approvalMapper;
     private final ReservationMapper reservationMapper;
     private final BoardMapper boardMapper;
+    private final BroadcastMapper broadcastMapper;
 
     // 생성자 주입
     public HomeRestController(AttendanceMapper attendanceMapper,
     						  VacationMapper vacationMapper,
     						  ApprovalMapper approvalMapper,
     						  ReservationMapper reservationMapper,
-    						  BoardMapper boardMapper) {
+    						  BoardMapper boardMapper,
+    						  BroadcastMapper broadcastMapper) {
         this.attendanceMapper = attendanceMapper;
         this.vacationMapper = vacationMapper;
         this.approvalMapper = approvalMapper;
         this.reservationMapper = reservationMapper;
         this.boardMapper = boardMapper;
+        this.broadcastMapper = broadcastMapper;
     }
 
     /**
@@ -179,11 +184,20 @@ public class HomeRestController {
         ));
     }
     
+    // 공지사항
     // 누적 TopN: /api/notices/home-top?limit=4&boardId=1
     @GetMapping("/notices/home-top")
     public List<PostDetailDto> homeTop(@RequestParam(defaultValue = "4") int limit,
                                        @RequestParam(required = false) Integer boardId){
         int safe = (limit <= 0 || limit > 10) ? 4 : limit;
         return boardMapper.selectHomeTopPosts(safe, boardId);
+    }
+    
+    // 방송편성
+    // 홈 카드: /api/broadcasts/home-top?limit=4
+    @GetMapping("/broadcasts/home-top")
+    public List<BroadcastFormDto> homeTop(@RequestParam(defaultValue = "4") int limit){
+        int safe = (limit <= 0 || limit > 10) ? 4 : limit;
+        return broadcastMapper.selectHomeTopBroadcasts(safe);
     }
 }

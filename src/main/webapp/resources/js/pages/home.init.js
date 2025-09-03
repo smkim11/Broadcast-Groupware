@@ -540,6 +540,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 // ============================공지사항 ============================
 (function(){
+  // DOMContentLoaded 유틸
   function ready(fn){ document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', fn) : fn(); }
 
   ready(function(){
@@ -560,9 +561,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     const boardIdAttr = card?.getAttribute('data-board-id');
     const boardId = boardIdAttr && boardIdAttr.trim() ? Number(boardIdAttr) : null;
 
-    const LIMIT = 4;
+    const LIMIT = 4; // 보여줄 개수
 
-    // ---- 데이터 로드
+    // ---- 데이터 로드 (누적, 기간 필터 없음)
     const params = new URLSearchParams({ limit: String(LIMIT) });
     if (boardId) params.set('boardId', String(boardId));
 
@@ -570,77 +571,57 @@ document.addEventListener('DOMContentLoaded', async function () {
       method:'GET', credentials:'same-origin', headers:{ [CSRF_HEADER]: CSRF_TOKEN }
     })
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(list => render(list))
+    .then(list => {
+      render(list);     // 행은 클릭 불가(단순 표시)
+      setupMoreLink();  // 전체보기만 클릭 가능(현재 탭)
+    })
     .catch(err => { console.error('[home-notice] fetch fail:', err); showEmpty(); });
 
-	// ---- 렌더 (컬럼: n-badge | n-title | n-date | n-time)
-	function render(list){
-	  if (!Array.isArray(list) || list.length === 0) { showEmpty(); return; }
-	  emptyEl?.classList.add('d-none');
+    // ---- 렌더 (컬럼: n-badge | n-title | n-date | n-time) - a태그 제거, 클릭 불가
+    function render(list){
+      if (!Array.isArray(list) || list.length === 0) { showEmpty(); return; }
+      emptyEl?.classList.add('d-none');
 
-	  rowsEl.innerHTML = list.slice(0, LIMIT).map(row => {
-	    // row: postId, postTitle, userName, createDate, topFixed('Y'/'N')
-	    const href   = detailUrl(row);
-	    const title  = esc(row.postTitle || '제목 없음');
-	    const dStr   = fmtDate(row.createDate); // yyyy.MM.dd
-	    const tStr   = fmtTime(row.createDate); // HH:mm
+      rowsEl.innerHTML = list.slice(0, LIMIT).map(row => {
+        // row: postId, postTitle, userName, createDate, topFixed('Y'/'N')
+        const title = esc(row.postTitle || '제목 없음');
+        const dStr  = fmtDate(row.createDate); // yyyy.MM.dd
+        const tStr  = fmtTime(row.createDate); // HH:mm
 
-	    // ★ topFixed 'Y'면 긴급, 아니면 일반 배지 (항상 표시)
-	    const top = (row.topFixed || 'N'); // null 안전
-	    const badgeHtml = (top === 'Y')
-	      ? `<span class="badge bg-danger">긴급</span>`
-	      : `<span class="badge bg-secondary">일반</span>`;
+        // topFixed 'Y'면 긴급, 아니면 일반 배지 (항상 표시)
+        const top = (row.topFixed || 'N');
+        const badgeHtml = (top === 'Y')
+          ? `<span class="badge bg-danger">긴급</span>`
+          : `<span class="badge bg-secondary">일반</span>`;
 
-	    return `
-	      <a class="n-row text-reset text-decoration-none"
-	         role="listitem"
-	         href="${escAttr(href)}"
-			 target="_blank"                      
-			 rel="noopener noreferrer" 
-	         data-href="${escAttr(href)}"
-	         title="${escAttr(row.postTitle||'')}">
-	        <div class="n-badge">${badgeHtml}</div>
-	        <div class="n-title" title="${escAttr(row.postTitle||'')}">${title}</div>
-	        <div class="n-date">${esc(dStr)}</div>
-	        <div class="n-time">${esc(tStr)}</div>
-	      </a>`;
-	  }).join('');
-
-	  // 자식 클릭 오동작 방지용
-	  rowsEl.addEventListener('click', function(e){
-	    const a = e.target.closest('a.n-row');
-	    if (!a) return;
-
-	    // ★ 새 탭 조건이면 브라우저 기본 동작 유지
-	    const tgt = a.getAttribute('target');
-	    if (tgt === '_blank' || e.ctrlKey || e.metaKey || e.button === 1) {
-	      return; // 기본 동작 = 새 탭 열림
-	    }
-
-	    // 같은 탭으로 강제 이동이 필요할 때만 남겨둠 (원하면 이 부분 삭제 가능)
-	    e.preventDefault();
-	    window.location.href = a.getAttribute('href');
-	  });
-
-	  // "더보기" 링크 세팅
-	  const moreLink = card?.querySelector('[data-role="more-link"]');
-	  if (moreLink) moreLink.href = moreUrl();
-	}
-
+        // a 태그 대신 div로만 표시 → 클릭 안 됨
+        return `
+          <div class="n-row" role="listitem" aria-label="공지 행">
+            <div class="n-badge">${badgeHtml}</div>
+            <div class="n-title" title="${escAttr(row.postTitle||'')}">${title}</div>
+            <div class="n-date">${esc(dStr)}</div>
+            <div class="n-time">${esc(tStr)}</div>
+          </div>`;
+      }).join('');
+    }
 
     function showEmpty(){
       rowsEl.innerHTML = '';
       emptyEl?.classList.remove('d-none');
     }
 
-    // ---- 라우팅
-    function detailUrl(row){
-		const bid = (row.boardId != null ? row.boardId : boardId);
-		  let url = `${ctx}/post/detail?postId=${encodeURIComponent(row.postId)}`;
-		  if (bid != null) url += `&boardId=${encodeURIComponent(bid)}`;
-		  return url;
+    // ---- 전체보기 링크(현재 탭만 이동)
+    function setupMoreLink(){
+      const moreLink = card?.querySelector('[data-role="more-link"]');
+      if (!moreLink) return;
+      moreLink.href = moreUrl();
+      moreLink.textContent = '전체보기';
+      moreLink.removeAttribute('target'); // 현재 탭 보장
+      moreLink.removeAttribute('rel');
     }
+
     function moreUrl(){
+      // 보드 지정 시 그 보드 목록, 아니면 전체 목록
       return boardId ? `${ctx}/board/${boardId}/list`
                      : `${ctx}/post/list`;
     }
@@ -667,127 +648,120 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
 
-// ============================ [시청률] ============================
+
+// ============================ 방송목록 ( 배지 | 이름 | 시간) ============================
 (function(){
-  function ready(fn){ document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', fn) : fn(); }
+  // DOM이 준비되면 콜백 실행하는 유틸
+  function ready(fn){ document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn) : fn(); }
 
   ready(function(){
-    const chartEl = document.getElementById('rating-chart');
-    const listEl  = document.getElementById('rating-list');
-    if(!chartEl || !listEl) return;
+    // 1) 엘리먼트 참조 (HTML에 있는 id와 일치해야 함)
+    const card   = document.getElementById('home-broadcast-card');   // 카드 루트 (card-body에 있음)
+    const rowsEl = document.getElementById('home-broadcast-rows');   // 행들을 렌더할 컨테이너
+    if (!card || !rowsEl) return;                                    // 없으면 종료
 
+    // 2) 컨텍스트/토큰 (프로젝트 공통)
+    const ctx = (window.CTX
+      || document.querySelector('meta[name="ctx"]')?.content
+      || document.body.getAttribute('data-context-path')
+      || '').trim();
     const CSRF_TOKEN  = document.querySelector('meta[name="_csrf"]')?.content || '';
     const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
-    const ctx         = window.CTX || '';
-    const DAYS        = 1;
-    const TOP_N       = 4; // 상위 N개만 표시
 
-    // 1) 데이터 로드 (없으면 데모)
-    fetch(`${ctx}/api/ratings/home-summary?days=${DAYS}`, {
-      method:'GET', credentials:'same-origin', headers:{ [CSRF_HEADER]: CSRF_TOKEN }
+    // 3) 설정값
+    const LIMIT = 4;   // 최대 4행만 표시 (공지사항 카드와 동일)
+
+    // 4) 데이터 로드
+    //    백엔드에서 내려줘야 하는 필드:
+    //    - 방송명: broadcastFormName (또는 name)
+    //    - 시간:   broadcastFormStartTime / broadcastFormEndTime (예: '09:00' 또는 '09:00:00')
+    //    - 요일:   broadcastMonday..broadcastSunday (1/0, 'Y'/'N', true/false 모두 허용)
+    fetch(`${ctx}/api/broadcasts/home-top?limit=${LIMIT}`, {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { [CSRF_HEADER]: CSRF_TOKEN }
     })
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .catch(() => demoRatings())
-    .then(raw => render(normalize(raw)))
-    .catch(err => console.error('[ratings] render error:', err));
+    .then(list => render(list))
+    .catch(err => {
+      console.error('[home-broadcast] fetch fail:', err);
+      render([]); // 실패 시도 표시 문구 출력
+    });
 
-    // 2) 응답 표준화 → [{name, value}] 높은 순 TOP_N
-    function normalize(p){
-      // 허용 형태: {items:[{program|name, rating|value}]}
-      //          또는 {labels:[...], series:[{data:[...]}]}
-      let items = [];
-      if (Array.isArray(p?.items)) {
-        items = p.items.map(x => ({
-          name:  x.program || x.name || '프로그램',
-          value: Number(x.rating ?? x.value ?? 0)
-        }));
-      } else if (Array.isArray(p?.labels) && Array.isArray(p?.series?.[0]?.data)) {
-        items = p.labels.map((nm, i) => ({
-          name:  String(nm || '프로그램'),
-          value: Number(p.series[0].data[i] ?? 0)
-        }));
-      }
-
-      // 내림차순 정렬 후 상위 N개
-      items.sort((a,b) => b.value - a.value);
-      return items.slice(0, TOP_N);
-    }
-
-    // 3) 렌더 (그래프 + 아래 리스트)
-    function render(items){
-      if (!items.length){
-        chartEl.innerHTML = '<div class="text-muted">데이터가 없습니다.</div>';
-        listEl.innerHTML  = '';
+    // 5) 렌더: 공지사항 레이아웃 그대로 (a태그 없이 div로만 → 행은 비클릭)
+    function render(list){
+      if (!Array.isArray(list) || list.length === 0){
+        rowsEl.innerHTML = '<div class="text-muted small">표시할 방송이 없습니다.</div>';
         return;
       }
 
-      // 색상 팔레트 (부트스트랩 변수 우선 사용)
-      const colors = [
-        getCss('--bs-primary') || '#0d6efd',
-        '#6f42c1',                           // purple
-        getCss('--bs-success') || '#198754',
-        getCss('--bs-warning') || '#ffc107',
-        getCss('--bs-info')    || '#0dcaf0'
-      ].slice(0, items.length);
+      rowsEl.innerHTML = list.slice(0, LIMIT).map(row => {
+        // ▶ 요일 배지 문자열 만들기 (예: 매일 / 월~금 / 주말 / 월,수,금 / 월~수, 금 ...)
+        const badge = makeWeekBadge(row);
 
-      // ---- 그래프 (가로 막대)
-      const height = 1 + items.length * 18; // 항목 수에 따른 높이
-      const options = {
-        chart:   { type: 'bar', height, toolbar: { show:false }, sparkline:{enabled:true} },
-        series:  [{ name: '시청률', data: items.map(x => x.value) }],
-        xaxis:   { labels: { show:false }, axisTicks:{show:false}, axisBorder:{show:false}, max: Math.max(10, Math.ceil(Math.max(...items.map(x=>x.value)) / 5) * 5) },
-        yaxis:   { labels: { show:false } },
-        plotOptions: {
-          bar: { horizontal: true, barHeight: '60%', distributed:true }
-        },
-        dataLabels: {
-          enabled: true,
-          formatter: val => `${val.toFixed(1)}%`,
-          offsetX: 6,
-          style: { fontWeight: 700 }
-        },
-        colors,
-        tooltip: { y: { formatter: v => `${v.toFixed(1)}%` } },
-        grid: { show:false }
-      };
+        // ▶ 방송명 (툴팁에 전체 제목)
+        const name  = esc(row.broadcastFormName || row.name || '제목 없음');
 
-      if (chartEl.__apex__) chartEl.__apex__.destroy();
-      const chart = new ApexCharts(chartEl, options);
-      chart.render();
-      chartEl.__apex__ = chart;
+        // ▶ 시간 (HH:mm~HH:mm 형식)
+        const start = row.broadcastFormStartTime ?? row.startTime ?? row.start_time;
+        const end   = row.broadcastFormEndTime   ?? row.endTime   ?? row.end_time;
+        const time  = makeTime(start, end);
 
-      // ---- 리스트 (색 점 + 제목 + 값)
-	   listEl.classList.add('rating-2col');     // ← 2열 스타일 적용
-	  listEl.innerHTML = items.map((x,i)=>`
-	    <div class="legend-item">
-	      <div class="legend-left">
-	        <span class="legend-dot" style="background:${colors[i] || '#999'}"></span>
-	        <span class="legend-name">${esc(x.name)}</span>
-	      </div>
-	      <strong>${x.value.toFixed(1)}%</strong>
-	    </div>
-	  `).join('');
+        // a 태그가 아닌 div 사용 → 행 자체는 클릭되지 않음
+        // (카드에 있는 .stretched-link가 카드 전체 클릭을 담당)
+        return `
+          <div class="n-row" role="listitem" aria-label="방송 행">
+            <div class="n-badge"><span class="badge bg-secondary">${esc(badge)}</span></div>
+            <div class="n-title" title="${escAttr(name)}">${name}</div>
+            <div class="n-time">${esc(time)}</div>
+          </div>`;
+      }).join('');
     }
 
-    // 4) 데모
-    function demoRatings(){
-      return {
-        items: [
-          { name:'9시 뉴스',     rating: 12.3 },
-          { name:'정오 뉴스',     rating: 9.8  },
-          { name:'다큐 스페셜',   rating: 8.4  },
-          { name:'저녁 토크쇼',   rating: 7.2  },
-          { name:'주간 시사',     rating: 6.6  },
-          { name:'스포츠 하이라이트', rating: 5.5 }
-        ]
-      };
+    // 6) 요일 배지 생성
+    function makeWeekBadge(row){
+      const flags = [
+        row.broadcastMonday, row.broadcastTuesday, row.broadcastWednesday,
+        row.broadcastThursday, row.broadcastFriday, row.broadcastSaturday, row.broadcastSunday
+      ].map(v => v === 1 || v === '1' || v === true || v === 'Y'); // 다양한 표현 허용
+
+      const ko = ['월','화','수','목','금','토','일'];
+      const on = ko.filter((_, i) => flags[i]);
+
+      if (on.length === 7) return '매일';
+      if (on.length === 5 && flags.slice(0,5).every(Boolean) && !flags[5] && !flags[6]) return '월~금';
+      if (on.length === 2 && flags[5] && flags[6] && !flags.slice(0,5).some(Boolean)) return '주말';
+
+      // 연속 구간 압축(예: 월~수, 금)
+      let label = '';
+      let i = 0;
+      while (i < 7){
+        if (!flags[i]) { i++; continue; }
+        const s = i;
+        while (i + 1 < 7 && flags[i + 1]) i++;
+        const e = i;
+        label += (label ? ',' : '') + (s === e ? ko[s] : `${ko[s]}~${ko[e]}`);
+        i++;
+      }
+      return label || '—';
     }
 
-    // 유틸
-    function getCss(varName){
-      return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    // 7) 시간 포맷: 'HH:mm~HH:mm'
+    function makeTime(st, et){
+      const s = toHHmm(st), e = toHHmm(et);
+      if (!s && !e) return '';
+      if (s && e)   return `${s}~${e}`;
+      return s || e || '';
     }
-    function esc(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+    function toHHmm(v){
+      if (!v) return '';
+      const s = String(v);
+      const m = s.match(/^(\d{2}):(\d{2})/);   // 'HH:mm' 또는 'HH:mm:ss' 에서 앞 5자리만 사용
+      return m ? `${m[1]}:${m[2]}` : s;
+    }
+
+    // 8) XSS 방지 유틸
+    function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
     function escAttr(s){ return esc(s).replace(/'/g,'&#39;'); }
   });
 })();
@@ -873,10 +847,13 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // ====== 라우트 & 유틸 ======
-  function detailUrl(row){
-    // 보드 지정 시 보드 라우트, 아니면 전역 포스트 라우트
-    return boardId ? `${CTX}/board/${boardId}/post/${row.postId}`
-                   : `${CTX}/post/${row.postId}`;
+  function detailUrl(/* row */){
+    // 전체보기와 동일: /board/{boardId}/list 로 이동
+    if (!boardId) {
+      console.warn('[urgent-ticker] data-board-id가 없습니다. 기본 게시판 ID를 지정하세요.');
+      return `${CTX}/board/1/list`; // ← 기본값(프로젝트에 맞게 숫자 교체)
+    }
+    return `${CTX}/board/${boardId}/list`;
   }
   function fmtDateTime(iso){
     if (!iso) return '';

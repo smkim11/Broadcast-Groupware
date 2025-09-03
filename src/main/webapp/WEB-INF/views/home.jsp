@@ -234,30 +234,28 @@
 
       <!-- (2) 시청률(예: 차트 자리) -->
      <div class="col-3">
-  <div class="card" id="card-rating">
-    <div class="card-body">
-      <div class="d-flex align-items-center mb-2">
-        <h4 class="card-title mb-1">방송목록</h4>
-        <span class="title-inline-note ms-2">월~금</span>
-        <a href="/ratings" class="title-inline-note ms-auto">전체 보기</a>
-      </div>
-
-      <!-- 그래프 -->
-      <div id="rating-chart"></div>
-
-      <!-- 방송명 리스트 -->
-      <ul id="rating-list" class="rating-list mt-2" role="list" aria-label="시청률 상위 프로그램"></ul>
-    </div>
-  </div>
-</div>
+		<div class="card">
+		    <div class="card-body" id="home-broadcast-card">
+		     <a href="${pageContext.request.contextPath}/broadcast/list" 
+		         class="stretched-link" 
+		         aria-label="방송목록 페이지로 이동"></a>
+		      <div class="d-flex align-items-center mb-2">
+		        <h4 class="card-title mb-1"><i class="uil uil-tv-retro me-1"></i> 방송편성</h4>
+		      </div>
+		      <div id="home-broadcast-rows" class="broadcast-rows mt-2" role="list" aria-label="방송 목록"></div>
+		    </div>
+		  </div>
+		</div>
 
       <!-- (3) 공지사항 -->
       <div class="col-3">
         <div class="card">
           <div class="card-body" id="home-notice-card">
+          <a href="${pageContext.request.contextPath}/board/1" 
+	         class="stretched-link" 
+	         aria-label="공지사항 페이지로 이동"></a>
             <div class="d-flex align-items-center mb-2">
 	      		<h4 class="card-title mb-1">공지사항</h4>
-	    			 <a href="/board/1" class="title-inline-note ms-auto">전체 보기</a>
 			 </div>
             <div id="home-notice-rows" class="notice-rows mt-2" role="list" aria-label="공지 목록"></div>
           </div>
@@ -283,7 +281,7 @@
   </div><!-- /col-xl-6 오른쪽 -->
 </div><!-- /row g-3 -->
                         <!-- 긴급 공지 티커 -->
-<div id="urgent-ticker" class="hide" role="status" aria-live="polite">
+<div id="urgent-ticker" data-board-id="1" class="hide" role="status" aria-live="polite">
   <button type="button" class="ticker-close" aria-label="닫기">×</button>
   <div class="ticker-viewport">
     <div class="ticker-track"></div>
@@ -309,7 +307,7 @@
   <div id="koj-chat-log" class="chat-log">
     <!-- 초기 안내 메시지 (원하면 지워도 됨) -->
     <div class="row bot">
-      <div class="bubble">무엇을 도와드릴까요? 예) <em>이번달 외근 몇개</em>, <em>어제 출근시간</em></div>
+      <div class="bubble">무엇을 도와드릴까요? 예) <em>근태</em></div>
       <div class="time"></div>
     </div>
   </div>

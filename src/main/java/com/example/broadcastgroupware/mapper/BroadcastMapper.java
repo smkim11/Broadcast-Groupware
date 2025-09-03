@@ -43,5 +43,8 @@ public interface BroadcastMapper {
 
     // 프로그램 팀원 삭제
     int deleteBroadcastTeamByIds(@Param("ids") List<Integer> ids);
+    
+    // home 페이지 조회
+    List<BroadcastFormDto> selectHomeTopBroadcasts(@Param("limit") int limit);
 
 }
