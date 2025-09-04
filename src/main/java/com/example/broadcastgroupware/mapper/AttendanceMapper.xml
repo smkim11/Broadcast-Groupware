@@ -137,7 +137,7 @@
 		SELECT
 			SUM(CASE WHEN attendance_in 	 IS NOT NULL THEN 1 ELSE 0 END) AS checkin,
 			SUM(CASE WHEN attendance_out 	 IS NOT NULL THEN 1 ELSE 0 END) AS checkout,
-			SUM(CASE WHEN attendance_outside IS NOT NULL THEN 1 ELSE 0 END) AS field
+			SUM(CASE WHEN attendance_outside IS NOT NULL THEN 1 ELSE 0 END) AS outside
 		FROM attendance
 		WHERE user_id = #{userId}
 		AND attendance_date BETWEEN DATE_SUB(CURDATE(), INTERVAL (#{days} - 1) DAY)

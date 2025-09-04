@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.broadcastgroupware.mapper.UserCreateMapper">
+	
+	<!-- 부서리스트: code가 없으면 id를 2자리 0패딩 
+	부서에 code 값이 비어있을 때(없거나 '')는, 부서 id를 ‘01’, ‘02’처럼 최소 2자리 문자열로 만들어서 대신 쓰라는 뜻
+		 ex)id=1 -> "01", id=12 -> "12" (id가 100이상이면 보통 그대로 "100"으로 둠
+	-->
+	<select id="selectDepartments" resultType="map">
+		SELECT 
+			d.department_id	  AS deptId,
+			d.department_name AS deptName,
+			<!-- 표시용 코드: 부서 id를 2자리 0패딩해서 '[05]' 으로 보여줌 -->
+			LPAD(d.department_id, 2, '0') AS code
+		FROM department d
+		ORDER BY d.department_name
+	
+	</select>
+	
+	<!-- 부서별 팀 리스트 -->
+	<select id="selectTeamsByDept" resultType="map">
+		SELECT
+			t.team_id 	AS teamId,
+			t.team_name AS teamName
+		FROM team t
+		WHERE t.department_id = #{deptId}
+		ORDER BY t.team_name
+	</select>
+</mapper>

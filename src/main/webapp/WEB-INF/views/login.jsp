@@ -57,22 +57,19 @@
                                             <input type="password" class="form-control" id="password" name="password" placeholder="비밀번호 입력" required>
                                         </div>
                 
-                                        <div class="mt-3 text-end">
+                                        <div class="mt-3 text-center">
                                             <button class="btn btn-primary w-sm waves-effect waves-light" type="submit">로그인</button>
                                         </div>
             
-
-                                        <div class="mt-4 text-center">
-                                            <p class="mb-0">Don't have an account ? <a href="" class="fw-medium text-primary"> Signup now </a> </p>
-                                        </div>
                                     </form>
                                 </div>
             
                             </div>
                         </div>
-
-                        <div class="mt-5 text-center">
-                            <p>© <script>document.write(new Date().getFullYear())</script> Minible. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand</p>
+	                            관리자아이디: ex)admin<br>
+	                            유저아이디: ex)user
+                        <div class="mt-2 text-center">
+                            <p>© <script>document.write(new Date().getFullYear())</script> 김성민 김예진 장정수 장지영 <i class="mdi mdi-star text-danger"></i> by 맛있는 김장김장</p>
                         </div>
 
                     </div>

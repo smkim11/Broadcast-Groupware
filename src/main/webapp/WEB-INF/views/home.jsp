@@ -84,7 +84,7 @@
          aria-label="근태 페이지로 이동"></a>
 			        <div class="d-flex align-items-center justify-content-between mb-1">
 			        <div class="d-flex align-items-center mb-2">
-			          <h4 class="card-title mb-1">근태</h4>
+			          <h4 class="card-title mb-1"><i class="uil-stopwatch me-1"></i>근태</h4>
 			          <span id="resv-range-label" class="title-inline-note ms-2">30일 기준</span>
 			        </div>
 			        </div>
@@ -111,10 +111,10 @@
 				  <!-- 외근 -->
 				  <div class="col-4">
 				    <div class="resv-donut position-relative">
-				      <div id="att-donut-field"></div>
+				      <div id="att-donut-outside"></div>
 				      <div class="att-center">외근</div>
 				    </div>
-				    <div class="small text-muted mt-1"><span id="att-field-time">--:--</span></div>
+				    <div class="small text-muted mt-1"><span id="att-outside-time">--:--</span></div>
 				  </div>
 				</div>
 			  </div>
@@ -128,7 +128,7 @@
 				      <!-- 제목 + 연차 기준 뱃지 + 전체보기(오른쪽) -->
 				      <div class="d-flex align-items-center justify-content-between">
 				        <div class="d-flex align-items-center">
-				         <h4 class="card-title mb-1">휴가</h4>
+				         <h4 class="card-title mb-1"><i class="uil-plane-departure me-1"></i>휴가</h4>
 				          <span id="vac-year-note" class="title-inline-note ms-2">—</span>
 				        </div>
 				      </div>
@@ -160,7 +160,7 @@
                      <div class="card">
                          <div class="card-body">
                              <div class="d-flex align-items-center mb-2">
-					      		<h4 class="card-title mb-1">문서</h4>
+					      		<h4 class="card-title mb-1"><i class="uil-folder-question me-1"></i>문서</h4>
 							</div>
 							 <div id="doc-rows" class="doc-rows mt-2" role="list" aria-label="문서 상태별 개수"></div>
                          </div>
@@ -172,7 +172,7 @@
 					  <div class="card" id="card-resv">
 					    <div class="card-body">
 					    <div class="d-flex align-items-center mb-2">
-					      <h4 class="card-title mb-1">예약</h4>
+					      <h4 class="card-title mb-1"><i class="uil-clock-three me-1"></i>예약</h4>
 						</div>
 					
 					      <!-- ▽ 도넛 3개가 가로로 나란히 -->
@@ -225,7 +225,7 @@
          class="stretched-link" 
          aria-label="일정 페이지로 이동"></a>
               <div class="d-flex align-items-center mb-2">
-	      		<h4 class="card-title mb-1">일정</h4>
+	      		<h4 class="card-title mb-1"><i class="uil-calender me-1"></i>일정</h4>
 			 </div>
            <div id="home-agenda-rows" class="agenda-rows mt-2" role="list" aria-label="일정 목록"></div>
           </div>
@@ -240,7 +240,7 @@
 		         class="stretched-link" 
 		         aria-label="방송목록 페이지로 이동"></a>
 		      <div class="d-flex align-items-center mb-2">
-		        <h4 class="card-title mb-1"><i class="uil uil-tv-retro me-1"></i> 방송편성</h4>
+		        <h4 class="card-title mb-1"><i class="uil uil-tv-retro me-1"></i>방송편성</h4>
 		      </div>
 		      <div id="home-broadcast-rows" class="broadcast-rows mt-2" role="list" aria-label="방송 목록"></div>
 		    </div>
@@ -255,7 +255,7 @@
 	         class="stretched-link" 
 	         aria-label="공지사항 페이지로 이동"></a>
             <div class="d-flex align-items-center mb-2">
-	      		<h4 class="card-title mb-1">공지사항</h4>
+	      		<h4 class="card-title mb-1"><i class="uil-exclamation-circle me-1"></i>공지사항</h4>
 			 </div>
             <div id="home-notice-rows" class="notice-rows mt-2" role="list" aria-label="공지 목록"></div>
           </div>
@@ -267,7 +267,7 @@
         <div class="card">
           <div class="card-body">
             <div class="d-flex align-items-center mb-2">
-            <h4 class="card-title mb-1">날씨</h4>
+            <h4 class="card-title mb-1"><i class="uil-cloud-question me-1"></i>날씨</h4>
              <input id="weather-city" class="form-control form-control-sm ms-auto" style="max-width:160px" placeholder="도시 (예: Seoul)">
             </div>
             <div id="weather-body">

@@ -37,6 +37,9 @@
 
       <div class="row">
         <div class="col-lg-12">
+        <div class="mb-1 text-end">
+            <a href="javascript:void(0);" class="btn btn-outline-primary btn-sm waves-effect"><i class="mdi mdi-plus me-1"></i>직원 등록</a>
+        </div>
           <div class="card">
             <div class="card-body">
 

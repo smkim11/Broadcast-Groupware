@@ -68,5 +68,8 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
+        
+        // 암호화 비밀번호 사용 시 주석 해제해서 사용: bcrypt 해시 비교(운영 권장)
+        // return new BCryptPasswordEncoder();
     }
 }

@@ -78,16 +78,16 @@ public class HomeRestController {
         Map<String, Object> c = attendanceMapper.selectCountsInDays(target, days);
         int inCnt    = toInt(c != null ? c.get("checkin")  : null);   // 출근 일수
         int outCnt   = toInt(c != null ? c.get("checkout") : null);   // 퇴근 일수
-        int fieldCnt = toInt(c != null ? c.get("field")    : null);   // 외근 일수
+        int outsideCnt = toInt(c != null ? c.get("outside")    : null);   // 외근 일수
 
         // 4) JS가 기대하는 형태로 JSON 구성 (normalize()에서 그대로 먹음)
         Map<String, Object> body = Map.of(
                 "days", days,
-                "counts", Map.of("checkin", inCnt, "checkout", outCnt, "field", fieldCnt),
+                "counts", Map.of("checkin", inCnt, "checkout", outCnt, "outside", outsideCnt),
                 "today", Map.of(
                         "checkinTime",  in  != null ? in  : "--:--",
                         "checkoutTime", out != null ? out : "--:--",
-                        "fieldTime",    fld
+                        "outsideTime",    fld
                 )
         );
 
