@@ -106,6 +106,140 @@ input:checked + .slider:before {
     margin-bottom: 1rem; /* 필요 시 여백 */
 }
 
+/* 모달 */
+/* 모달 전체 배경 */
+.modal {
+	display: none; /* 기본은 숨김 */
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+
+/* 모달 컨텐츠 */
+.modal-content {
+	background: #fff;
+	padding: 20px;
+	width: 100%;
+	max-width: 430px;
+	border-radius: 8px;
+	position: relative;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 탭 버튼 영역 */
+.tab-buttons {
+	display: flex;
+	justify-content: center;  
+	gap: 3px;               
+	margin-bottom: 15px;
+}
+
+.form-actions .closeModal {
+	background: #4CAF50;  
+	color: #fff;        
+}
+
+.tab-buttons button {
+	margin-right: 10px;
+	padding: 8px 12px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	background: #f1f1f1;
+	cursor: pointer;
+}
+.tab-buttons button:hover {
+	background: #e0e0e0;
+}
+
+/* 폼 그룹 */
+.form-group {
+	margin-bottom: 10px;
+}
+.form-group input,
+.form-group select {
+	width: 100%;
+	padding: 8px;
+	box-sizing: border-box;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+}
+
+/* 폼 액션 버튼 */
+.form-actions {
+	text-align: right;
+}
+.form-actions button {
+	margin-left: 5px;
+	padding: 8px 14px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+}
+.modal .closeModal {
+	background: #ccc;
+}
+.form-actions button[type="submit"] {
+	background: #4CAF50;
+	color: #fff;
+}
+
+/* 스위치 버튼 (토글) */
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 50px;
+	height: 24px;
+}
+.switch input {
+	display: none;
+}
+.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	transition: 0.4s;
+	border-radius: 24px;
+}
+.slider:before {
+	position: absolute;
+	content: "";
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	bottom: 3px;
+	background-color: white;
+	transition: 0.4s;
+	border-radius: 50%;
+}
+input:checked + .slider {
+	background-color: #4CAF50;
+}
+input:checked + .slider:before {
+	transform: translateX(26px);
+}
+
+/* 등장 애니메이션 */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
 
 </style>
 
@@ -245,75 +379,72 @@ input:checked + .slider:before {
 </div>
 
 <!-- 게시판 관리 모달 -->
-<div id="boardManageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-    background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-    <div style="background:white; padding:20px; width:500px; border-radius:8px; position:relative;">
-        <h3>게시판 관리</h3>
+<div id="boardManageModal" class="modal">
+	<div class="modal-content">
+		<h3 style="color: blue; text-align: center;">게시판 관리</h3>
 
-        <!-- 탭 버튼 -->
-        <div style="margin-bottom:15px; text-align:center;">
-            <button type="button" id="showRegister" style="margin-right:10px;">게시판 등록</button>
-            <button type="button" id="showModifyName" style="margin-right:10px;">게시판 이름 수정</button>
-            <button type="button" id="showModifyStatus">게시판 상태 수정</button>
-        </div>
+		<!-- 탭 버튼 -->
+		<div class="tab-buttons">
+			<button type="button" id="showRegister">게시판 등록</button>
+			<button type="button" id="showModifyName">게시판 이름 수정</button>
+			<button type="button" id="showModifyStatus">게시판 상태 수정</button>
+		</div>
 
-        <!-- 등록 폼 -->
-        <form id="postForm" enctype="multipart/form-data" style="display:block;">
-            <div style="margin-bottom:10px;">
-                <label>게시판명</label><br>
-                <input type="text" name="boardTitle" style="width:100%;" required>
-            </div>
-            <div style="text-align:right;">
-                <button type="button" class="closeModal">닫기</button>
-                <button type="submit">등록</button>
-            </div>
-        </form>
+		<!-- 등록 폼 -->
+		<form id="postForm" enctype="multipart/form-data">
+			<div class="form-group">
+				<label>게시판명</label><br>
+				<input type="text" name="boardTitle" required>
+			</div>
+			<div class="form-actions">
+				<button type="button" class="closeModal" style="background-color: #4CAF50;">닫기</button>
+				<button type="submit">등록</button>
+			</div>
+		</form>
 
-        <!-- 이름 수정 폼 -->
-        <form id="modifyFormName" enctype="multipart/form-data" style="display:none;">
-            <div style="margin-bottom:10px;">
-                <label>게시판 선택</label><br>
-                <select class="boardSelectName">
-                    <option value="">-- 게시판 --</option>
-                </select>
-                <input type="hidden" name="boardId" class="hiddenBoardId" value="">
-            </div>
-            <div style="margin-bottom:10px;">
-                <label>게시판명</label><br>
-                <input type="text" name="boardTitle" style="width:100%;" required>
-            </div>
-            <div style="text-align:right;">
-                <button type="button" class="closeModal">닫기</button>
-                <button type="submit">수정</button>
-            </div>
-        </form>
+		<!-- 이름 수정 폼 -->
+		<form id="modifyFormName" enctype="multipart/form-data" style="display:none;">
+			<div class="form-group">
+				<label>게시판 선택</label><br>
+				<select class="boardSelectName">
+					<option value="">-- 게시판 --</option>
+				</select>
+				<input type="hidden" name="boardId" class="hiddenBoardId" value="">
+			</div>
+			<div class="form-group">
+				<label>게시판명</label><br>
+				<input type="text" name="boardTitle" required>
+			</div>
+			<div class="form-actions">
+				<button type="button" class="closeModal" style="background-color: #4CAF50;">닫기</button>
+				<button type="submit">수정</button>
+			</div>
+		</form>
 
-        <!-- 상태 수정 폼 -->
-        <form id="modifyFormStatus" enctype="multipart/form-data" style="display:none;">
-            <div style="margin-bottom:10px;">
-                <label>게시판 선택</label><br>
-                <select class="boardSelectStatus">
-                    <option value="">-- 게시판 --</option>
-                </select>
-                <input type="hidden" name="boardId" class="hiddenBoardId" value="">
-            </div>
-            <div style="margin-bottom:10px;">
-                <label>게시판 상태</label><br>
-                <label class="switch">
-                    <input type="checkbox" name="boardStatus" class="boardStatusToggle">
-                    <span class="slider round"></span>
-                </label>
-                <span class="statusLabelText">비활성화</span>
-            </div>
-            <div style="text-align:right;">
-                <button type="button" class="closeModal">닫기</button>
-                <button type="submit">수정</button>
-            </div>
-        </form>
-
-    </div>
+		<!-- 상태 수정 폼 -->
+		<form id="modifyFormStatus" enctype="multipart/form-data" style="display:none;">
+			<div class="form-group">
+				<label>게시판 선택</label><br>
+				<select class="boardSelectStatus">
+					<option value="">-- 게시판 --</option>
+				</select>
+				<input type="hidden" name="boardId" class="hiddenBoardId" value="">
+			</div>
+			<div class="form-group">
+				<label>게시판 상태</label><br>
+				<label class="switch">
+					<input type="checkbox" name="boardStatus" class="boardStatusToggle">
+					<span class="slider round"></span>
+				</label>
+				<span class="statusLabelText">비활성화</span>
+			</div>
+			<div class="form-actions">
+				<button type="button" class="closeModal" style="background-color: #4CAF50;">닫기</button>
+				<button type="submit">수정</button>
+			</div>
+		</form>
+	</div>
 </div>
-
 
 
 <script type="text/javascript">

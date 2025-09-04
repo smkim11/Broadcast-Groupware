@@ -290,6 +290,10 @@ input:checked + .slider:before {
 	border-radius: 4px;
 	cursor: pointer;
 	transition: 0.3s;
+	font-size: 14px;       
+	line-height: 1.4;      
+	height: 36px;        
+	box-sizing: border-box;
 }
 
 .d-flex {
