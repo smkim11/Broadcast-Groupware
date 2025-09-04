@@ -188,6 +188,55 @@
 	    </foreach>
 	</delete>
 	
+	
+	<!-- ======== 회차 ======== -->
+    
+    <!-- 방송 편성 INSERT -->
+    <!-- 
+		useGeneratedKeys="true": DB에서 AUTO_INCREMENT로 생성된 PK 값을 가져오도록 설정
+		keyProperty="broadcastScheduleId": 생성된 PK를 BroadcastSchedule 객체의 broadcastScheduleId 필드에 자동 세팅
+		=> insert 실행 후 schedule.getBroadcastScheduleId() 호출 시 DB에서 생성된 PK 값 확인 가능
+	-->
+	<insert id="insertBroadcastSchedule"
+	        parameterType="com.example.broadcastgroupware.domain.BroadcastSchedule"
+	        useGeneratedKeys="true" keyProperty="broadcastScheduleId">
+	    INSERT INTO broadcast_schedule (approval_line_id, create_date)
+	    VALUES (#{approvalLineId}, NOW())
+	</insert>
+	
+	<!-- 동일 결재 라인으로 이미 생성된 편성 재사용 -->
+	<select id="findScheduleIdByApprovalLineId" parameterType="int" resultType="int">
+	    SELECT bs.broadcast_schedule_id
+	    FROM broadcast_schedule bs
+	    WHERE bs.approval_line_id = #{approvalLineId}
+	    LIMIT 1
+	</select>
+	
+	<!-- 해당 편성의 회차 수 -->
+	<select id="countEpisodesByScheduleId" parameterType="int" resultType="int">
+	    SELECT COUNT(*)
+	    FROM broadcast_episode
+	    WHERE broadcast_schedule_id = #{broadcastScheduleId}
+	</select>
+	
+	<!-- 회차 일괄 INSERT (코멘트 제외) -->
+	<insert id="insertEpisodes">
+	    INSERT INTO broadcast_episode (
+	    	broadcast_schedule_id, broadcast_episode_no,
+	        broadcast_episode_date, broadcast_episode_weekday,
+	        create_date
+	    ) 
+	    VALUES
+	    <foreach collection="list" item="e" separator=",">
+	        (#{e.broadcastScheduleId}, #{e.broadcastEpisodeNo},
+	         #{e.broadcastEpisodeDate}, #{e.broadcastEpisodeWeekday},
+	         NOW())
+	    </foreach>
+	</insert>
+	
+	
+	<!-- ======== 기타 ======== -->	
+	
 	<!-- 홈카드: 방송목록 Top N (최신 편성 순) -->
 	<select id="selectHomeTopBroadcasts" parameterType="map" resultMap="BroadcastMap">
 		  SELECT
@@ -229,5 +278,4 @@
 		  LIMIT #{limit}
 	</select>
 	
-    
 </mapper>

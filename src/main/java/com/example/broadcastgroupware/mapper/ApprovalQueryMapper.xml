@@ -383,5 +383,14 @@
 	    WHERE rl.user_id = #{userId}
 	    ORDER BY ad.create_date DESC
     </select>
+    
+    <!-- ======== 회차 ======== -->
+    
+    <!-- 결재라인 ID로 공통 양식(approval_document) ID 조회 -->
+	<select id="selectApprovalDocumentIdByLine" parameterType="int" resultType="int">
+	    SELECT al.approval_document_id
+	    FROM approval_line al
+	    WHERE al.approval_line_id = #{approvalLineId}
+	</select>
 	
 </mapper>

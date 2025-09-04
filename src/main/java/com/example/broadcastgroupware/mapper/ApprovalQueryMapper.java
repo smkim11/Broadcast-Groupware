@@ -6,8 +6,6 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.example.broadcastgroupware.domain.ApprovalLine;
-import com.example.broadcastgroupware.domain.ReferenceLine;
 import com.example.broadcastgroupware.dto.ApprovalDocumentDto;
 
 @Mapper
@@ -85,4 +83,9 @@ public interface ApprovalQueryMapper {
     // 참조 목록 문서
     List<ApprovalDocumentDto> selectReferencedDocuments(@Param("userId") int userId);
     
+    
+    // ===== 회차 =====
+    
+    // 결재라인 ID로 공통 양식(approval_document) ID 조회
+    Integer selectApprovalDocumentIdByLine(@Param("approvalLineId") int approvalLineId);
 }

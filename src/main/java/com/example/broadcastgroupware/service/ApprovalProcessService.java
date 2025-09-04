@@ -5,25 +5,37 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.broadcastgroupware.domain.BroadcastEpisode;
+import com.example.broadcastgroupware.domain.BroadcastSchedule;
 import com.example.broadcastgroupware.mapper.ApprovalMapper;
 import com.example.broadcastgroupware.mapper.ApprovalQueryMapper;
+import com.example.broadcastgroupware.mapper.BroadcastMapper;
 
 @Service
 public class ApprovalProcessService {
     private final ApprovalMapper approvalMapper;
     private final ApprovalQueryMapper approvalQueryMapper;
     private final VacationService vacationService;
+    private final BroadcastMapper broadcastMapper;
 
     public ApprovalProcessService(ApprovalMapper approvalMapper, ApprovalQueryMapper approvalQueryMapper,
-    								VacationService vacationService) {
+    								VacationService vacationService, BroadcastMapper broadcastMapper) {
         this.approvalMapper = approvalMapper;
         this.approvalQueryMapper = approvalQueryMapper;
         this.vacationService = vacationService;
+        this.broadcastMapper = broadcastMapper;
     }
 
     // 결재 처리 (승인/반려)
@@ -78,13 +90,18 @@ public class ApprovalProcessService {
                     // 휴가 이력 등록 + 사용일 업데이트
                     vacationService.applyApprovedVacation(documentId, myApprovalLineId, dayCount);
                 }
+                              
+                // 방송 문서라면: 편성/회차 자동 생성
+                autoCreateScheduleAndEpisodes(documentId, userId);  // 아래 메서드 참고
             
             }
         } else {
             approvalMapper.updateDocumentStatus(documentId, "반려");
         }
     }
-    
+        
+
+    // ===== 휴가 문서인 경우 =====
     
     // 휴가 문서 여부
     private boolean isVacationDoc(int documentId) {
@@ -101,11 +118,124 @@ public class ApprovalProcessService {
     	// 시작일~종료일 포함 휴가 일수 계산
     	String s = String.valueOf(vf.get("vacationFormStartDate"));
     	String e = String.valueOf(vf.get("vacationFormEndDate"));
-    	java.time.LocalDate start = java.time.LocalDate.parse(s);
-    	java.time.LocalDate end = java.time.LocalDate.parse(e);
+    	LocalDate start = LocalDate.parse(s);
+    	LocalDate end = LocalDate.parse(e);
     	
-    	long days = java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
+    	long days = ChronoUnit.DAYS.between(start, end) + 1;
     	return (double) days;
+    }
+    
+    
+    // ===== 방송 문서인 경우 =====
+    
+    private void autoCreateScheduleAndEpisodes(int documentId, int approverUserId) {
+        // 방송 문서 여부
+        Map<String, Object> form = approvalQueryMapper.selectBroadcastFormDetail(documentId);
+        if (form == null || form.isEmpty()) {
+            return;
+        }
+
+        // 1) 마지막 결재자의 결재라인 정보 조회 (PK/차수/상태)
+        Map<String, Object> myLine = approvalQueryMapper.selectUserApprovalLine(documentId, approverUserId);
+        if (myLine == null || myLine.get("approvalLineId") == null) {
+            throw new IllegalStateException("결재라인을 찾을 수 없습니다. doc=" + documentId + ", user=" + approverUserId);
+        }
+        int approvalLineId = ((Number) myLine.get("approvalLineId")).intValue();
+
+        // 2) 편성(프로그램) 생성 또는 재사용
+        Integer found = broadcastMapper.findScheduleIdByApprovalLineId(approvalLineId);
+        int scheduleId;
+        if (found != null) {
+            scheduleId = found;
+        } else {
+            var schedule = new BroadcastSchedule();
+            schedule.setApprovalLineId(approvalLineId);
+            // INSERT 실행 시 useGeneratedKeys로 PK가 schedule.broadcastScheduleId에 채워짐
+            broadcastMapper.insertBroadcastSchedule(schedule);
+            scheduleId = schedule.getBroadcastScheduleId();
+        }
+
+        // 3) 회차가 이미 있으면 재생성 스킵
+        int existing = broadcastMapper.countEpisodesByScheduleId(scheduleId);
+        if (existing > 0) return;
+
+        // 4) 요일 및 기간으로 회차 계산 -> 일괄 INSERT (코멘트 제외)
+        var episodes = buildEpisodes(scheduleId, form);
+        if (!episodes.isEmpty()) {
+            broadcastMapper.insertEpisodes(episodes);
+        }
+    }
+
+    // 회차 목록 계산
+    private List<BroadcastEpisode> buildEpisodes(int scheduleId, Map<String, Object> form) {
+        String startStr = String.valueOf(form.get("broadcastFormStartDate"));
+        String endStr = String.valueOf(form.get("broadcastFormEndDate"));
+        
+        // 문자열을 날짜 연산이 가능한 LocalDate로 변환
+        LocalDate start = LocalDate.parse(startStr);
+        LocalDate end = LocalDate.parse(endStr);
+        
+        if (end.isBefore(start)) throw new IllegalArgumentException("종료일이 시작일보다 앞섭니다.");
+
+        // 선택된 방송 요일 수집
+        EnumSet<DayOfWeek> days = collectSelectedWeekdays(form);
+        
+        if (days.isEmpty()) throw new IllegalArgumentException("방송 요일이 선택되지 않았습니다.");
+
+        DateTimeFormatter iso = DateTimeFormatter.ISO_DATE;
+        
+        // 결과 회차 목록과 회차 번호 카운터
+        List<BroadcastEpisode> out = new ArrayList<>();
+        int no = 1;
+
+        // 종료일 포함 범위: totalDays로 순회
+        long totalDays = ChronoUnit.DAYS.between(start, end);   // end는 미포함 일수
+        for (long offset = 0; offset <= totalDays; offset++) {  // 종료일 포함
+            LocalDate d = start.plusDays(offset);
+            if (!days.contains(d.getDayOfWeek())) continue;
+
+            // 해당 날짜가 포함되는 경우 회차 엔티티 생성
+            var e = new BroadcastEpisode();
+            e.setBroadcastScheduleId(scheduleId);
+            e.setBroadcastEpisodeNo(no++);
+            e.setBroadcastEpisodeDate(d.format(iso));
+            e.setBroadcastEpisodeWeekday(toKor(d.getDayOfWeek()));
+            out.add(e);
+        }
+        return out;
+    }
+
+    private EnumSet<DayOfWeek> collectSelectedWeekdays(Map<String, Object> f) {
+    	// 선택된 요일 수집: 화면 값(0/1, '1'/'Y'/'true')을 on(...)으로 판정해 추가
+        EnumSet<DayOfWeek> s = EnumSet.noneOf(DayOfWeek.class);
+        if (on(f.get("broadcastMonday"))) s.add(DayOfWeek.MONDAY);
+        if (on(f.get("broadcastTuesday"))) s.add(DayOfWeek.TUESDAY);
+        if (on(f.get("broadcastWednesday"))) s.add(DayOfWeek.WEDNESDAY);
+        if (on(f.get("broadcastThursday"))) s.add(DayOfWeek.THURSDAY);
+        if (on(f.get("broadcastFriday"))) s.add(DayOfWeek.FRIDAY);
+        if (on(f.get("broadcastSaturday"))) s.add(DayOfWeek.SATURDAY);
+        if (on(f.get("broadcastSunday"))) s.add(DayOfWeek.SUNDAY);
+        return s;
+    }
+
+    // on 판정: null=false, Number(1)=true, String '1'/'Y'/'true'=true
+    private boolean on(Object v) {
+        if (v == null) return false;
+        if (v instanceof Number n) return n.intValue() == 1;
+        String s = String.valueOf(v).trim();
+        return "1".equals(s) || "Y".equalsIgnoreCase(s) || "true".equalsIgnoreCase(s);
+    }
+
+    private String toKor(DayOfWeek d) {
+        return switch (d) {
+            case MONDAY -> "월";
+            case TUESDAY -> "화";
+            case WEDNESDAY -> "수";
+            case THURSDAY -> "목";
+            case FRIDAY -> "금";
+            case SATURDAY -> "토";
+            case SUNDAY -> "일";
+        };
     }
     
     
