@@ -6,9 +6,18 @@
 <head>
   <meta charset="UTF-8">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 </head>
+  <style>
+/* 템플릿에서 제공하는 에러메세지만 사용  */
+.was-validated .form-control:valid,
+.form-control.is-valid {
+  border-color: #dee2e6 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+</style>
 <body>
-<c:set var="ctx" value="${pageContext.request.contextPath}" />
 
 <div>
   <jsp:include page ="../nav/header.jsp"></jsp:include>
@@ -37,9 +46,13 @@
 
       <div class="row">
         <div class="col-lg-12">
-        <div class="mb-1 text-end">
-            <a href="javascript:void(0);" class="btn btn-outline-primary btn-sm waves-effect"><i class="mdi mdi-plus me-1"></i>직원 등록</a>
-        </div>
+       <div class="mb-1 text-end">
+		  <a href="javascript:void(0);" 
+		     class="btn btn-outline-primary btn-sm waves-effect"
+		     data-bs-toggle="modal" data-bs-target="#userCreateModal">
+		     <i class="mdi mdi-plus me-1"></i>직원 등록
+		  </a>
+		</div>
           <div class="card">
             <div class="card-body">
 
@@ -55,8 +68,11 @@
                           <label class="form-check-label" for="contacusercheck"></label>
                         </div>
                       </th>
+                      <th scope="col">사원번호</th>
                       <th scope="col">이름</th>
-                      <th scope="col">부서/직급</th>
+                      <th scope="col">직급</th>
+                      <th scope="col">부서</th>
+                      <th scope="col">팀</th>
                       <th scope="col">Email</th>
                       <th scope="col" style="width: 200px;">Action</th>
                     </tr>
@@ -70,7 +86,7 @@
                             <label class="form-check-label" for="check_${r.userId}"></label>
                           </div>
                         </th>
-
+						<td><c:out value="${r.username}"/></td>
                         <td>
                           <img
                             src="<c:out value='${empty r.profileImage ? ctx += "/resources/images/users/default-avatar.png" : r.profileImage}'/>"
@@ -79,17 +95,19 @@
                           <a href="${ctx}/user/detail/${r.userId}" class="text-body">
                             <c:out value="${r.fullName}"/>
                           </a>
-                         (<c:out value="${r.userRank}"/>)
+                         <small class="text-muted">(<c:out value="${r.gender}"/>)</small>
                         </td>
 
                         <td>
-                         <div class="text-muted small">
+                         <c:out value="${r.userRank}"/>
+                        </td>
+                        
+                        <td>
                             <c:out value="${r.departmentName}"/>
                             <c:if test="${not empty r.departmentName}">
-                              /<c:out value="${r.teamName}"/>
                             </c:if>
-                          </div>
                         </td>
+                        <td><c:out value="${r.teamName}"/></td>
                         <td><c:out value="${r.email}"/></td>
 
                         <td>
@@ -205,6 +223,125 @@
 
     </div><!-- container-fluid -->
   </div><!-- page-content -->
+  
+<!-- ===== 직원 생성 모달 ===== -->
+<div class="modal fade" id="userCreateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">직원 등록</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <!-- 부서 -->
+          <div class="col-md-6">
+            <label class="form-label">부서</label>
+            <select id="deptSelect" class="form-select">
+              <option value="">부서를 선택하세요</option>
+            </select>
+            <div class="invalid-feedback" id="err-dept"></div>
+          </div>
+
+          <!-- 팀 -->
+          <div class="col-md-6">
+            <label class="form-label">팀</label>
+            <select id="teamSelect" class="form-select" disabled>
+              <option value="">팀을 선택하세요</option>
+            </select>
+            <div class="invalid-feedback" id="err-team"></div>
+          </div>
+
+          <!-- 권한 -->
+          <div class="col-md-6">
+            <label class="form-label">권한(role)</label>
+            <select id="role" class="form-select">
+              <option value="USER">USER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <div class="invalid-feedback" id="err-role"></div>
+          </div>
+          <!-- 직급 -->
+          <div class="col-md-6">
+            <label class="form-label">직급</label>
+            <select id="userRank" class="form-select">
+            </select>
+            <div class="invalid-feedback" id="err-rank"></div>
+          </div>
+          
+          <!-- 이름 -->
+          <div class="col-md-6">
+            <label class="form-label">이름</label>
+            <input id="fullName" class="form-control" type="text" placeholder="홍길동">
+            <div class="invalid-feedback" id="err-name"></div>
+          </div>
+
+          <!-- 주민번호 앞/뒤 -->
+          <div class="col-md-3">
+            <label class="form-label">주민 앞자리(6자리)</label>
+            <input id="userSn1" class="form-control"
+                   type="text" inputmode="numeric" pattern="\d*"
+                   maxlength="6" placeholder="예: 900101">
+            <div class="invalid-feedback" id="err-sn1"></div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">주민 뒷자리(7자리)</label>
+            <input id="userSn2" class="form-control"
+                   type="text" inputmode="numeric" pattern="\d*"
+                   maxlength="7" placeholder="예: 1xxxxxx">
+            <div class="invalid-feedback" id="err-sn2"></div>
+          </div>
+       
+
+          <!-- 연락처 -->
+          <div class="col-md-6">
+            <label class="form-label">연락처</label>
+            <input id="userPhone" class="form-control" type="text" placeholder="01012345678">
+            <div class="invalid-feedback" id="err-phone"></div>
+          </div>
+          
+          <!-- 이메일 -->
+          <div class="col-md-6">
+            <label class="form-label">이메일</label>
+            <input id="userEmail" class="form-control" type="email" placeholder="user@example.com">
+            <div class="invalid-feedback" id="err-email"></div>
+          </div>
+
+
+       <!-- 입사일(왼쪽) + 안내문구(오른쪽) : 칸 너비는 그대로 col-md-6 / col-md-6 -->
+<div class="col-md-6">
+  <label class="form-label">입사일</label>
+  <input id="userJoinDate" class="form-control" type="date" readonly>
+  <!-- (유효성 메시지 위치 유지) -->
+  <div id="err-join" class="invalid-feedback"></div>
+</div>
+
+<!-- 오른쪽 빈칸에 안내 문구만 배치 -->
+<div class="col-md-6">
+  <!-- 라벨 라인 높이를 맞추기 위해 보이지 않는 레이블 한 줄 -->
+  <label class="form-label d-none d-md-block">&nbsp;</label>
+  <!-- 실제 안내 문구 -->
+  <div class="small text-danger pt-2">
+    ※ 초기비밀번호는 생년월일입니다.
+  </div>
+</div>
+
+ </div>
+
+        <!-- 서버/기타 메시지 -->
+        <div id="createResult" class="mt-3 small" style="display:none;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+        <button type="button" class="btn btn-outline-success" id="btnCreateUser">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===== /직원 생성 모달 ===== -->
+
 
   <div>
     <jsp:include page ="../nav/footer.jsp"></jsp:include>
@@ -214,6 +351,8 @@
   </div>
 </div><!-- main-content -->
 
-<script src="${ctx}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
+<script src="${pageContext.request.contextPath}/resources/js/pages/user-create.init.js"></script>
 </body>
 </html>
