@@ -19,6 +19,57 @@
 	input[readonly] {
 	  background-color: #F6F6F6;
 	}
+	/* 테이블 카드 */
+	.table-card {
+	    background-color: #fff;
+	    padding: 20px;
+	    border-radius: 12px;
+	    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+	    margin-top: 20px;
+	}
+	
+	/* 프로필 이미지 강조 */
+	#profileImg {
+	    width: 150px;
+	    height: 150px;
+	    border-radius: 50%;
+	    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+	    transition: transform 0.2s;
+	}
+	#profileImg:hover {
+	    transform: scale(1.05);
+	}
+	
+	/* 서명 캔버스 중앙정렬 */
+	#signCanvas, #updateSignCanvas {
+	    display: block;
+	    margin: 10px auto;
+	    border-radius: 6px;
+	}
+	
+	/* 버튼 스타일 개선 */
+	.btn-outline-primary, .btn-outline-success, .btn-outline-secondary {
+	    border-radius: 6px;
+	    padding: 6px 12px;
+	    transition: all 0.2s;
+	}
+	.btn-outline-primary:hover {
+	    background-color: #34c38f;
+	    color: white;
+	    border-color: #34c38f;
+	}
+	
+	/* 테이블 내용 중앙 정렬 */
+	.table th, .table td {
+	    vertical-align: middle !important;
+	}
+	
+	/* 프로필 이미지 카드 내부에서 중앙 정렬 */
+	.card.text-center img#profileImg {
+	    display: block;
+	    margin: 0 auto; /* 좌우 중앙 정렬 */
+	}
+
 </style>
 <title>KOJ방송국</title>
 </head>
@@ -36,82 +87,89 @@
                     </div>
                 </div>
             </div>
-            <div style="text-align:center;">
-			    <!-- 프로필 이미지 -->
-			    <img src="/final/${myInfo.profile}" alt="프로필" 
-			         id="profileImg" class="avatar-lg rounded-circle img-thumbnail" style="cursor:pointer;">
-			
-			    <!-- 숨겨진 파일 업로드 -->
-			    <form id="uploadForm" action="/addProfile" method="post" enctype="multipart/form-data">
-			        <input type="file" id="fileInput" name="file" accept="image/*" style="display:none;" onchange="document.getElementById('uploadForm').submit();">
-			    </form>
+            <div class="row g-3">
+			  <!-- 프로필 -->
+			  <div class="col-md-4">
+			    <div class="card text-center shadow-sm rounded-2 p-3">
+			    	<div>&nbsp;</div><div>&nbsp;</div>
+			      <!-- 프로필 이미지 -->
+			      <img src="/final/${myInfo.profile}" alt="프로필" id="profileImg" class="avatar-lg rounded-circle mb-3" style="cursor:pointer;">
+					<form id="uploadForm" action="/addProfile" method="post" enctype="multipart/form-data">
+				        <input type="file" id="fileInput" name="file" accept="image/*" style="display:none;" onchange="document.getElementById('uploadForm').submit();">
+				    </form>
+					<div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>
+			      <!-- 이름, 직급, 소속 -->
+			      <h4>${myInfo.fullName}</h4>
+			      <p>${myInfo.belong} | ${myInfo.userRank}</p>
+			      <div>&nbsp;</div><div>&nbsp;</div>
+			    </div>
+			  </div>
+
+			  <!-- 정보 수정 카드 -->
+			  <div class="col-md-8">
+			    <div class="card shadow-sm rounded-2 p-3">
+			      <form id="myPageForm" class="needs-validation" novalidate>
+			        <table class="table table-bordered align-middle mb-3">
+			          <input type="hidden" name="userId" id="userId" value="${myInfo.userId}"/>
+			          <tr>
+			            <th class="text-center">사원번호</th>
+			            <td><input type="text" name="username" id="username" class="form-control" value="${myInfo.username}" readonly></td>
+			          </tr>
+			          <tr>
+			            <th class="text-center">생년월일</th>
+			            <td><input type="text" name="birth" id="birth" class="form-control" value="${myInfo.birth}" readonly></td>
+			          </tr>
+			          <tr>
+			            <th class="text-center">전화번호</th>
+			            <td>
+			              <input type="text" name="userPhone" id="userPhone" value="${myInfo.userPhone}" placeholder="Ex) 010-1234-5678" 
+			                     class="form-control" pattern="^\d{2,3}-\d{3,4}-\d{4}$" required>
+			              <div class="invalid-feedback">올바른 전화번호를 입력하세요.</div>
+			            </td>
+			          </tr>
+			          <tr>
+			            <th class="text-center">이메일</th>
+			            <td>
+			              <input type="email" name="userEmail" id="userEmail" value="${myInfo.userEmail}" placeholder="Ex) example@naver.com"
+			                     class="form-control" required>
+			              <div class="invalid-feedback">올바른 이메일을 입력하세요.</div>
+			            </td>
+			          </tr>
+			          <tr>
+			            <th class="text-center">서명</th>
+			            <td>
+			            	<c:choose>
+						        <c:when test="${myInfo.sign == null}">
+						          <canvas id="signCanvas" width="400" height="200" style="border:1px solid #ccc;"></canvas>
+						          <div class="mt-2 d-flex gap-2 justify-content-end">
+						            <button type="button" id="btnClear" class="btn btn-outline-secondary btn-sm">삭제</button>
+						            <button type="button" id="btnSign" class="btn btn-outline-success btn-sm">등록</button>
+						          </div>
+						          <input type="hidden" id="signImg" name="signImg">
+						        </c:when>
+						        <c:otherwise>
+						          <img src="/final/${myInfo.sign}" alt="서명 이미지"  width="300" height="150">
+						        </c:otherwise>
+					      	</c:choose>
+			            </td>
+			          </tr>
+			        </table>
+			        <div class="d-flex justify-content-end gap-2">
+			          <!-- 서명이 등록되어 있을때만 표시 -->
+			          <c:choose>
+			          	<c:when test="${myInfo.sign != null}">
+			          		<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#sign-modal">서명 변경</button>
+			          	</c:when>
+			          	<c:otherwise>
+			          	</c:otherwise>
+			          </c:choose>
+			          <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pw-modal">비밀번호 변경</button>
+			          <button type="submit" id="btn" class="btn btn-outline-primary">수정</button>
+			        </div>
+			      </form>
+			    </div>
+			  </div>
 			</div>
-   		<form class="needs-validation" id="myPageForm" novalidate>
-			<table class="table table-bordered align-middle">
-				<input type="hidden" name="userId" id="userId" value="${myInfo.userId }"/>
-				<tr>
-					<th class="text-center">소속</th>
-					<td><input type="text" name="belong" id="belong" class="form-control" value="${myInfo.belong }" readonly></td>
-				</tr>
-				<tr>
-					<th class="text-center">직급</th>
-					<td><input type="text" name="userRank" id="userRank" class="form-control" value="${myInfo.userRank }" readonly></td>
-				</tr>
-				<tr>
-					<th class="text-center">이름</th>
-					<td><input type="text" name="fullName" id="fullName" class="form-control" value="${myInfo.fullName }" readonly></td>
-				</tr>
-				<tr>
-					<th class="text-center">사원번호</th>
-					<td><input type="text" name="username" id="username" class="form-control" value="${myInfo.username }" readonly></td>
-				</tr>
-				<tr>
-					<th class="text-center">전화번호</th>
-					<td><input type="text" name="userPhone" id="userPhone" value="${myInfo.userPhone }" placeholder="Ex) 010-1234-5678" 
-							class="form-control" pattern="^\d{2,3}-\d{3,4}-\d{4}$" required>
-					<div class="invalid-feedback">올바른 전화번호를 입력하세요.</div></td>
-				</tr>
-				<tr>
-					<th class="text-center">이메일</th>
-					<td><input type="email" name="userEmail" id="userEmail" value="${myInfo.userEmail }" placeholder="Ex) example@naver.com"
-							class="form-control" required>
-					<div class="invalid-feedback">올바른 이메일을 입력하세요.</div></td>
-				</tr>
-				<tr>
-				    <th class="text-center">서명</th>
-				    	<!-- 서명이 없으면 서명등록창, 있으면 저장된 서명이미지 -->
-				    	<td>
-						    <c:choose>
-						    	<c:when test="${myInfo.sign == null }">
-							    	<canvas id="signCanvas" width="400px" height="200px" style="border:1px solid #ccc; margin:10px auto;"></canvas>
-							        <div class="mt-2 d-flex gap-2">
-							            <button type="button" id="btnClear" class="btn btn-outline-secondary btn-sm">삭제</button>
-							            <button type="button" id="btnSign" class="btn btn-outline-success btn-sm">등록</button>
-							        </div>
-							        <input type="hidden" id="signImg" name="signImg">
-						    	</c:when>
-						    	<c:otherwise>
-						    		 <img src="/final/${myInfo.sign}" 
-       									alt="서명 이미지" width="300" height="150">
-						    	</c:otherwise>
-						    </c:choose>
-				    	</td>
-				</tr>
-			</table>
-				
-			<div class="d-flex justify-content-end gap-2 mt-3">
-				<!-- 서명 변경 모달 버튼 -->
-				<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#sign-modal">
-				   서명 변경
-				</button>
-				<!-- 비밀번호 변경 모달 버튼 -->
-				<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pw-modal">
-				   비밀번호 변경
-				</button>
-				<button type="submit" id="btn" class="btn btn-outline-primary">수정</button>			
-			</div>
-		</form>
-		
 		<!--비밀번호 변경 모달 -->
 		<div class="modal fade" id="pw-modal" tabindex="-1" aria-hidden="true">
 		  <div class="modal-dialog modal-dialog-centered">

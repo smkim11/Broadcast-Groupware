@@ -5,6 +5,13 @@
 	<select id="userInfo" resultType="com.example.broadcastgroupware.dto.MyPageDto">
 		SELECT distinct u.user_id userId, concat(d.department_name,' ',t.team_name)belong, u.full_name fullName, 
 			u.user_rank userRank, u.username, u.user_phone userPhone, u.user_email userEmail,
+			(case when (SELECT SUBSTRING(user_sn2,1,1) FROM user WHERE user_id=u.user_id) = 1 OR 
+				(SELECT SUBSTRING(user_sn2,1,1) FROM user WHERE user_id=u.user_id) = 2 
+			then CONCAT('19',(SELECT SUBSTRING(user_sn1,1,2) FROM user WHERE user_id=u.user_id),'년 ',
+				(SELECT SUBSTRING(user_sn1,3,2) FROM user WHERE user_id=u.user_id),'월 ',(SELECT SUBSTRING(user_sn1,5,2) FROM user WHERE user_id=u.user_id),'일')
+			ELSE CONCAT('20',(SELECT SUBSTRING(user_sn1,1,2) FROM user WHERE user_id=u.user_id),'년 ',
+				(SELECT SUBSTRING(user_sn1,3,2) FROM user WHERE user_id=u.user_id),'월 ',(SELECT SUBSTRING(user_sn1,5,2) FROM user WHERE user_id=u.user_id),'일')
+			END) birth,
 			CONCAT((select user_images_name FROM user_images WHERE user_images_type='서명' AND user_id = u.user_id),'.',
 			(select user_images_ext FROM user_images WHERE user_images_type='서명' AND user_id = u.user_id)) sign,
 			CONCAT((select user_images_name FROM user_images WHERE user_images_type='프로필' AND user_id = u.user_id),'.',

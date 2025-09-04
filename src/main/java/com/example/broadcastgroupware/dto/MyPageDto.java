@@ -11,6 +11,7 @@ public class MyPageDto {
 	private String username;
 	private String userPhone;
 	private String userEmail;
+	private String birth;
 	private String sign;
 	private String profile;
 }
