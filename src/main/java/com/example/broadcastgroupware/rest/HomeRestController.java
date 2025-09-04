@@ -37,7 +37,7 @@ public class HomeRestController {
     private final ApprovalMapper approvalMapper;
     private final ReservationMapper reservationMapper;
     private final BoardMapper boardMapper;
-    private final BroadcastMapper broadcastMapper;
+    private final BroadcastProgramMapper broadcastProgramMapper;
     private final LoginService loginService;
 
     // 생성자 주입
