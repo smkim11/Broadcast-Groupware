@@ -39,49 +39,107 @@
 	</select>
 	
 	<!-- 조직도 -->
-	<select id="selectUserList" resultType="com.example.broadcastgroupware.dto.UserListDto">
-	  SELECT
-	    u.user_id                         AS userId,
-	    u.full_name                       AS fullName,
-	    u.user_rank                       AS userRank,
-	    u.user_email                      AS email,
-	    t.team_id                         AS teamId,
-	    t.team_name                       AS teamName,
-	    COALESCE(ui.user_images_type, '/resources/images/users/avatar-default.png') AS profileImage,
-	    d.department_id					  AS departmentId,
-	    d.department_name				  AS departmentName
-	    
-	  FROM `user` u
-	  LEFT JOIN deployment_history dh	        
-	  		ON dh.user_id = u.user_id
-	       AND dh.create_date = (
-	            SELECT MAX(dh2.create_date)
-	            FROM deployment_history dh2
-	            WHERE dh2.user_id = u.user_id
-	       )
-	  LEFT JOIN team t ON t.team_id = dh.team_id	<!-- 팀(소속) -->
-	  LEFT JOIN department d ON d.department_id = t.department_id	<!-- 부서 -->
-	  LEFT JOIN user_images ui ON u.user_id = ui.user_id
-	  <where>
-	    <if test="q != null and q != ''">
-	      (u.full_name LIKE CONCAT('%', #{q}, '%')
-	       OR u.user_email LIKE CONCAT('%', #{q}, '%'))
-	    </if>
-	  </where>
-	  ORDER BY u.full_name
-	  LIMIT #{limit} OFFSET #{offset}
-	</select>
+<select id="selectUserList" resultType="com.example.broadcastgroupware.dto.UserListDto">
+  SELECT
+    u.user_id   AS userId,
+    u.username  AS username,
+    CASE
+      WHEN LEFT(u.user_sn2,1) IN ('1','3','5','7') THEN '남'
+      WHEN LEFT(u.user_sn2,1) IN ('2','4','6','8') THEN '여'
+      ELSE ''
+    END         AS gender,
+    u.full_name  AS fullName,
+    u.user_rank  AS userRank,
+    u.user_email AS email,
+    t.team_id    AS teamId,
+    t.team_name  AS teamName,
+    COALESCE(ui.profile_image, '/resources/images/users/avatar-default.png') AS profileImage,
+    d.department_id   AS departmentId,
+    d.department_name AS departmentName
+  FROM `user` u
 
- <select id="countUserList" resultType="int">
-    SELECT COUNT(*)
+  <!-- 1) 배치이력: 사용자별 최신 1행만 뽑는다 -->
+  LEFT JOIN (
+    SELECT user_id, team_id
+    FROM (
+      SELECT dh.*,
+             ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY create_date DESC, deployment_history_id DESC) AS rn
+      FROM deployment_history dh
+    ) x
+    WHERE x.rn = 1
+  ) dh ON dh.user_id = u.user_id
+
+  <!-- 2) 팀/부서 (각 team_id는 유일하다고 가정) -->
+  LEFT JOIN team t        ON t.team_id = dh.team_id
+  LEFT JOIN department d  ON d.department_id = t.department_id
+
+  <!-- 3) 이미지: 사용자별 최신 1장만 -->
+  LEFT JOIN (
+    SELECT user_id, user_images_type AS profile_image
+    FROM (
+      SELECT ui.*,
+             ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY create_date DESC, user_images_id DESC) AS rn
+      FROM user_images ui
+    ) z
+    WHERE z.rn = 1
+  ) ui ON ui.user_id = u.user_id
+
+  <where>
+    <!-- 필요 시 퇴사자 제외 -->
+    <!-- u.user_resign_date IS NULL -->
+    <if test="q != null and q != ''">
+      <if test="_parameter != null"> AND </if>
+      (u.full_name LIKE CONCAT('%', #{q}, '%')
+       OR u.user_email LIKE CONCAT('%', #{q}, '%'))
+    </if>
+  </where>
+
+  ORDER BY
+    CASE WHEN d.department_name = '대표' THEN 0 ELSE 1 END,
+    d.department_name ASC,
+    t.team_name ASC,
+    FIELD(u.user_rank, '국장','부서장','팀장','과장','대리','주임','사원'),
+    u.full_name ASC
+  LIMIT #{limit} OFFSET #{offset}
+</select>
+
+  <!-- (신규) 관리자 목록 카운트: 목록과 동일한 FROM/WHERE 사용 -->
+<select id="countUserList" resultType="int">
+  SELECT COUNT(*)
+  FROM (
+    SELECT u.user_id
     FROM `user` u
+    LEFT JOIN (
+      SELECT user_id, team_id
+      FROM (
+        SELECT dh.*,
+               ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY create_date DESC, deployment_history_id DESC) AS rn
+        FROM deployment_history dh
+      ) x
+      WHERE x.rn = 1
+    ) dh ON dh.user_id = u.user_id
+    LEFT JOIN team t        ON t.team_id = dh.team_id
+    LEFT JOIN department d  ON d.department_id = t.department_id
+    LEFT JOIN (
+      SELECT user_id, user_images_type AS profile_image
+      FROM (
+        SELECT ui.*,
+               ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY create_date DESC, user_images_id DESC) AS rn
+        FROM user_images ui
+      ) z
+      WHERE z.rn = 1
+    ) ui ON ui.user_id = u.user_id
     <where>
+      <!-- u.user_resign_date IS NULL -->
       <if test="q != null and q != ''">
+        <if test="_parameter != null"> AND </if>
         (u.full_name LIKE CONCAT('%', #{q}, '%')
          OR u.user_email LIKE CONCAT('%', #{q}, '%'))
       </if>
     </where>
-  </select>
+    GROUP BY u.user_id
+  ) X
+</select>
 	
 
 </mapper>

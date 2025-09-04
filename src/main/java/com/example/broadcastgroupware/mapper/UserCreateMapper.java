@@ -6,23 +6,28 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.example.broadcastgroupware.domain.User;
+import com.example.broadcastgroupware.dto.UserCreateDto;
 
 @Mapper
 public interface UserCreateMapper {
 		// username 시퀀스(yyyy + 부서번호 2자리)
 		Integer selectNextSeqByPrefix(@Param("prefix") String prefix);
 		
-		// 저장
-		int isert(@Param("u") User user);
+		 // 팀 → 부서ID 역조회 (team.department_id)
+	    int selectDepartmentIdByTeamId(@Param("teamId") int teamId);
 		
-		// 모달 셀렉트 박스: 부서/팀
-		List<Map<String,Object>> selectDepartments();
-		List<Map<String,Object>> slectTeamsByDept(@Param("deptId") int deptId);
+		// 저장
+		int insertUser(@Param("u") UserCreateDto user);
+		
+		// 부서/팀 조인 결과 (대표 제외)
+	    List<Map<String, Object>> selectDeptTeamJoined();
+
+	    // user 테이블에서 사용 중인 직급 목록 DISTINCT
+	    List<String> selectRanksFromUsers();
 
 		// 팀이 해당 부서 소속인지 검증
-		int countTeamInDept(@Param("deptId") int deptId,
-							@Param("teamId") int teamId);
+		int countTeamInDept(@Param("teamId") int teamId,
+							@Param("deptId") int deptId);
 		
 		// 배치 이력 저장
 		int insertDeploymentHistory(@Param("userId") int userId,

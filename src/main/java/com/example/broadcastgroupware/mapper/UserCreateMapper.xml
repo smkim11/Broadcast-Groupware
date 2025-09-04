@@ -2,28 +2,75 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.broadcastgroupware.mapper.UserCreateMapper">
 	
-	<!-- 부서리스트: code가 없으면 id를 2자리 0패딩 
-	부서에 code 값이 비어있을 때(없거나 '')는, 부서 id를 ‘01’, ‘02’처럼 최소 2자리 문자열로 만들어서 대신 쓰라는 뜻
-		 ex)id=1 -> "01", id=12 -> "12" (id가 100이상이면 보통 그대로 "100"으로 둠
-	-->
-	<select id="selectDepartments" resultType="map">
-		SELECT 
-			d.department_id	  AS deptId,
-			d.department_name AS deptName,
-			<!-- 표시용 코드: 부서 id를 2자리 0패딩해서 '[05]' 으로 보여줌 -->
-			LPAD(d.department_id, 2, '0') AS code
-		FROM department d
-		ORDER BY d.department_name
+	<!-- 팀 → 부서ID (서비스에서 deptId 보정/검증에 사용) -->
+  <select id="selectDepartmentIdByTeamId" resultType="int">
+    SELECT t.department_id
+    FROM team t
+    WHERE t.team_id = #{teamId}
+  </select>
 	
-	</select>
+  <!-- (신규) 부서-팀 조인: 대표 제외, 팀 없는 부서도 나오게 LEFT JOIN -->
+  <select id="selectDeptTeamJoined" resultType="map">
+    SELECT
+      d.department_id             AS deptId,
+      d.department_name           AS deptName,
+      t.team_id                   AS teamId,
+      t.team_name                 AS teamName
+    FROM department d
+    LEFT JOIN team t
+      ON t.department_id = d.department_id
+     AND (t.team_name &lt;&gt; '대표' OR t.team_name IS NULL)
+    WHERE d.department_name &lt;&gt; '대표'
+    ORDER BY d.department_name, t.team_name
+  </select>
+
+  <!-- (신규) user 테이블에서 실제로 쓰이고 있는 직급만 DISTINCT ('대표'는 제외) -->
+  <select id="selectRanksFromUsers" resultType="string">
+    SELECT DISTINCT u.user_rank
+    FROM `user` u
+    WHERE u.user_rank IS NOT NULL
+      AND u.user_rank &lt;&gt; '국장'
+    ORDER BY FIELD(u.user_rank,'사원','대리','과장','팀장','부서장'), u.user_rank
+  </select>
 	
-	<!-- 부서별 팀 리스트 -->
-	<select id="selectTeamsByDept" resultType="map">
+	<!-- prefix(yyyy_dept02)로 시작하는 username의 마지막 3자리 최댓값 +1 -->
+	<select id="selectNextSeqByPrefix" resultType="int">
 		SELECT
-			t.team_id 	AS teamId,
-			t.team_name AS teamName
-		FROM team t
-		WHERE t.department_id = #{deptId}
-		ORDER BY t.team_name
+			COALESCE(MAX(CAST(RIGHT(u.username,3) AS UNSIGNED)), 0) + 1
+		FROM `user` u
+		WHERE u.username LIKE CONCAT(#{prefix}, '%')
 	</select>
+	
+	<!-- INSERT userGeneratedKeys로 userId 채움 -->
+	<insert id="insertUser" parameterType="map" useGeneratedKeys="true" keyProperty="u.userId" keyColumn="user_id">
+		INSERT 
+			INTO `user` (
+						 username, password, role, full_name, user_sn1, user_sn2, user_phone, user_email, user_rank, user_join_date
+						 ) VALUES (
+						 		#{u.username},
+						 		#{u.password},
+						 		#{u.role},
+						 		#{u.fullName},
+						 		#{u.userSn1},
+						 		#{u.userSn2},
+						 		#{u.userPhone},
+						 		#{u.userEmail},
+						 		#{u.userRank},
+						 		#{u.userJoinDate}
+						 		)	
+	</insert>
+	
+	<!-- 팀이 해당 부서에 속하는지 검증 -->
+	<select id="countTeamInDept" resultType="int">
+		SELECT COUNT(*)
+		FROM team
+		WHERE team_id = #{teamId}
+			AND department_id = #{deptId}
+	</select>
+	
+	<!-- 배치 이력 insert -->
+	<insert id="insertDeploymentHistory">
+		INSERT INTO deployment_history (user_id, team_id, create_date)
+		VALUES (#{userId}, #{teamId}, NOW())
+	</insert>
 </mapper>
