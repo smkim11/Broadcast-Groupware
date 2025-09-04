@@ -64,4 +64,9 @@
 	<update id="updatePassword" parameterType="com.example.broadcastgroupware.dto.PasswordDto">
 		UPDATE user SET password=#{newPw} WHERE user_id=#{userId}
 	</update>
+	
+	<!--서명수정-->
+	<update id="updateUserSign" parameterType="com.example.broadcastgroupware.domain.UserImages">
+		update user_images set user_images_name=#{userImagesName} where user_id = #{userId} and user_images_type='서명'
+	</update>
 </mapper>

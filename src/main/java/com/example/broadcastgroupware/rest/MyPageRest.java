@@ -48,4 +48,10 @@ public class MyPageRest {
 		myPageService.updatePassword(passwordDto);
 		return "변경성공";
 	}
+	
+	// 서명 수정
+	@PatchMapping("/updateSign")
+	public void updateSign(@RequestBody UserImages userImages) {
+		myPageService.updateSign(userImages);
+	}
 }

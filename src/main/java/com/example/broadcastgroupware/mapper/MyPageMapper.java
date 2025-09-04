@@ -27,4 +27,6 @@ public interface MyPageMapper {
 	void updatePassword(PasswordDto passwordDto);
 	// 비밀번호 이력에 비밀번호 추가
 	void insertPasswordHistory(PasswordDto passwordDto);
+	// 서명 수정
+	void updateUserSign(UserImages userImages);
 }

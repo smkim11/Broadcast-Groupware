@@ -92,4 +92,33 @@ public class MyPageService {
 		myPageMapper.updatePassword(passwordDto);
 		myPageMapper.insertPasswordHistory(passwordDto);
 	}
+	
+	// 서명 수정
+	public void updateSign(UserImages userImages) {
+	    // 0) 확장자 추출 (data:image/png;base64,...)
+	    String base64Data = userImages.getUserImagesName();
+	    String ext = base64Data.substring(base64Data.indexOf("/") + 1, base64Data.indexOf(";")); // png, jpg 등
+	    
+	    // 1) 랜덤 파일명 생성
+	    String filename = UUID.randomUUID().toString().replace("-", "");
+
+	    // 2) 저장 경로 지정
+	    String savePath = "c:\\final\\"; 
+	    File file = new File(savePath + filename+ "." + ext);
+
+	    // 3) 디코딩해서 파일 저장
+	    try (FileOutputStream fos = new FileOutputStream(file)) {
+	        fos.write(Base64.getDecoder().decode(base64Data.split(",")[1]));
+	    } catch (IOException e) {
+	        throw new RuntimeException("파일 저장 실패", e);
+	    }
+
+	    // 4) UserImages 객체에 값 채우기
+	    userImages.setUserImagesName(filename); // 파일명
+	    userImages.setUserImagesExt(ext);
+	    userImages.setUserImagesPath(savePath);
+	    
+	    // DB에 저장
+	    myPageMapper.updateUserSign(userImages);
+	}
 }

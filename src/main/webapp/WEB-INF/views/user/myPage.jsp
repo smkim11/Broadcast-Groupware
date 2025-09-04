@@ -16,6 +16,9 @@
 	  background-image: none !important;
 	  box-shadow: none !important;
 	}
+	input[readonly] {
+	  background-color: #F6F6F6;
+	}
 </style>
 <title>KOJ방송국</title>
 </head>
@@ -82,10 +85,10 @@
 				    	<td>
 						    <c:choose>
 						    	<c:when test="${myInfo.sign == null }">
-							    	<canvas id="signCanvas" width="400px" height="200px" style="border: 1px solid #000000;"></canvas>
+							    	<canvas id="signCanvas" width="400px" height="200px" style="border:1px solid #ccc; margin:10px auto;"></canvas>
 							        <div class="mt-2 d-flex gap-2">
-							            <button type="button" id="btnClear" class="btn btn-secondary btn-sm">삭제</button>
-							            <button type="button" id="btnSign" class="btn btn-primary btn-sm">등록</button>
+							            <button type="button" id="btnClear" class="btn btn-outline-secondary btn-sm">삭제</button>
+							            <button type="button" id="btnSign" class="btn btn-outline-success btn-sm">등록</button>
 							        </div>
 							        <input type="hidden" id="signImg" name="signImg">
 						    	</c:when>
@@ -99,8 +102,12 @@
 			</table>
 				
 			<div class="d-flex justify-content-end gap-2 mt-3">
+				<!-- 서명 변경 모달 버튼 -->
+				<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#sign-modal">
+				   서명 변경
+				</button>
 				<!-- 비밀번호 변경 모달 버튼 -->
-				<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#event-modal">
+				<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pw-modal">
 				   비밀번호 변경
 				</button>
 				<button type="submit" id="btn" class="btn btn-outline-primary">수정</button>			
@@ -108,7 +115,7 @@
 		</form>
 		
 		<!--비밀번호 변경 모달 -->
-		<div class="modal fade" id="event-modal" tabindex="-1" aria-hidden="true">
+		<div class="modal fade" id="pw-modal" tabindex="-1" aria-hidden="true">
 		  <div class="modal-dialog modal-dialog-centered">
 		    <div class="modal-content">
 		      
@@ -154,11 +161,36 @@
 				      	</div>
 		      		</form>
 		      </div>
-		      
-		      
 		    </div>
 		  </div>
 		</div>
+		  <!--서명 변경 모달 -->
+	      <div class="modal fade" id="sign-modal" tabindex="-1" aria-hidden="true">
+			  <div class="modal-dialog modal-dialog-centered">
+			    <div class="modal-content">
+			      
+			      <div class="modal-header py-3 px-4 border-bottom-0">
+			        <h5 class="modal-title">서명 변경</h5>
+			        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			      </div>
+			      <div class="modal-body">
+					<form class="needs-validation" id="changeSignForm" novalidate>
+			      			<div class="row">
+                   					<label class="form-label">서명</label>
+			      					<canvas id="updateSignCanvas" width="400px" height="200px" style="border:1px solid #ccc; margin:10px auto;"></canvas>
+							        <div class="mt-2 d-flex gap-2">
+							            <button type="button" id="updateBtnClear" class="btn btn-outline-secondary btn-sm">삭제</button>
+							        </div>
+				      		</div>
+				      		<div class="modal-footer">
+						        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+						        <button type="submit" class="btn btn-outline-success">수정</button>
+					      	</div>
+				      </form>
+			      	</div>
+		     	 </div>
+	      		</div>
+	    			</div>
    		</div>
     </div>
 </div>
@@ -187,7 +219,12 @@
 		// ajax로 SignaturePad 객체안 사인이미지를 서버로 전송
 		$('#btnSign').click(function(){
 			if(signaturePad.isEmpty()){
-				alert('서명을 해주세요.');
+				Swal.fire({
+                    title: "서명을 해주세요.",
+                    icon: "error",
+					confirmButtonText: "확인",
+					confirmButtonColor: "#34c38f"
+                });
 			}else{
 				$.ajax({
 					asyn : true, // true면 비동기(백그라운드로 실행)
@@ -330,6 +367,66 @@
 	        });
 	    });
 	});
+	
+	var updateCanvas = document.getElementById("updateSignCanvas");
+	
+	
+	if(updateCanvas){
+		const signaturePad = new SignaturePad($('canvas')[0], {
+			  minWidth: 2,
+		    maxWidth: 2,
+		    penColor: 'rgb(0, 0, 0)'
+		});
+		
+		// 캔버스 내용 초기화하는 clear()메소드
+		$('#updateBtnClear').click(function(){
+			signaturePad.clear();
+		});
+		
+		const signForm = document.getElementById("changeSignForm");
+		
+		signForm.addEventListener("submit", function(e){
+			e.preventDefault();  // 바로 제출막고 확인 누르면 제출
+			if(signaturePad.isEmpty()){
+				e.stopPropagation();
+				Swal.fire({
+                    title: "서명을 해주세요.",
+                    icon: "error",
+					confirmButtonText: "확인",
+					confirmButtonColor: "#34c38f"
+                });
+			}else{
+
+			const userId = document.getElementById("userId").value;
+			
+			fetch("/updateSign", {
+		        method: "PATCH",
+		        headers: {"Content-Type":"application/json"},
+		        body: JSON.stringify({userId:userId,userImagesName: signaturePad.toDataURL()})
+		    }).then((res) => {
+				if(res.ok){
+					Swal.fire({
+				        title: "수정되었습니다.",
+				        icon: "success",
+						confirmButtonText: "확인",
+				        confirmButtonColor: "#34c38f"
+			    	}).then((result)=>{ // 확인 누르면 페이지 새로고침
+	    		    	if(result.isConfirmed){
+	    		    		location.reload();
+	    		    	}
+	    		    });
+				}else{
+					Swal.fire({
+	                    title: "수정을 실패했습니다.",
+	                    icon: "error",
+						confirmButtonText: "확인",
+						confirmButtonColor: "#34c38f"
+	                });
+				}
+			});
+			}
+		});
+	}
 </script>
 </body>
 <!-- Sweet Alerts js -->
