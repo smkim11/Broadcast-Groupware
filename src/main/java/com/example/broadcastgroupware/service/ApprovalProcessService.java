@@ -21,21 +21,26 @@ import com.example.broadcastgroupware.domain.BroadcastEpisode;
 import com.example.broadcastgroupware.domain.BroadcastSchedule;
 import com.example.broadcastgroupware.mapper.ApprovalMapper;
 import com.example.broadcastgroupware.mapper.ApprovalQueryMapper;
-import com.example.broadcastgroupware.mapper.BroadcastMapper;
+import com.example.broadcastgroupware.mapper.BroadcastEpisodeMapper;
+import com.example.broadcastgroupware.mapper.BroadcastProgramMapper;
+import com.example.broadcastgroupware.mapper.BroadcastScheduleMapper;
 
 @Service
 public class ApprovalProcessService {
     private final ApprovalMapper approvalMapper;
     private final ApprovalQueryMapper approvalQueryMapper;
     private final VacationService vacationService;
-    private final BroadcastMapper broadcastMapper;
+    private final BroadcastScheduleMapper broadcastScheduleMapper;
+    private final BroadcastEpisodeMapper broadcastEpisodeMapper;
 
     public ApprovalProcessService(ApprovalMapper approvalMapper, ApprovalQueryMapper approvalQueryMapper,
-    								VacationService vacationService, BroadcastMapper broadcastMapper) {
+    							  VacationService vacationService, BroadcastScheduleMapper broadcastScheduleMapper, 
+    							  BroadcastEpisodeMapper broadcastEpisodeMapper) {
         this.approvalMapper = approvalMapper;
         this.approvalQueryMapper = approvalQueryMapper;
         this.vacationService = vacationService;
-        this.broadcastMapper = broadcastMapper;
+        this.broadcastScheduleMapper = broadcastScheduleMapper;
+        this.broadcastEpisodeMapper = broadcastEpisodeMapper;
     }
 
     // 결재 처리 (승인/반려)
@@ -143,7 +148,7 @@ public class ApprovalProcessService {
         int approvalLineId = ((Number) myLine.get("approvalLineId")).intValue();
 
         // 2) 편성(프로그램) 생성 또는 재사용
-        Integer found = broadcastMapper.findScheduleIdByApprovalLineId(approvalLineId);
+        Integer found = broadcastScheduleMapper.findScheduleIdByApprovalLineId(approvalLineId);
         int scheduleId;
         if (found != null) {
             scheduleId = found;
@@ -151,18 +156,18 @@ public class ApprovalProcessService {
             var schedule = new BroadcastSchedule();
             schedule.setApprovalLineId(approvalLineId);
             // INSERT 실행 시 useGeneratedKeys로 PK가 schedule.broadcastScheduleId에 채워짐
-            broadcastMapper.insertBroadcastSchedule(schedule);
+            broadcastScheduleMapper.insertBroadcastSchedule(schedule);
             scheduleId = schedule.getBroadcastScheduleId();
         }
 
         // 3) 회차가 이미 있으면 재생성 스킵
-        int existing = broadcastMapper.countEpisodesByScheduleId(scheduleId);
+        int existing = broadcastEpisodeMapper.countEpisodesByScheduleId(scheduleId);
         if (existing > 0) return;
 
         // 4) 요일 및 기간으로 회차 계산 -> 일괄 INSERT (코멘트 제외)
         var episodes = buildEpisodes(scheduleId, form);
         if (!episodes.isEmpty()) {
-            broadcastMapper.insertEpisodes(episodes);
+        	broadcastEpisodeMapper.insertEpisodes(episodes);
         }
     }
 

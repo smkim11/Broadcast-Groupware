@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.example.broadcastgroupware.mapper.BroadcastScheduleMapper">
+	
+	 <!-- 방송 편성 INSERT -->
+    <!-- 
+		useGeneratedKeys="true": DB에서 AUTO_INCREMENT로 생성된 PK 값을 가져오도록 설정
+		keyProperty="broadcastScheduleId": 생성된 PK를 BroadcastSchedule 객체의 broadcastScheduleId 필드에 자동 세팅
+		=> insert 실행 후 schedule.getBroadcastScheduleId() 호출 시 DB에서 생성된 PK 값 확인 가능
+	-->
+	<insert id="insertBroadcastSchedule"
+	        parameterType="com.example.broadcastgroupware.domain.BroadcastSchedule"
+	        useGeneratedKeys="true" keyProperty="broadcastScheduleId">
+	    INSERT INTO broadcast_schedule (approval_line_id, create_date)
+	    VALUES (#{approvalLineId}, NOW())
+	</insert>
+	
+	<!-- 동일 결재 라인으로 이미 생성된 편성 재사용 -->
+	<select id="findScheduleIdByApprovalLineId" parameterType="int" resultType="int">
+	    SELECT bs.broadcast_schedule_id
+	    FROM broadcast_schedule bs
+	    WHERE bs.approval_line_id = #{approvalLineId}
+	    LIMIT 1
+	</select>
+	
+</mapper>

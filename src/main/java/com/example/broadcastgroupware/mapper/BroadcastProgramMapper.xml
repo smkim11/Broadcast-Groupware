@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper 
-	namespace="com.example.broadcastgroupware.mapper.BroadcastMapper">
+	namespace="com.example.broadcastgroupware.mapper.BroadcastProgramMapper">
 	
 	<!-- 방송편성 공통 resultMap -->
     <resultMap id="BroadcastMap" type="com.example.broadcastgroupware.dto.BroadcastFormDto">
@@ -32,9 +32,7 @@
         <!-- 회차 수 -->
         <result column="episodes_count"          property="episodesCount"/>
     </resultMap>
-    
-    
-    <!-- ======== 방송편성 ======== -->
+
 
     <!-- 방송편성 총 개수 -->
     <select id="countBroadcasts" resultType="int">
@@ -107,135 +105,7 @@
         	ON u.user_id = ad.user_id
         WHERE bs.broadcast_schedule_id = #{scheduleId}
     </select>
-    
-    
-	<!-- ======== 프로그램별 팀원 ======== -->
-	
-    <!-- 프로그램별 팀원 수 -->
-    <select id="countBroadcastTeamBySchedule" resultType="int">
-        SELECT COUNT(*)
-        FROM broadcast_team bt
-        WHERE bt.broadcast_schedule_id = #{scheduleId}
-    </select>
 
-   	<!-- 프로그램별 팀원 목록 -->
-    <select id="selectBroadcastTeamBySchedule"
-            resultType="com.example.broadcastgroupware.dto.BroadcastTeamRowDto">
-        SELECT
-            bt.broadcast_team_id    AS broadcastTeamId,
-            u.user_id               AS userId,
-            u.full_name             AS fullName,
-            d.department_name       AS departmentName,
-            t.team_name             AS teamName,
-            u.user_rank             AS userRank
-        FROM broadcast_team bt
-        JOIN `user` u
-            ON u.user_id = bt.user_id
-        LEFT JOIN (
-            SELECT dh.user_id, dh.team_id
-            FROM deployment_history dh
-            JOIN (
-                SELECT user_id, MAX(create_date) AS max_cd
-                FROM deployment_history
-                GROUP BY user_id
-            ) latest
-              ON latest.user_id = dh.user_id
-             AND latest.max_cd = dh.create_date
-        ) cur ON cur.user_id = u.user_id
-        LEFT JOIN team t
-            ON t.team_id = cur.team_id
-        LEFT JOIN department d
-            ON d.department_id = t.department_id
-        WHERE bt.broadcast_schedule_id = #{scheduleId}
-        ORDER BY bt.broadcast_team_id ASC
-        LIMIT #{beginRow}, #{rowPerPage}
-    </select>
-    
-	<!-- 프로그램 팀원 중복 여부 -->
-	<select id="existsBroadcastTeam" resultType="int">
-	    SELECT COUNT(*)
-	    FROM broadcast_team
-	    WHERE broadcast_schedule_id = #{scheduleId}
-	        AND user_id = #{userId}
-	</select>
-	
-	<!-- 프로그램 팀 정원 -->
-	<select id="selectCapacityBySchedule" resultType="int">
-	    SELECT bf.broadcast_form_capacity
-	    FROM broadcast_schedule bs
-	    JOIN approval_line al 
-	    	ON al.approval_line_id = bs.approval_line_id
-	    JOIN approval_document ad 
-	    	ON ad.approval_document_id = al.approval_document_id
-	    JOIN broadcast_form bf 
-	    	ON bf.approval_document_id = ad.approval_document_id
-	    WHERE bs.broadcast_schedule_id = #{scheduleId}
-	</select>
-	
-	
-	<!-- 프로그램 팀원 등록 -->
-	<insert id="insertBroadcastTeam" parameterType="com.example.broadcastgroupware.domain.BroadcastTeam">
-	    INSERT INTO broadcast_team (broadcast_schedule_id, user_id, create_date)
-	    VALUES (#{broadcastScheduleId}, #{userId}, NOW())
-	</insert>
-	
-	<!-- 프로그램 팀원 삭제 -->
-	<delete id="deleteBroadcastTeamByIds">
-	    DELETE FROM broadcast_team
-	    WHERE broadcast_team_id IN
-	    <foreach collection="ids" item="id" open="(" separator="," close=")">
-	        #{id}
-	    </foreach>
-	</delete>
-	
-	
-	<!-- ======== 회차 ======== -->
-    
-    <!-- 방송 편성 INSERT -->
-    <!-- 
-		useGeneratedKeys="true": DB에서 AUTO_INCREMENT로 생성된 PK 값을 가져오도록 설정
-		keyProperty="broadcastScheduleId": 생성된 PK를 BroadcastSchedule 객체의 broadcastScheduleId 필드에 자동 세팅
-		=> insert 실행 후 schedule.getBroadcastScheduleId() 호출 시 DB에서 생성된 PK 값 확인 가능
-	-->
-	<insert id="insertBroadcastSchedule"
-	        parameterType="com.example.broadcastgroupware.domain.BroadcastSchedule"
-	        useGeneratedKeys="true" keyProperty="broadcastScheduleId">
-	    INSERT INTO broadcast_schedule (approval_line_id, create_date)
-	    VALUES (#{approvalLineId}, NOW())
-	</insert>
-	
-	<!-- 동일 결재 라인으로 이미 생성된 편성 재사용 -->
-	<select id="findScheduleIdByApprovalLineId" parameterType="int" resultType="int">
-	    SELECT bs.broadcast_schedule_id
-	    FROM broadcast_schedule bs
-	    WHERE bs.approval_line_id = #{approvalLineId}
-	    LIMIT 1
-	</select>
-	
-	<!-- 해당 편성의 회차 수 -->
-	<select id="countEpisodesByScheduleId" parameterType="int" resultType="int">
-	    SELECT COUNT(*)
-	    FROM broadcast_episode
-	    WHERE broadcast_schedule_id = #{broadcastScheduleId}
-	</select>
-	
-	<!-- 회차 일괄 INSERT (코멘트 제외) -->
-	<insert id="insertEpisodes">
-	    INSERT INTO broadcast_episode (
-	    	broadcast_schedule_id, broadcast_episode_no,
-	        broadcast_episode_date, broadcast_episode_weekday,
-	        create_date
-	    ) 
-	    VALUES
-	    <foreach collection="list" item="e" separator=",">
-	        (#{e.broadcastScheduleId}, #{e.broadcastEpisodeNo},
-	         #{e.broadcastEpisodeDate}, #{e.broadcastEpisodeWeekday},
-	         NOW())
-	    </foreach>
-	</insert>
-	
-	
-	<!-- ======== 기타 ======== -->	
 	
 	<!-- 홈카드: 방송목록 Top N (최신 편성 순) -->
 	<select id="selectHomeTopBroadcasts" parameterType="map" resultMap="BroadcastMap">

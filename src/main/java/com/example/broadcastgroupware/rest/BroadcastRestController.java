@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.broadcastgroupware.service.BroadcastService;
 
 @RestController
-@RequestMapping("/broadcast/team")
+@RequestMapping("/broadcast")
 public class BroadcastRestController {
 
     private final BroadcastService broadcastService;
@@ -23,7 +23,7 @@ public class BroadcastRestController {
     }
 
     // 프로그램별 팀원 목록
-    @GetMapping("/list")
+    @GetMapping("/team/list")
     public Map<String, Object> teamList(@RequestParam int scheduleId,
                                         @RequestParam(defaultValue = "1") int page,
                                         @RequestParam(defaultValue = "10") int size) {
@@ -32,7 +32,7 @@ public class BroadcastRestController {
     
     
     // 프로그램 팀원 등록
-    @PostMapping("/add")
+    @PostMapping("/team/add")
     public Map<String, Object> add(@RequestBody Map<String, Integer> body) {
         int scheduleId = body.getOrDefault("scheduleId", 0);
         int userId = body.getOrDefault("userId", 0);
@@ -56,10 +56,34 @@ public class BroadcastRestController {
 
     
     // 프로그램 팀원 삭제
-    @PostMapping("/delete")
+    @PostMapping("/team/delete")
     public Map<String, Object> delete(@RequestBody Map<String, List<Integer>> body) {
         List<Integer> ids = body.get("ids");
         int deleted = broadcastService.deleteBroadcastTeam(ids);
         return Map.of("deleted", deleted);
     }
+    
+    
+    // 회차 목록
+    @GetMapping("/episodes/list")
+    public Map<String, Object> list(@RequestParam int scheduleId,
+                                    @RequestParam(defaultValue = "1") int page,
+                                    @RequestParam(defaultValue = "10") int size) {
+        return broadcastService.getEpisodeList(scheduleId, page, size);
+    }
+    
+    // 회차 소제목 / 회차 설명 (코멘트) 수정
+    @PostMapping("/episodes/comment")
+    public Map<String, Object> updateEpisodeComment(@RequestBody Map<String, Object> body) {
+        int episodeId = (int) body.getOrDefault("episodeId", 0);
+        String comment = (String) body.getOrDefault("comment", null);
+        
+        int updated = broadcastService.updateEpisodeComment(episodeId, comment);
+        
+        int status = updated == 1 ? 200 : 500;
+        String message = updated == 1 ? "저장되었습니다." : "저장에 실패했습니다.";
+        
+        return Map.of("status", status, "message", message, "updated", updated);
+    }
+
 }

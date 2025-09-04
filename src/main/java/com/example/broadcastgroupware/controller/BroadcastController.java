@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -17,10 +18,10 @@ import com.example.broadcastgroupware.service.BroadcastService;
 @RequestMapping("/broadcast")
 public class BroadcastController {
 
-    private final BroadcastService service;
+    private final BroadcastService broadcastService;
 
-    public BroadcastController(BroadcastService service) {
-        this.service = service;
+    public BroadcastController(BroadcastService broadcastService) {
+        this.broadcastService = broadcastService;
     }
 
     // 방송편성 목록 조회
@@ -30,7 +31,7 @@ public class BroadcastController {
                        @RequestParam(defaultValue = "10") int size,
                        Model model) {
 
-        Map<String, Object> data = service.getBroadcastList(keyword, page, size);
+        Map<String, Object> data = broadcastService.getBroadcastList(keyword, page, size);
         model.addAllAttributes(data);
         return "broadcast/program_list";
     }
@@ -39,7 +40,7 @@ public class BroadcastController {
     @GetMapping("/detail/{scheduleId}")
     public String detail(@PathVariable int scheduleId, Model model,
     						RedirectAttributes ra) {
-        BroadcastFormDto program = service.getBroadcastDetail(scheduleId);
+        BroadcastFormDto program = broadcastService.getBroadcastDetail(scheduleId);
         if (program == null) {
         	ra.addFlashAttribute("message", "방송편성을 찾을 수 없습니다.");
             return "redirect:/broadcast/list";

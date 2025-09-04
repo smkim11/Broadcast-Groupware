@@ -7,6 +7,14 @@
 <head>
 <meta charset="UTF-8">
 <title>Program Detail</title>
+<style>
+    .episodes-table th,
+    .episodes-table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+</style>
+
 </head>
 <body>
 <div>
@@ -79,14 +87,53 @@
 			                    </tr>
 			                    <tr>
 			                        <th class="bg-light text-center">회차</th>
-			                        <td class="d-flex justify-content-between align-items-center">
-			                            <span>
-			                                <c:out value="${empty program.episodesCount ? '-' : program.episodesCount}"/>
-			                            </span>
-			                            <a href="${pageContext.request.contextPath}/broadcast/episodes?formId=${program.broadcastFormId}">
-			                                회차 상세 보기
-			                            </a>
-			                        </td>
+			                        <td>
+									    <div class="d-flex justify-content-between align-items-center">
+									        <span>
+									            <c:out value="${empty program.episodesCount ? '-' : program.episodesCount}"/>회
+									        </span>
+									        <a href="#" class="link-primary" id="btnEpisodesToggle" data-schedule-id="${program.broadcastScheduleId}"
+									           data-bs-toggle="collapse" data-bs-target="#episodesPanel" aria-expanded="false" aria-controls="episodesPanel">
+									            회차 상세 보기
+									        </a>
+									    </div>
+									
+									    <!-- 접이식 회차 패널 -->
+									    <div id="episodesPanel" class="collapse mt-2" data-loaded="0">
+									        <div class="card border">
+									            <div class="card-body p-2">
+									                <div class="table-responsive">
+									                    <table class="table table-sm table-bordered align-middle mb-2 episodes-table">
+														    <colgroup>
+														        <col style="width:80px;">
+														        <col style="width:120px;">
+														        <col style="width:100px;">
+														        <col>
+														        <col style="width:100px;">
+														    </colgroup>
+														    <thead class="table-light">
+														        <tr class="text-center">
+														            <th>회차</th>
+														            <th>방영일</th>
+														            <th>방영 요일</th>
+														            <th>소제목 / 회차 설명</th>
+														            <th>작업</th>
+														        </tr>
+														    </thead>
+														    <tbody id="episodesBody">
+														        <tr>
+														            <td colspan="5" class="text-center text-muted py-3">불러오는 중…</td>
+														        </tr>
+														    </tbody>
+														</table>
+									                </div>
+									                <div class="d-flex justify-content-center">
+									                    <ul id="episodesPaging" class="pagination pagination-sm mb-0"></ul>
+									                </div>
+									            </div>
+									        </div>
+									    </div>
+									</td>
 			                    </tr>
 			                    <tr>
 			                        <th class="bg-light text-center">대표자</th>
@@ -95,7 +142,10 @@
 			                                <c:out value="${empty program.fullName ? '-' : program.fullName}"/>
 			                                <span class="text-muted ms-2">(담당 인원: <c:out value="${program.broadcastFormCapacity}"/>명)</span>
 			                            </span>
-			                            <a href="#team-card" class="link-primary" id="btnOpenTeam">팀원 보기</a>
+			                            <a href="#teamCollapse" class="link-primary" id="btnOpenTeam" data-bs-toggle="collapse"
+			                               data-bs-target="#teamCollapse" aria-expanded="false" aria-controls="teamCollapse">
+			                            	팀원 보기
+			                            </a>
 			                        </td>
 			                    </tr>
 			                </tbody>
@@ -105,7 +155,7 @@
 			</div>
 			
 			<!-- 팀원 카드 -->
-			<div class="card mt-3 d-none" id="team-card" data-loaded="0"
+			<div class="card mt-3 collapse" id="teamCollapse" data-loaded="0"
 			     data-schedule-id="${program.broadcastScheduleId}">
 			    <div class="card-body">
 			    	<!-- 헤더: 제목 + (사용자가 대표자인 경우) 등록/삭제 -->
@@ -133,11 +183,11 @@
 			                    <col style="width:22%;">
 			                    <col style="width:22%;">
 			                </colgroup>
-			                <thead>
+			                <thead class="table-light">
 			                    <tr class="text-center">
 			                        <th>선택</th>
 			                        <th>번호</th>
-			                        <th>팀원 명</th>
+			                        <th>이름</th>
 			                        <th>직급</th>
 			                        <th>소속 부서</th>
 			                        <th>소속 팀</th>
@@ -192,6 +242,36 @@
 			        </div>
 			    </div>
 			</div>
+			
+			<!-- 회차 소제목 수정 모달 -->
+			<div class="modal fade" id="epCommentModal" tabindex="-1" aria-hidden="true">
+			    <div class="modal-dialog modal-md">
+			        <div class="modal-content">
+			            <div class="modal-header">
+			                <h5 class="modal-title">소제목 / 회차 설명 수정</h5>
+			                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+			            </div>
+			            <div class="modal-body">
+			                <form id="epCommentForm">
+			                    <input type="hidden" id="epIdInput">
+			                    <div class="mb-2">
+			                        <label class="form-label small">회차</label>
+			                        <input type="text" class="form-control" id="epNoInput" readonly>
+			                    </div>
+			                    <div class="mb-2">
+			                        <label class="form-label small">소제목 / 회차 설명</label>
+			                        <textarea class="form-control" id="epCommentInput" rows="3" placeholder="소제목 혹은 회차 설명을 입력하세요"></textarea>
+			                    </div>
+			                </form>
+			                <div class="alert alert-warning d-none" id="epCommentAlert"></div>
+			            </div>
+			            <div class="modal-footer">
+			                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+			                <button type="button" class="btn btn-outline-success" id="btnEpSave">수정</button>
+			            </div>
+			        </div>
+			    </div>
+			</div>
 	        
         </div>
     </div>
@@ -207,33 +287,73 @@
 
 <script>
     (function () {
-        const ctx = '${pageContext.request.contextPath}';  		 // 컨텍스트 경로
-        const teamCard = document.getElementById('team-card'); 	 // 팀원 카드 (토글 대상)
-        const btnOpen = document.getElementById('btnOpenTeam');  // "팀원 보기" 링크
-        const tbody = document.getElementById('teamBody'); 		 // 팀원 목록 tbody
-        const pagingEl = document.getElementById('teamPaging');  // 페이징 영역(ul)
+    	// ===== 팀원 목록 =====
+        const ctx = '${pageContext.request.contextPath}';  		       // 컨텍스트 경로
+        const teamCollapse = document.getElementById('teamCollapse');  // 팀원 섹션(접기/펼치기)
+        const btnOpen = document.getElementById('btnOpenTeam');    	   // "팀원 보기" 토글
+        const tbody = document.getElementById('teamBody'); 		       // 팀원 목록 tbody
+        const pagingEl = document.getElementById('teamPaging');        // 페이징 영역(ul)
         const btnDeleteChecked = document.getElementById('btnDeleteChecked');  // 팀원 삭제 버튼
 
-        const scheduleId = teamCard ? teamCard.getAttribute('data-schedule-id') : null;
+        const scheduleId = teamCollapse ? teamCollapse.getAttribute('data-schedule-id') : null;
         let currentPage = 1;
         const pageSize = 10;
         let totalCount = 0;
+        
+        
+		// 공통 페이징 (팀원/회차 공용)
+		function renderPagingGeneric(total, page, size, containerEl, onMovePage) {
+		    const totalPage = Math.max(1, Math.ceil(total / size));  // 총 페이지 수 계산
+		
+		    // 페이징 항목 HTML 생성
+		    function item(p, t, dis, act) {
+		        return '' +
+		            '<li class="page-item ' + (dis ? 'disabled ' : '') + (act ? 'active' : '') + '">' +
+		                '<a class="page-link" href="#" data-page="' + p + '">' + t + '</a>' +
+		            '</li>';
+		    }
+		
+		    const start = Math.max(1, page - 2);         // 시작 페이지
+		    const end = Math.min(totalPage, start + 4);  // 끝 페이지
+		
+		    let html = '';
+		    html += item(Math.max(1, page - 1), '‹', page == 1, false);  // 이전
+		    for (let p = start; p <= end; p++) {
+		        html += item(p, String(p), false, p == page);            // 중간 번호
+		    }
+		    html += item(Math.min(totalPage, page + 1), '›', page == totalPage, false);  // 다음
+		
+		    containerEl.innerHTML = html;
+		
+		    // 각 페이지 버튼 클릭 이벤트 등록
+		    Array.prototype.forEach.call(containerEl.querySelectorAll('a.page-link'), function (a) {
+		        a.addEventListener('click', function (e) {
+		            e.preventDefault();
+		            const target = Number(a.getAttribute('data-page'));
+		            if (target && target !== page) onMovePage(target);
+		        });
+		    });
+		}
 
-        // 팀원 보기 버튼
-        btnOpen && btnOpen.addEventListener('click', function (e) {
-            e.preventDefault();  // 기본 링크 동작 막기
-            if (teamCard.classList.contains('d-none')) {
-                teamCard.classList.remove('d-none');  // 카드 표시
-            }
-            if (teamCard.getAttribute('data-loaded') !== '1') {
-                loadTeamPage(1);  // 최초 1회 목록 로드
-                teamCard.setAttribute('data-loaded', '1');
-            }
-            setTimeout(function () {
-                teamCard.scrollIntoView({ behavior: 'smooth', block: 'start' });  // 스크롤 이동
-            }, 0);
-        });
+        
+     	// 팀원 섹션: collapse 토글 시 최초 로드 + 버튼 텍스트 토글
+        if (teamCollapse) {
 
+        	// 펼칠 때 이벤트
+            teamCollapse.addEventListener('show.bs.collapse', function () {
+                if (teamCollapse.getAttribute('data-loaded') !== '1') {
+                    loadTeamPage(1);
+                    teamCollapse.setAttribute('data-loaded', '1');
+                }
+                if (btnOpen) btnOpen.textContent = '팀원 닫기';  // 버튼 라벨 변경
+            });
+        	
+         	// 접을 때 이벤트
+            teamCollapse.addEventListener('hide.bs.collapse', function () {
+                if (btnOpen) btnOpen.textContent = '팀원 보기';  // 버튼 라벨 복구
+            });
+        }
+     	
         // 팀원 목록 로드
         function loadTeamPage(page) {
             currentPage = page;
@@ -307,37 +427,8 @@
 
         // 페이징 렌더링
         function renderPaging(total, page, size) {
-            var totalPage = Math.max(1, Math.ceil(total / size));  // 총 페이지 수 계산
-
-            // 페이징 항목 HTML 생성
-            function item(p, t, dis, act) {
-                return '' +
-                    '<li class="page-item ' + (dis ? 'disabled ' : '') + (act ? 'active' : '') + '">' +
-                        '<a class="page-link" href="#" data-page="' + p + '">' + t + '</a>' +
-                    '</li>';
-            }
-
-            var start = Math.max(1, page - 2); 		   // 시작 페이지
-            var end = Math.min(totalPage, start + 4);  // 끝 페이지
-
-            var html = '';
-            html += item(Math.max(1, page - 1), '‹', page == 1, false);  // 이전
-            for (var p = start; p <= end; p++) {
-                html += item(p, String(p), false, p == page);  // 중간 번호
-            }
-            html += item(Math.min(totalPage, page + 1), '›', page == totalPage, false);  // 다음
-
-            pagingEl.innerHTML = html;
-
-            // 각 페이지 버튼 클릭 이벤트 등록
-            Array.prototype.forEach.call(pagingEl.querySelectorAll('a.page-link'), function (a) {
-                a.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    var p = Number(a.getAttribute('data-page'));
-                    if (p && p !== page) loadTeamPage(p);
-                });
-            });
-        }
+		    return renderPagingGeneric(total, page, size, pagingEl, loadTeamPage);
+		}
 
         // 체크된 행들의 ID 배열 반환
         function selectedIds() {
@@ -368,17 +459,186 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: ids })
-            }).then(function (res) {
+            })
+            .then(function (res) {
                 if (!res.ok) throw new Error('삭제 실패');
                 var lastPage = Math.max(1, Math.ceil((totalCount - ids.length) / pageSize));
                 return loadTeamPage(Math.min(currentPage, lastPage));  // 현재 페이지 또는 마지막 페이지 로드
-            }).then(function () {
+            })
+            .then(function () {
                 alert('삭제되었습니다.');
-            }).catch(function (e) {
+            })
+            .catch(function (e) {
                 console.error(e);
                 alert('삭제 중 오류가 발생했습니다.');
             });
         });
+        
+        
+        // ===== 회차 목록(행 내부) =====
+        const episodesPanel = document.getElementById('episodesPanel'); 	 	 // 회차 섹션
+        const episodesBody = document.getElementById('episodesBody');   	 	 // 회차 목록 tbody
+        const episodesPaging = document.getElementById('episodesPaging');        // 회차 페이징 영역
+        const btnEpisodesToggle = document.getElementById('btnEpisodesToggle');  // 회차 토글 버튼
+
+        let episodesCurrentPage = 1;
+        const episodesPageSize = 8;
+        let episodesTotalCount = 0;
+        const episodesScheduleId = btnEpisodesToggle ? btnEpisodesToggle.getAttribute('data-schedule-id') : null;
+
+     	// 회차 섹션: collapse 토글 시 최초 로드 + 버튼 텍스트 토글
+        if (episodesPanel) {
+
+        	// 펼칠 때 이벤트
+            episodesPanel.addEventListener('show.bs.collapse', function () {
+                if (episodesPanel.getAttribute('data-loaded') !== '1') {
+                    loadEpisodesPage(1);
+                    episodesPanel.setAttribute('data-loaded', '1');
+                }
+                if (btnEpisodesToggle) btnEpisodesToggle.textContent = '회차 닫기';  // 버튼 라벨 변경
+            });
+            
+         	// 접을 때 이벤트
+            episodesPanel.addEventListener('hide.bs.collapse', function () {
+                if (btnEpisodesToggle) btnEpisodesToggle.textContent = '회차 상세 보기';  // 버튼 라벨 복구
+            });
+        }
+
+     	// 회차 목록 로드
+        function loadEpisodesPage(page) {
+            episodesCurrentPage = page;
+            episodesBody.innerHTML =
+                '<tr>' +
+                    '<td colspan="5" class="text-center text-muted py-3">불러오는 중…</td>' +
+                '</tr>';
+
+            const url = ctx + '/broadcast/episodes/list'
+                        + '?scheduleId=' + encodeURIComponent(episodesScheduleId)
+                        + '&page=' + page
+                        + '&size=' + episodesPageSize;
+
+            fetch(url, { headers: { 'Accept': 'application/json' } })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('통신 오류');
+                    return res.json();  // JSON 파싱
+                })
+                .then(function (data) {
+                    episodesTotalCount = data.totalCount || 0;  // 전체 개수 저장
+                    renderEpisodesRows(data.rows || []);		// 행 렌더링
+                 	// 페이징 렌더링
+                    renderEpisodesPaging(episodesTotalCount, data.page || 1, data.size || episodesPageSize);
+                })
+                .catch(function (e) {
+                    console.error(e);
+                    episodesBody.innerHTML =
+                        '<tr>' +
+                            '<td colspan="5" class="text-center text-muted py-3">회차를 불러오지 못했습니다</td>' +
+                        '</tr>';
+                });
+        }
+
+     	// 회차 목록 행 렌더링
+        function renderEpisodesRows(rows) {
+            if (!rows.length) {
+                episodesBody.innerHTML =
+                    '<tr><td colspan="5" class="text-center text-muted py-3">등록된 회차가 없습니다</td></tr>';
+                return;
+            }
+
+            const html = rows.map(function (r) {
+                const weekday = (r.broadcastEpisodeWeekday || '').trim() || '-';
+                const hasComment = !!(r.broadcastEpisodeComment && r.broadcastEpisodeComment.trim().length > 0);
+                const commentHtml = hasComment
+                    ? '<span class="ep-comment-label">' + esc(r.broadcastEpisodeComment) + '</span>'
+                    : '<span class="text-muted">-</span>';
+
+                return '' +
+                    '<tr>' +
+                        '<td>' + safe(r.broadcastEpisodeNo) + '</td>' +
+                        '<td>' + esc(r.broadcastEpisodeDate || '') + '</td>' +
+                        '<td>' + esc(weekday) + '</td>' +
+                        '<td class="ep-comment">' + commentHtml + '</td>' +
+                        '<td>' +
+                            '<button type="button" class="btn btn-sm btn-outline-success btn-ep-edit"' +
+                            ' data-episode-id="' + safe(r.broadcastEpisodeId) + '"' +
+                            ' data-episode-no="' + safe(r.broadcastEpisodeNo) + '"' +
+                            ' data-episode-comment="' + esc(r.broadcastEpisodeComment || '') + '"' +
+                            '>수정</button>' +
+                        '</td>' +
+                    '</tr>';
+            }).join('');
+
+            episodesBody.innerHTML = html;
+        }
+
+     	
+     	// 페이징 렌더링
+        function renderEpisodesPaging(total, page, size) {
+        	return renderPagingGeneric(total, page, size, episodesPaging, loadEpisodesPage);
+        }
+        
+     	// 경고 메시지 유틸
+		function showEpAlert(msg, type) {
+            var el = document.getElementById('epCommentAlert');
+            el.className = 'alert alert-' + (type || 'warning');
+            el.textContent = msg;
+            el.classList.remove('d-none');
+        }
+
+     	
+     	// 수정 버튼 클릭 -> 모달 오픈
+        episodesBody.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-ep-edit');
+            if (!btn) return;
+
+            document.getElementById('epIdInput').value = btn.getAttribute('data-episode-id');
+            document.getElementById('epNoInput').value = btn.getAttribute('data-episode-no');
+            document.getElementById('epCommentInput').value = btn.getAttribute('data-episode-comment') || '';
+
+            new bootstrap.Modal(document.getElementById('epCommentModal')).show();
+        });
+
+     	
+     	// 모달 수정 버튼 클릭 -> 소제목 / 회차 설명 업데이트
+        document.getElementById('btnEpSave').addEventListener('click', function () {
+            const id = document.getElementById('epIdInput').value;
+            const comment = document.getElementById('epCommentInput').value;
+
+            fetch(ctx + '/broadcast/episodes/comment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ episodeId: Number(id), comment: comment })
+            })
+            .then(function (res) {
+                if (!res.ok) throw new Error('수정 실패');
+                return res.json();
+            })
+            .then(function (data) {
+                if (!data || data.updated !== 1) throw new Error('수정 실패');
+
+                // 해당 행만 부분 갱신
+                const btn = episodesBody.querySelector('.btn-ep-edit[data-episode-id="' + id + '"]');
+                if (!btn) return;
+                const row = btn.closest('tr');
+                const commentTd = row.children[3];  // 0:회차, 1:날짜, 2:요일, 3:소제목 / 회차 설명, 4:작업
+                const hasComment = !!(comment && comment.trim().length > 0);
+                commentTd.innerHTML = hasComment
+                    ? '<span class="ep-comment-label">' + esc(comment) + '</span>'
+                    : '<span class="text-muted">-</span>';
+
+                // 버튼 data 속성 최신화
+                btn.setAttribute('data-episode-comment', comment || '');
+
+                bootstrap.Modal.getInstance(document.getElementById('epCommentModal')).hide();
+            })
+            .catch(function (e) {
+                console.error(e);
+                const alertEl = document.getElementById('epCommentAlert');
+                alertEl.textContent = '저장 중 오류가 발생했습니다.';
+                alertEl.classList.remove('d-none');
+            });
+        });
+
 
         // HTML 이스케이프 유틸
         function esc(s) {

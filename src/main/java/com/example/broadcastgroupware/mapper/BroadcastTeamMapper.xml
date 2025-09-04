@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.example.broadcastgroupware.mapper.BroadcastTeamMapper">
+	
+	<!-- 프로그램별 팀원 수 -->
+    <select id="countBroadcastTeamBySchedule" resultType="int">
+        SELECT COUNT(*)
+        FROM broadcast_team bt
+        WHERE bt.broadcast_schedule_id = #{scheduleId}
+    </select>
+
+   	<!-- 프로그램별 팀원 목록 (페이징) -->
+    <select id="selectBroadcastTeamBySchedule"
+            resultType="com.example.broadcastgroupware.dto.BroadcastTeamRowDto">
+        SELECT
+            bt.broadcast_team_id    AS broadcastTeamId,
+            u.user_id               AS userId,
+            u.full_name             AS fullName,
+            d.department_name       AS departmentName,
+            t.team_name             AS teamName,
+            u.user_rank             AS userRank
+        FROM broadcast_team bt
+        JOIN `user` u
+            ON u.user_id = bt.user_id
+        LEFT JOIN (
+            SELECT dh.user_id, dh.team_id
+            FROM deployment_history dh
+            JOIN (
+                SELECT user_id, MAX(create_date) AS max_cd
+                FROM deployment_history
+                GROUP BY user_id
+            ) latest
+              ON latest.user_id = dh.user_id
+             AND latest.max_cd = dh.create_date
+        ) cur ON cur.user_id = u.user_id
+        LEFT JOIN team t
+            ON t.team_id = cur.team_id
+        LEFT JOIN department d
+            ON d.department_id = t.department_id
+        WHERE bt.broadcast_schedule_id = #{scheduleId}
+        ORDER BY bt.broadcast_team_id ASC
+        LIMIT #{beginRow}, #{rowPerPage}
+    </select>
+    
+	<!-- 프로그램 팀원 중복 여부 -->
+	<select id="existsBroadcastTeam" resultType="int">
+	    SELECT COUNT(*)
+	    FROM broadcast_team
+	    WHERE broadcast_schedule_id = #{scheduleId}
+	        AND user_id = #{userId}
+	</select>
+	
+	<!-- 프로그램 팀 정원 -->
+	<select id="selectCapacityBySchedule" resultType="int">
+	    SELECT bf.broadcast_form_capacity
+	    FROM broadcast_schedule bs
+	    JOIN approval_line al 
+	    	ON al.approval_line_id = bs.approval_line_id
+	    JOIN approval_document ad 
+	    	ON ad.approval_document_id = al.approval_document_id
+	    JOIN broadcast_form bf 
+	    	ON bf.approval_document_id = ad.approval_document_id
+	    WHERE bs.broadcast_schedule_id = #{scheduleId}
+	</select>
+	
+	
+	<!-- 프로그램 팀원 등록 -->
+	<insert id="insertBroadcastTeam" parameterType="com.example.broadcastgroupware.domain.BroadcastTeam">
+	    INSERT INTO broadcast_team (broadcast_schedule_id, user_id, create_date)
+	    VALUES (#{broadcastScheduleId}, #{userId}, NOW())
+	</insert>
+	
+	<!-- 프로그램 팀원 삭제 -->
+	<delete id="deleteBroadcastTeamByIds">
+	    DELETE FROM broadcast_team
+	    WHERE broadcast_team_id IN
+	    <foreach collection="ids" item="id" open="(" separator="," close=")">
+	        #{id}
+	    </foreach>
+	</delete>
+	
+</mapper>

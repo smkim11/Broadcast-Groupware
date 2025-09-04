@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.example.broadcastgroupware.mapper.BroadcastEpisodeMapper">
+	
+	<!-- 해당 편성의 회차 수 -->
+	<select id="countEpisodesByScheduleId" parameterType="int" resultType="int">
+	    SELECT COUNT(*)
+	    FROM broadcast_episode
+	    WHERE broadcast_schedule_id = #{broadcastScheduleId}
+	</select>
+	
+	<!-- 회차 일괄 INSERT (코멘트 제외) -->
+	<insert id="insertEpisodes">
+	    INSERT INTO broadcast_episode (
+	    	broadcast_schedule_id, broadcast_episode_no,
+	        broadcast_episode_date, broadcast_episode_weekday,
+	        create_date
+	    ) 
+	    VALUES
+	    <foreach collection="list" item="e" separator=",">
+	        (#{e.broadcastScheduleId}, #{e.broadcastEpisodeNo},
+	         #{e.broadcastEpisodeDate}, #{e.broadcastEpisodeWeekday},
+	         NOW())
+	    </foreach>
+	</insert>
+	
+	<!-- 회차 목록 (페이징) -->
+	<select id="selectEpisodesBySchedule" resultType="com.example.broadcastgroupware.domain.BroadcastEpisode">
+	    SELECT
+	        be.broadcast_episode_id      AS broadcastEpisodeId,
+	        be.broadcast_schedule_id     AS broadcastScheduleId,
+	        be.broadcast_episode_no      AS broadcastEpisodeNo,
+	        be.broadcast_episode_date    AS broadcastEpisodeDate,
+	        be.broadcast_episode_weekday AS broadcastEpisodeWeekday,
+	        be.broadcast_episode_comment AS broadcastEpisodeComment,
+	        be.create_date               AS createDate
+	    FROM broadcast_episode be
+	    WHERE be.broadcast_schedule_id = #{scheduleId}
+	    ORDER BY be.broadcast_episode_no ASC
+	    LIMIT #{beginRow}, #{rowPerPage}
+	</select>
+	
+	<!-- 회차 소제목 / 회차 설명 (코멘트) 수정 -->
+	<update id="updateEpisodeComment">
+	    UPDATE broadcast_episode
+	    SET broadcast_episode_comment = #{comment}
+	    WHERE broadcast_episode_id = #{episodeId}
+	</update>
+	
+</mapper>

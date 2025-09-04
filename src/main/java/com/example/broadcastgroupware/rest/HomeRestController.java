@@ -20,7 +20,7 @@ import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.mapper.ApprovalMapper;
 import com.example.broadcastgroupware.mapper.AttendanceMapper;
 import com.example.broadcastgroupware.mapper.BoardMapper;
-import com.example.broadcastgroupware.mapper.BroadcastMapper;
+import com.example.broadcastgroupware.mapper.BroadcastProgramMapper;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
 import com.example.broadcastgroupware.mapper.VacationMapper;
 import com.example.broadcastgroupware.service.LoginService;
@@ -43,13 +43,13 @@ public class HomeRestController {
     // 생성자 주입
 	public HomeRestController(AttendanceMapper attendanceMapper, VacationMapper vacationMapper,
 			ApprovalMapper approvalMapper, ReservationMapper reservationMapper, BoardMapper boardMapper,
-			BroadcastMapper broadcastMapper, LoginService loginService) {
+			BroadcastProgramMapper broadcastProgramMapper, LoginService loginService) {
 		this.attendanceMapper = attendanceMapper;
 		this.vacationMapper = vacationMapper;
 		this.approvalMapper = approvalMapper;
 		this.reservationMapper = reservationMapper;
 		this.boardMapper = boardMapper;
-		this.broadcastMapper = broadcastMapper;
+		this.broadcastProgramMapper = broadcastProgramMapper;
 		this.loginService = loginService;
 	}
 
@@ -204,7 +204,7 @@ public class HomeRestController {
     @GetMapping("/broadcasts/home-top")
     public List<BroadcastFormDto> homeTop(@RequestParam(defaultValue = "4") int limit){
         int safe = (limit <= 0 || limit > 10) ? 4 : limit;
-        return broadcastMapper.selectHomeTopBroadcasts(safe);
+        return broadcastProgramMapper.selectHomeTopBroadcasts(safe);
     }
     
     // 비밀번호 찾기
