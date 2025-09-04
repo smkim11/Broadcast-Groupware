@@ -291,6 +291,11 @@ a.btn:last-of-type:hover {
     background-color: #ddd;
 }
 
+.date {
+	font-size: 11px;
+	font-weight: 100;
+}
+
 </style>
 
 </head>
@@ -369,7 +374,7 @@ a.btn:last-of-type:hover {
 					                <c:otherwise>
 					                    <span class="author">${co.userName} (${co.userRank})</span>
 					                    <p class="commentContent">${co.commentContent}</p>
-					                    <span class="date">${co.createDate}</span>
+					                    <span class="date" style="font-weight: 300;">${co.createDate}</span>
 					
 					                    <!-- 본인 글 수정/삭제 -->
 					                    <c:if test="${loginUser.userId eq co.userId}">
@@ -408,7 +413,7 @@ a.btn:last-of-type:hover {
 					                        <c:otherwise>
 					                            <span class="author">${r.userName} (${r.userRank})</span>
 					                            <p class="commentContent">${r.commentContent}</p>
-					                            <span class="date">${r.createDate}</span>
+					                            <span class="date" style="font-weight: 300;">${r.createDate}</span>
 					
 					                            <!-- 본인 대댓글 수정/삭제 -->
 					                            <c:if test="${loginUser.userId eq r.userId}">

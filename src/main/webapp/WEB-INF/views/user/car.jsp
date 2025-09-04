@@ -27,7 +27,7 @@
 .list {
 	width: 100%;
 	min-height: 100vh;
-	padding: 20px;
+	padding: 15px;
 	box-sizing: border-box;
 }
 
