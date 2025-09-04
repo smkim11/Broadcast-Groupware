@@ -17,6 +17,93 @@
         <link href="${pageContext.request.contextPath}/resources/css/icons.min.css" rel="stylesheet" type="text/css" />
         <!-- App Css-->
         <link href="${pageContext.request.contextPath}/resources/css/app.min.css" id="app-style" rel="stylesheet" type="text/css" />
+
+<style type="text/css">
+	/* 모달 전체 배경 */
+#findPasswordModal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.6); /* 반투명 검정 */
+	display: none; /* 기본은 숨김 */
+	z-index: 1000;
+	justify-content: center; /* 수평 중앙 정렬 */
+	align-items: center; /* 수직 중앙 정렬 */
+}
+
+/* 모달 컨테이너 */
+#findPasswordModal .modal-contain {
+	background-color: #fff;
+	padding: 30px 40px;
+	border-radius: 10px;
+	width: 400px;
+	box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+	position: relative;
+	text-align: center;
+}
+
+/* 제목 */
+#findPasswordModal h3 {
+	margin-bottom: 20px;
+	font-size: 22px;
+	color: blue;
+}
+
+/* 라벨 */
+#findPasswordModal span {
+	display: block;
+	text-align: left;
+	margin-bottom: 5px;
+	font-size: 14px;
+	color: #555;
+}
+
+/* 입력 */
+#findPasswordModal input[type="text"] {
+	width: 100%;
+	padding: 10px;
+	margin-bottom: 15px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	font-size: 14px;
+	box-sizing: border-box;
+}
+
+/* 버튼 공통 스타일 */
+#findPasswordModal button {
+	padding: 10px 20px;
+	border-radius: 5px;
+	border: none;
+	cursor: pointer;
+	font-size: 14px;
+	transition: background-color 0.3s;
+	margin: 5px;
+}
+
+/* 닫기 버튼 */
+#findPasswordModal button.cancel {
+	background-color: green;
+	color: #fff;
+}
+
+#findPasswordModal button.cancel:hover {
+	background-color: green;
+}
+
+/* 찾기 버튼 */
+#findPasswordModal button[type="submit"] {
+	background-color: green;
+	color: #fff;
+}
+
+#findPasswordModal button[type="submit"]:hover {
+	background-color: #0056b3;
+}
+	
+</style>
+
 </head>
 
     <body class="authentication-bg">
@@ -51,7 +138,7 @@
                 
                                         <div class="mb-3">
                                             <div class="float-end">
-                                                <a href="" class="text-muted">비밀번호 찾기</a>
+                                                <a id="find" class="text-muted">비밀번호 찾기</a>
                                             </div>
                                             <label class="form-label" for="password">비밀번호</label>
                                             <input type="password" class="form-control" id="password" name="password" placeholder="비밀번호 입력" required>
@@ -78,9 +165,73 @@
             </div>
             <!-- end container -->
         </div>
+        
+        <div id="findPasswordModal" class="modal">
+        	<div class="modal-contain">
+<!--         		<form id="findPassword" class="findForm"> -->
+	        		<h3>비밀번호 찾기</h3>
+	        		
+	        		<span>사원번호</span>
+	        		<input type="text" class="username" name="username" placeholder="사원번호를 입력하세요.">
+	        		<span>생년월일</span>
+	        		<input type="text" class="userSn1" name="userSn1" placeholder="ex)990705">
+	        		<button type="button" class="cancel">닫기</button>
+	        		<button type="submit">찾기</button>
+        		</form>
+        	</div>
+        </div>
 
 <div>
     <jsp:include page ="../views/nav/javascript.jsp"></jsp:include>
 </div>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#find').on('click', function() {
+			$('#findPasswordModal').css('display', 'flex');
+		});
+		
+		$('.cancel').on('click', function(){
+			$('#findPasswordModal').hide();
+			location.reload();
+		});
+		
+	});
+	
+	$('#findPassword').on('submit', function(e) {
+		e.preventDefault();
+
+		var usernameStr = $('.username').val();
+		var userSn1Str = $('.userSn1').val();
+
+		// JSON 객체 생성
+		var payload = { username: usernameStr, userSn1: userSn1Str };
+
+		// 실제 보낼 JSON 문자열 확인
+		console.log("보낼 JSON 문자열:", JSON.stringify(payload));
+
+		$.ajax({
+			url: "/api/find/password",
+			type: "POST",
+			contentType: "application/json",
+			data: JSON.stringify(payload),
+			beforeSend: function(xhr, settings) {
+				console.log("AJAX 요청 전송 데이터:", settings.data);
+			},
+			success: function(res) {
+				alert('임시 비밀번호 메일발송완료!');
+				$('.username').val('');
+				$('.userSn1').val('');
+				$('#findPasswordModal').hide();
+			},
+			error: function(err) {
+				console.error(err);
+				alert('관리자에게 문의하세요.');
+			}
+		});
+
+		
+	});
+</script>
 </body>
 </html>

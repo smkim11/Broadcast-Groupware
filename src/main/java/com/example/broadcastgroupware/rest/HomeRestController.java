@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.SessionAttribute; // 세션에서
 
 import com.example.broadcastgroupware.domain.Attendance;
 import com.example.broadcastgroupware.dto.BroadcastFormDto;
+import com.example.broadcastgroupware.dto.FindPassword;
 import com.example.broadcastgroupware.dto.PostDetailDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.mapper.ApprovalMapper;
@@ -20,9 +23,13 @@ import com.example.broadcastgroupware.mapper.BoardMapper;
 import com.example.broadcastgroupware.mapper.BroadcastMapper;
 import com.example.broadcastgroupware.mapper.ReservationMapper;
 import com.example.broadcastgroupware.mapper.VacationMapper;
+import com.example.broadcastgroupware.service.LoginService;
+
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class HomeRestController {
 
     private final AttendanceMapper attendanceMapper;
@@ -31,21 +38,20 @@ public class HomeRestController {
     private final ReservationMapper reservationMapper;
     private final BoardMapper boardMapper;
     private final BroadcastMapper broadcastMapper;
+    private final LoginService loginService;
 
     // 생성자 주입
-    public HomeRestController(AttendanceMapper attendanceMapper,
-    						  VacationMapper vacationMapper,
-    						  ApprovalMapper approvalMapper,
-    						  ReservationMapper reservationMapper,
-    						  BoardMapper boardMapper,
-    						  BroadcastMapper broadcastMapper) {
-        this.attendanceMapper = attendanceMapper;
-        this.vacationMapper = vacationMapper;
-        this.approvalMapper = approvalMapper;
-        this.reservationMapper = reservationMapper;
-        this.boardMapper = boardMapper;
-        this.broadcastMapper = broadcastMapper;
-    }
+	public HomeRestController(AttendanceMapper attendanceMapper, VacationMapper vacationMapper,
+			ApprovalMapper approvalMapper, ReservationMapper reservationMapper, BoardMapper boardMapper,
+			BroadcastMapper broadcastMapper, LoginService loginService) {
+		this.attendanceMapper = attendanceMapper;
+		this.vacationMapper = vacationMapper;
+		this.approvalMapper = approvalMapper;
+		this.reservationMapper = reservationMapper;
+		this.boardMapper = boardMapper;
+		this.broadcastMapper = broadcastMapper;
+		this.loginService = loginService;
+	}
 
     /**
      * 근태 요약 API
@@ -96,7 +102,7 @@ public class HomeRestController {
 
     // ── 아래는 초보자용 유틸 함수 ─────────────────────────────────────────────
 
-    // 숫자 안전 변환 (null -> 0)
+	// 숫자 안전 변환 (null -> 0)
     private static int toInt(Object v) {
         return (v == null) ? 0 : ((Number) v).intValue();
     }
@@ -200,4 +206,26 @@ public class HomeRestController {
         int safe = (limit <= 0 || limit > 10) ? 4 : limit;
         return broadcastMapper.selectHomeTopBroadcasts(safe);
     }
+    
+    // 비밀번호 찾기
+    @PostMapping("/find/password")
+    public Map<String, String> findPassword(@RequestBody FindPassword userInfo) {
+        log.info("raw userInfo: {}", userInfo);
+        log.info("사원번호: {}", userInfo.getUsername());
+        log.info("생년월일: {}", userInfo.getUserSn1());
+
+        try {
+            int username = Integer.parseInt(userInfo.getUsername());
+            loginService.findPassword(username, userInfo.getUserSn1());
+
+            return Map.of("status", "success", "message", "임시 비밀번호 메일 발송 완료!");
+        } catch (NumberFormatException e) {
+            log.error("사원번호 변환 실패", e);
+            return Map.of("status", "error", "message", "잘못된 사원번호입니다.");
+        } catch (Exception e) {
+            log.error("비밀번호 찾기 처리 실패", e);
+            return Map.of("status", "error", "message", "서버 오류 발생. 관리자에게 문의하세요.");
+        }
+    }
+    
 }
