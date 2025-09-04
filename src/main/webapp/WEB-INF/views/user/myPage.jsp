@@ -54,6 +54,10 @@
 					<td><input type="text" name="belong" id="belong" class="form-control" value="${myInfo.belong }" readonly></td>
 				</tr>
 				<tr>
+					<th class="text-center">직급</th>
+					<td><input type="text" name="userRank" id="userRank" class="form-control" value="${myInfo.userRank }" readonly></td>
+				</tr>
+				<tr>
 					<th class="text-center">이름</th>
 					<td><input type="text" name="fullName" id="fullName" class="form-control" value="${myInfo.fullName }" readonly></td>
 				</tr>
@@ -61,12 +65,6 @@
 					<th class="text-center">사원번호</th>
 					<td><input type="text" name="username" id="username" class="form-control" value="${myInfo.username }" readonly></td>
 				</tr>
-				<!-- 
-				<tr>
-					<th class="text-center">비밀번호</th>
-					<td><input type="password" name="pw" id="pw" class="form-control"></td>
-				</tr>
-				-->
 				<tr>
 					<th class="text-center">전화번호</th>
 					<td><input type="text" name="userPhone" id="userPhone" value="${myInfo.userPhone }" placeholder="Ex) 010-1234-5678" 

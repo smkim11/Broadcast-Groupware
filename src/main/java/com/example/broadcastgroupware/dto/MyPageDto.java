@@ -6,6 +6,7 @@ import lombok.Data;
 public class MyPageDto {
 	private int userId;
 	private String belong;
+	private String userRank;
 	private String fullName;
 	private String username;
 	private String userPhone;

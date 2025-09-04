@@ -75,6 +75,7 @@
 		                            <tr>
 		                                <th>부서</th>
 		                                <th>팀</th>
+		                                <th>직급</th>
 		                                <th>이름</th>
 		                                <th>근무시간</th>
 		                                <th>지각횟수</th>
@@ -86,7 +87,8 @@
 		                            <tr>
 		                                <td>${list.departmentName }</td>
 		                                <td>${list.teamName }</td>
-		                                <td>${list.fullName } ${list.userRank }</td>
+		                                <td>${list.userRank }</td>
+		                                <td>${list.fullName }</td>
 		                                <td>${list.monthWorkHours }</td>
 		                                <td>${list.lateness }회</td>
 		                                <td>
