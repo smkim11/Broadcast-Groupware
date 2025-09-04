@@ -8,15 +8,41 @@
 <link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <meta charset="UTF-8">
 <style>
-	/* 글자색 흰색으로 */
-	.fc-event {
-    color: #fff !important;
-    cursor: default !important;
-	}
 	.fc-event:hover {
-    opacity: 1 !important;
-    color: #fff !important;
+	   opacity: 1 !important;
+	   color: #fff !important;
 	}
+	/* 기본 일자 셀 높이 */
+	.fc-daygrid-day {
+	    height: 80px; /* 원하는 높이로 조정 */
+	    min-height: 80px;
+	}
+	
+	/* 이벤트가 많아도 넘치면 말줄임 */
+	.fc-event {
+	    max-height: 20px; /* 한 줄 높이 */
+	    overflow: hidden;
+	    white-space: nowrap;
+	    text-overflow: ellipsis;
+	    color: #fff !important;
+	    cursor: default !important;
+	}
+	/* 이벤트 전체 flex로 감싸기 */
+	.fc .fc-event {
+	    display: flex !important;
+	    flex-direction: column;
+	    justify-content: center; /* 세로 중앙 정렬 */
+	    padding: 0 !important;
+	}
+	
+	/* 이벤트 텍스트 중앙 정렬, 글씨 두께 통일 */
+	.fc .fc-event .fc-event-title {
+	    display: block !important;
+	    text-align: center;
+	    font-weight: 700;
+	    line-height: normal;
+	}
+	
 </style>
 <title>방송국</title>
 </head>
@@ -46,8 +72,8 @@
 			<div class="col-xl-12">
                  <div class="card">
                      <div class="card-body">
-                         <h4 class="card-title"><span id="date" style="color:gray"></span></h4>
-                         <span id="time" style="color:gray; font-size: 30px;"></span>
+                         <h4 class="card-title"><span id="date"></span></h4>
+                         <span id="time" style="font-size: 30px;"></span>
                          <div class="row">
                              <div class="col-6">
                                  <div>
@@ -81,19 +107,19 @@
                                  <div class="card-group" style="margin-top:-70px;">
                                      <div class="card">
                      					<div class="card-body">
-                 							총 근무일
+                 							<strong>총 근무일</strong>
                     						<div>${totalWorkDay}</div>
                      					</div>
                      				</div>
                      				<div class="card">
                      					<div class="card-body">
-                     						이번주 근무시간
+                     						<strong>이번주 근무시간</strong>
                      						<div>${fn:substring(weekWorkHours,0,2)}시간 ${fn:substring(weekWorkHours,3,5)}분</div>
                    						</div>
                						</div>
                 					<div class="card">
                      					<div class="card-body">
-                     						잔여 휴가
+                     						<strong>잔여 휴가</strong>
                      						<div>${remainVacation}일</div>
                      					</div>
                      				</div>

@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", function() {
         editable: false,
 		displayEventTime: false,
         initialView: "dayGridMonth",
-		aspectRatio: 1.8,
+		height:600,
+		contentHeight: 500,
         themeSystem: "bootstrap",
         headerToolbar: {
             left: "prev,next today",

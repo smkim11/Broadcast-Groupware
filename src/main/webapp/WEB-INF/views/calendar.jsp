@@ -8,13 +8,41 @@
 <link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <meta charset="UTF-8">
 <style>
-/* 템플릿에서 제공하는 에러메세지만 사용  */
-.was-validated .form-control:valid,
-.form-control.is-valid {
-  border-color: #dee2e6 !important;
-  background-image: none !important;
-  box-shadow: none !important;
-}
+	/* 템플릿에서 제공하는 에러메세지만 사용  */
+	.was-validated .form-control:valid,
+	.form-control.is-valid {
+		border-color: #dee2e6 !important;
+		background-image: none !important;
+		box-shadow: none !important;
+	}
+		/* 기본 일자 셀 높이 */
+	.fc-daygrid-day {
+	    height: 80px; /* 원하는 높이로 조정 */
+	    min-height: 80px;
+	}
+	
+	/* 이벤트가 많아도 넘치면 말줄임 */
+	.fc-event {
+	    max-height: 20px; /* 한 줄 높이 */
+	    overflow: hidden;
+	    white-space: nowrap;
+	    text-overflow: ellipsis;
+	}
+	/* 이벤트 전체 flex로 감싸기 */
+	.fc .fc-event {
+	    display: flex !important;
+	    flex-direction: column;
+	    justify-content: center; /* 세로 중앙 정렬 */
+	    padding: 0 !important;
+	}
+	
+	/* 이벤트 텍스트 중앙 정렬, 글씨 두께 통일 */
+	.fc .fc-event .fc-event-title {
+	    display: block !important;
+	    text-align: center;
+	    font-weight: 700;
+	    line-height: normal;
+	}
 </style>
 <title>방송국</title>
 </head>

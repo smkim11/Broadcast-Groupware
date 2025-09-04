@@ -81,6 +81,32 @@ document.addEventListener("DOMContentLoaded", function(){
         t.innerText = "일정등록", // 모달 제목 변경
         newEventData = e;
     }
+	// 모달 닫힐 때 상태 초기화
+	document.getElementById("event-modal").addEventListener("hidden.bs.modal", function () {
+	    const form = document.getElementById("form-event");
+
+	    // 폼 리셋
+	    if (form) {
+	        form.reset();
+	        form.classList.remove("was-validated", "view-event");
+	    }
+
+	    // 검증 관련 클래스 제거
+	    form.querySelectorAll(".is-valid, .is-invalid").forEach(el => {
+	        el.classList.remove("is-valid", "is-invalid");
+	    });
+
+	    // 읽기 전용 / hidden 토글 복원
+	    document.getElementById("event-type").style.display = "block";
+	    document.getElementById("event-type-read").type = "hidden";
+	    document.getElementById("event-type-read").value = "";
+	    document.getElementById("event-type-read").readOnly = false;
+
+	    // 버튼 상태 초기화
+	    document.getElementById("btn-save-event").removeAttribute("hidden");
+	    document.getElementById("edit-event-btn").setAttribute("hidden", true);
+	    document.getElementById("btn-delete-event").setAttribute("hidden", true);
+	});
 
     // 화면 크기에 따른 초기 뷰 설정
     function u(){
@@ -98,7 +124,8 @@ document.addEventListener("DOMContentLoaded", function(){
         navLinks: true,
         initialView: u(),
 		displayEventTime: false,
-		aspectRatio: 1.6, // 캘린더 세로길이 조절 높아질수록 줄어듬
+		height:600,
+		contentHeight: 500,
         themeSystem: "bootstrap",
         headerToolbar: {
             left: "prev,next today",
