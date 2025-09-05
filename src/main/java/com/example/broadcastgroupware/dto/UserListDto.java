@@ -9,6 +9,7 @@ public class UserListDto {
 	private String fullName;		// 사용자 이름
 	private String userRank;		// 사용자 직급
 	private String gender;			// 남/여 구분
+	private String userJoinDate;			// 입사일
 	private String profileImage;	// 프로필 이미지 경로(없으면 기본 아바타 경로)*/
 	private String email;			// 이메일
 	private int teamId;				// 팀 아이디

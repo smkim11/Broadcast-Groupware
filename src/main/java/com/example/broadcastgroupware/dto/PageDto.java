@@ -1,8 +1,10 @@
 package com.example.broadcastgroupware.dto;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class PageDto {
 	private int currentPage;
 	private int rowPerPage;
