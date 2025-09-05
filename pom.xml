@@ -179,6 +179,20 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<resources>
+         <!-- 기본 리소스 경로 -->
+         <resource>
+            <directory>src/main/resources</directory>
+         </resource>
+   
+         <!-- ★ 추가: src/main/java 안에 있는 XML도 포함 -->
+         <resource>
+            <directory>src/main/java</directory>
+            <includes>
+               <include>**/*.xml</include>
+            </includes>
+         </resource>
+      </resources>
 	</build>
 
 </project>
