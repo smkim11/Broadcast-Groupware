@@ -207,7 +207,6 @@
         src="https://www.youtube.com/embed/FJfwehhzIhw?autoplay=1&mute=1"
         title="[LIVE] 대한민국 24시간 뉴스채널 YTN"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
         allowfullscreen>
       </iframe>
     </div>
