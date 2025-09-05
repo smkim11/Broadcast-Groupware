@@ -29,7 +29,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
             	.dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll() // JSP forward 허용
-                .requestMatchers("/login", "/logout", "/resources/**", "/css/**", "/js/**", "/ws-stomp/**", "/session/**").permitAll()
+                .requestMatchers("/api/find/password", "/login", "/logout", "/resources/**", "/css/**", "/js/**", "/ws-stomp/**", "/session/**").permitAll()
                 .requestMatchers("/home").hasAnyRole("admin","user")
                 .requestMatchers("/lock", "/unlock").authenticated()
                 .requestMatchers("/admin/**").hasRole("admin")
@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .successHandler(customLoginSuccessHandler)  // 주입 받은 빈 사용
+                .failureUrl("/login?error=1")   // 실패 시 ?error=1 추가
                 .permitAll()
             )
             

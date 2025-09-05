@@ -22,11 +22,11 @@ public class LoginService {
 
 	// 비밀번호 찾기
 	@Transactional
-	public void findPassword(int username, String userSn1) {
+	public boolean findPassword(int username, String sn1) {
 		// 이메일 조회
-		String email = loginMapper.findEmail(username);
-		if (email == null) {
-			throw new IllegalArgumentException("해당 유저의 이메일을 찾을 수 없습니다.");
+		String email = loginMapper.findEmail(username, sn1);
+		if (email == null || email.isBlank()) {
+			 return false; // ★ 예외 던지지 않음
 		}
 
 		// 랜덤 8자리 비밀번호 생성
@@ -39,9 +39,12 @@ public class LoginService {
 		SimpleMailMessage message = new SimpleMailMessage();
 		message.setTo(email);
 		message.setSubject("임시 비밀번호 안내");
-		message.setText("새로운 임시 비밀번호는 다음과 같습니다: " + newPassword);
-		message.setText("로그인 후 비밀번호 변경하세요.");
+		message.setText(String.format(
+			    "새로운 임시 비밀번호는 다음과 같습니다:%n%s%n%n로그인 후 비밀번호를 변경하세요.",
+			    newPassword
+			));
 		mailSender.send(message);
+		return true;
 	}
 
 	// 랜덤 비밀번호 생성 메서드

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.broadcastgroupware.mapper.LoginMapper">
+	
 	<select id="findEmail">
 		SELECT user_email AS userEmail
-		FROM user
+		FROM `user`
 		WHERE username = #{username}
+			AND user_sn1 = #{sn1}
 	</select>
 	
 	<!-- 임시비밀번호 저장 -->

@@ -207,25 +207,36 @@ public class HomeRestController {
         return broadcastProgramMapper.selectHomeTopBroadcasts(safe);
     }
     
-    // 비밀번호 찾기
+ // 비밀번호 찾기
     @PostMapping("/find/password")
     public Map<String, String> findPassword(@RequestBody FindPassword userInfo) {
-        log.info("raw userInfo: {}", userInfo);
-        log.info("사원번호: {}", userInfo.getUsername());
-        log.info("생년월일: {}", userInfo.getUserSn1());
+        final String usernameStr = userInfo != null && userInfo.getUsername()!=null ? userInfo.getUsername().trim() : "";
+        final String sn1         = userInfo != null && userInfo.getUserSn1()!=null   ? userInfo.getUserSn1().trim()   : "";
+
+        log.info("username={}, sn1={}", usernameStr, sn1);
 
         try {
-            int username = Integer.parseInt(userInfo.getUsername());
-            loginService.findPassword(username, userInfo.getUserSn1());
+            int username = Integer.parseInt(usernameStr);
 
-            return Map.of("status", "success", "message", "임시 비밀번호 메일 발송 완료!");
+            // ★ 서비스 반환값을 반드시 확인
+            boolean ok = loginService.findPassword(username, sn1);
+
+            if (ok) {
+                log.info("비번찾기 성공 username={}, sn1={}", username, sn1);
+                return Map.of("status","success","message","임시 비밀번호 메일 발송 완료!");
+            } else {
+                log.info("비번찾기 실패(불일치) username={}, sn1={}", username, sn1);
+                return Map.of("status","error","message","사원번호/생년월일이 일치하지 않습니다.");
+            }
+
         } catch (NumberFormatException e) {
-            log.error("사원번호 변환 실패", e);
-            return Map.of("status", "error", "message", "잘못된 사원번호입니다.");
+            log.error("사원번호 변환 실패: {}", usernameStr, e);
+            return Map.of("status","error","message","잘못된 사원번호입니다.");
         } catch (Exception e) {
-            log.error("비밀번호 찾기 처리 실패", e);
-            return Map.of("status", "error", "message", "서버 오류 발생. 관리자에게 문의하세요.");
+            log.error("비밀번호 찾기 처리 실패 (username={}, sn1={})", usernameStr, sn1, e);
+            return Map.of("status","error","message","서버 오류 발생. 관리자에게 문의하세요.");
         }
     }
+
     
 }
