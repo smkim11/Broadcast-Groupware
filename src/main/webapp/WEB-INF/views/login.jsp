@@ -168,7 +168,7 @@
         
         <div id="findPasswordModal" class="modal">
         	<div class="modal-contain">
-<!--         		<form id="findPassword" class="findForm"> -->
+				<form id="findPassword" class="findForm">
 	        		<h3>비밀번호 찾기</h3>
 	        		
 	        		<span>사원번호</span>
@@ -203,6 +203,14 @@
 
 		var usernameStr = $('.username').val();
 		var userSn1Str = $('.userSn1').val();
+		
+		if(usernameStr == '') {
+			alert('사원번호를 입력하세요')
+			return;
+		} else if(userSn1Str == '') {
+			alert('생년월일을 입력하세요')
+			return;
+		}
 
 		// JSON 객체 생성
 		var payload = { username: usernameStr, userSn1: userSn1Str };
