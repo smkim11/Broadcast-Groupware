@@ -14,7 +14,7 @@
 	<packaging>war</packaging>
 	<name>broadcast-groupware</name>
 	<description>Demo project for Spring Boot</description>
-	<url/>   
+	<url/>
 	<licenses>
 		<license/>
 	</licenses>
