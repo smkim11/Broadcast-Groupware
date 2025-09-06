@@ -6,7 +6,10 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.example.broadcastgroupware.domain.BroadcastTeam;
+import com.example.broadcastgroupware.domain.Department;
+import com.example.broadcastgroupware.domain.Team;
 import com.example.broadcastgroupware.dto.BroadcastTeamRowDto;
+import com.example.broadcastgroupware.dto.UserRowDto;
 
 @Mapper
 public interface BroadcastTeamMapper {
@@ -25,9 +28,26 @@ public interface BroadcastTeamMapper {
     // 프로그램 팀 정원
     int selectCapacityBySchedule(@Param("scheduleId") int scheduleId);
 
+    
     // 프로그램 팀원 등록
     int insertBroadcastTeam(BroadcastTeam row);
+    
+    // 대표자(기안자) 권한 확인
+    int existsOwnerByScheduleAndUser(@Param("scheduleId") int scheduleId,
+            						 @Param("loginUserId") int loginUserId);
 
-    // 프로그램 팀원 삭제
+    // 부서 목록
+	List<Department> listDepartments();
+	
+	// 부서별 팀 목록
+	List<Team> listTeamsByDepartment(@Param("departmentId") int departmentId);
+	
+	// 등록 가능 사용자
+	List<UserRowDto> listAssignableUsersByTeam(@Param("scheduleId") int scheduleId,
+	                      					   @Param("teamId") int teamId);
+	
+	
+	// 프로그램 팀원 삭제
     int deleteBroadcastTeamByIds(@Param("ids") List<Integer> ids);
+
 }

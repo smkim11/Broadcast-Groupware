@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.SessionAttribute;
 
+import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.service.BroadcastService;
 
 @RestController
@@ -33,25 +35,44 @@ public class BroadcastRestController {
     
     // 프로그램 팀원 등록
     @PostMapping("/team/add")
-    public Map<String, Object> add(@RequestBody Map<String, Integer> body) {
+    public Map<String, Object> add(@RequestBody Map<String, Integer> body,
+                                   @SessionAttribute(value = "loginUser", required = false) UserSessionDto loginUser) {
         int scheduleId = body.getOrDefault("scheduleId", 0);
         int userId = body.getOrDefault("userId", 0);
-        int result = broadcastService.addBroadcastTeam(scheduleId, userId);
+        int loginUserId = (loginUser != null) ? loginUser.getUserId() : 0;  // 세션 없으면 0
+
+        int result = broadcastService.addBroadcastTeam(scheduleId, userId, loginUserId);
+        
         String message;
-        int status = 200;
-        if (result == 1) {
-            message = "등록되었습니다.";
-        } else if (result == -1) {
-            message = "이미 등록된 팀원입니다.";
-            status = 409;
-        } else if (result == -2) {
-            message = "정원을 초과할 수 없습니다.";
-            status = 409;
-        } else {
-            message = "등록에 실패했습니다.";
-            status = 500;
+        int status;
+        switch (result) {
+            case 1: message = "등록되었습니다."; status = 200; break;
+            case -1: message = "이미 등록된 팀원입니다."; status = 409; break;
+            case -2: message = "정원을 초과할 수 없습니다."; status = 409; break;
+            case -3: message = "등록 권한이 없습니다."; status = 403; break;
+            default: message = "등록에 실패했습니다."; status = 500; break;
         }
         return Map.of("status", status, "message", message, "result", result);
+    }
+    
+    
+    // 부서 목록 (드롭다운)
+    @GetMapping("/departments")
+    public List<com.example.broadcastgroupware.domain.Department> departments() {
+        return broadcastService.listDepartments();
+    }
+
+    // 부서별 팀 목록 (드롭다운)
+    @GetMapping("/teams")
+    public List<com.example.broadcastgroupware.domain.Team> teams(@RequestParam int departmentId) {
+        return broadcastService.listTeamsByDepartment(departmentId);
+    }
+
+    // 등록 가능 사용자 목록 (드롭다운)
+    @GetMapping("/assignable-users")
+    public List<com.example.broadcastgroupware.dto.UserRowDto> assignableUsers(@RequestParam int scheduleId,
+                                                                               @RequestParam int teamId) {
+        return broadcastService.listAssignableUsersByTeam(scheduleId, teamId);
     }
 
     

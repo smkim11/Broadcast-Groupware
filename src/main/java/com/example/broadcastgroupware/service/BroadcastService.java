@@ -10,9 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.broadcastgroupware.domain.BroadcastEpisode;
 import com.example.broadcastgroupware.domain.BroadcastTeam;
+import com.example.broadcastgroupware.domain.Department;
+import com.example.broadcastgroupware.domain.Team;
 import com.example.broadcastgroupware.dto.BroadcastFormDto;
 import com.example.broadcastgroupware.dto.BroadcastTeamRowDto;
 import com.example.broadcastgroupware.dto.PageDto;
+import com.example.broadcastgroupware.dto.UserRowDto;
 import com.example.broadcastgroupware.mapper.BroadcastEpisodeMapper;
 import com.example.broadcastgroupware.mapper.BroadcastProgramMapper;
 import com.example.broadcastgroupware.mapper.BroadcastTeamMapper;
@@ -21,14 +24,14 @@ import com.example.broadcastgroupware.mapper.BroadcastTeamMapper;
 public class BroadcastService {
 
     private final BroadcastProgramMapper broadcastProgramMapper;
-    private final BroadcastTeamMapper broadcastteamMapper;
-    private final BroadcastEpisodeMapper broadcastepisodeMapper;
+    private final BroadcastTeamMapper broadcastTeamMapper;
+    private final BroadcastEpisodeMapper broadcastEpisodeMapper;
 
-    public BroadcastService(BroadcastProgramMapper broadcastProgramMapper, BroadcastTeamMapper broadcastteamMapper,
-    						BroadcastEpisodeMapper broadcastepisodeMapper) {
+    public BroadcastService(BroadcastProgramMapper broadcastProgramMapper, BroadcastTeamMapper broadcastTeamMapper,
+    						BroadcastEpisodeMapper broadcastEpisodeMapper) {
         this.broadcastProgramMapper = broadcastProgramMapper;
-        this.broadcastepisodeMapper = broadcastepisodeMapper;
-        this.broadcastteamMapper = broadcastteamMapper;
+        this.broadcastEpisodeMapper = broadcastEpisodeMapper;
+        this.broadcastTeamMapper = broadcastTeamMapper;
     }
     
     // 요일 변환 공통
@@ -88,14 +91,14 @@ public class BroadcastService {
     
     // 프로그램별 팀원 목록 페이징 조회
     public Map<String, Object> getBroadcastTeamPage(int scheduleId, int page, int size) {
-        int total = broadcastteamMapper.countBroadcastTeamBySchedule(scheduleId);  // 전체 인원 수
+        int total = broadcastTeamMapper.countBroadcastTeamBySchedule(scheduleId);  // 전체 인원 수
         int lastPage = Math.max(1, (int) Math.ceil((double) total / size));    // 마지막 페이지 번호
         int safePage = Math.max(1, Math.min(page, lastPage));				   // 유효한 페이지 번호 보정
         int beginRow = (safePage - 1) * size;								   // 조회 시작 행
 
         // 페이징된 팀원 목록 조회
         List<BroadcastTeamRowDto> rows =
-        		broadcastteamMapper.selectBroadcastTeamBySchedule(scheduleId, beginRow, size);
+        		broadcastTeamMapper.selectBroadcastTeamBySchedule(scheduleId, beginRow, size);
 
         // 결과 Map 구성
         Map<String, Object> out = new HashMap<>();
@@ -108,44 +111,77 @@ public class BroadcastService {
     }
     
     
-    // 프로그램 팀원 등록
+    // 프로그램 팀원 등록 (반환값: 1=성공, -1=중복, -2=정원초과, -3=권한없음)
     @Transactional
-    public int addBroadcastTeam(int scheduleId, int userId) {
-        // 중복 체크
-        if (broadcastteamMapper.existsBroadcastTeam(scheduleId, userId) > 0) {
+    public int addBroadcastTeam(int scheduleId, int userId, int loginUserId) {
+        if (loginUserId > 0) {
+        	// 등록 권한 여부 확인
+            if (broadcastTeamMapper.existsOwnerByScheduleAndUser(scheduleId, loginUserId) != 1) {
+                return -3;  // 권한 없음
+            }
+        }
+
+        // 중복 등록 차단
+        if (broadcastTeamMapper.existsBroadcastTeam(scheduleId, userId) > 0) {
             return -1;  // 이미 등록됨
         }
-        // 정원 체크
-        Integer capacity = broadcastteamMapper.selectCapacityBySchedule(scheduleId);
+
+        // 정원 검사
+        Integer capacity = broadcastTeamMapper.selectCapacityBySchedule(scheduleId);
         if (capacity != null && capacity > 0) {
-            int assigned = broadcastteamMapper.countBroadcastTeamBySchedule(scheduleId);
+            int assigned = broadcastTeamMapper.countBroadcastTeamBySchedule(scheduleId);
+            
+            // 정원이 가득 찼다면 등록 불가
             if (assigned >= capacity) {
                 return -2;  // 정원 초과
             }
         }
+
+        // 등록
         BroadcastTeam row = new BroadcastTeam();
         row.setBroadcastScheduleId(scheduleId);
         row.setUserId(userId);
-        return broadcastteamMapper.insertBroadcastTeam(row);  // 1 등록 성공
+        return broadcastTeamMapper.insertBroadcastTeam(row);  // 성공 시 1 반환
+    }
+    
+    // 부서 목록 (드롭다운)
+    public List<Department> listDepartments() {
+        return broadcastTeamMapper.listDepartments();
     }
 
+    // 부서별 팀 목록 (드롭다운)
+    public List<Team> listTeamsByDepartment(int departmentId) {
+        return broadcastTeamMapper.listTeamsByDepartment(departmentId);
+    }
+
+    // 등록 가능 사용자 목록 (드롭다운)
+    public List<UserRowDto> listAssignableUsersByTeam(int scheduleId, int teamId) {
+        return broadcastTeamMapper.listAssignableUsersByTeam(scheduleId, teamId);
+    }
+
+    // 기안자(=대표자) 권한 확인
+    public boolean isOwner(int scheduleId, int loginUserId) {
+        return broadcastTeamMapper.existsOwnerByScheduleAndUser(scheduleId, loginUserId) == 1;
+    }
+    
+    
     // 프로그램 팀원 삭제
     @Transactional
     public int deleteBroadcastTeam(List<Integer> ids) {
-        return (ids == null || ids.isEmpty()) ? 0 : broadcastteamMapper.deleteBroadcastTeamByIds(ids);
+        return (ids == null || ids.isEmpty()) ? 0 : broadcastTeamMapper.deleteBroadcastTeamByIds(ids);
     }
 
     
     // 회차 목록 + 페이징
     public Map<String, Object> getEpisodeList(int scheduleId, int page, int size) {
-    	int total = broadcastepisodeMapper.countEpisodesByScheduleId(scheduleId);
+    	int total = broadcastEpisodeMapper.countEpisodesByScheduleId(scheduleId);
     	int lastPage = Math.max(1, (int) Math.ceil((double) total / size));
     	int safePage = Math.max(1, Math.min(page, lastPage));
     	int beginRow = (safePage - 1) * size;
     	
     	// 페이징된 회차 목록 조회
     	List<BroadcastEpisode> rows =
-    			broadcastepisodeMapper.selectEpisodesBySchedule(scheduleId, beginRow, size);
+    			broadcastEpisodeMapper.selectEpisodesBySchedule(scheduleId, beginRow, size);
     	
     	// 결과 Map 구성
     	Map<String, Object> out = new HashMap<>();
@@ -161,7 +197,7 @@ public class BroadcastService {
     public int updateEpisodeComment(int episodeId, String comment) {
     	// 공백만 입력되면 DB에는 NULL로 저장
         String normalized = (comment != null && comment.isBlank()) ? null : comment;
-        return broadcastepisodeMapper.updateEpisodeComment(episodeId, normalized);
+        return broadcastEpisodeMapper.updateEpisodeComment(episodeId, normalized);
     }
     
 }

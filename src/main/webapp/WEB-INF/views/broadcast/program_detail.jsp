@@ -228,10 +228,6 @@
 			                        <label class="form-label small">이름</label>
 			                        <select class="form-select" id="userSelect"></select>
 			                    </div>
-			                    <div class="mb-2">
-			                        <label class="form-label small">직급</label>
-			                        <input type="text" class="form-control" id="rankInput"/>
-			                    </div>
 			                </form>
 			                <div class="small text-muted">부서/팀 선택 후 이름을 선택하세요.</div>
 			            </div>
@@ -653,6 +649,147 @@
 
         // null-safe 문자열 변환
         function safe(s) { return s == null ? '' : String(s); }
+        
+        
+        // ===== 팀원 등록 (드롭다운) =====
+        const teamAddModalEl = document.getElementById('teamAddModal');
+        const deptSel = document.getElementById('deptSelect');
+        const teamSel = document.getElementById('teamSelect');
+        const userSel = document.getElementById('userSelect');
+        const btnTeamSave = document.getElementById('btnTeamSave');
+
+        // 드롭다운 항목 유틸
+        function opt(v, t) {
+            const o = document.createElement('option');
+            o.value = v;
+            o.textContent = t;
+            return o;
+        }
+        
+     	// 선택 목록 초기화 유틸
+        function clearSelect(sel, placeholder) {
+            sel.innerHTML = '';
+            sel.appendChild(opt('', placeholder || '선택하세요'));
+        }
+
+        // 부서 목록 로드
+        function loadDepartments() {
+            clearSelect(deptSel, '부서를 선택하세요');
+            clearSelect(teamSel, '팀을 선택하세요');
+            clearSelect(userSel, '이름을 선택하세요');
+
+            fetch(ctx + '/broadcast/departments', { headers: { 'Accept': 'application/json' } })
+                .then(r => r.json())
+                .then(list => {
+                	// 결과가 배열이 아니거나 비었으면 placeholder만 유지
+                    if (!Array.isArray(list) || list.length == 0) {
+                        deptSel.appendChild(opt('', '(부서 없음)'));
+                        return;
+                    }
+                 	// 부서 id/name을 옵션 태그로 추가
+                    list.forEach(d => {
+                        deptSel.appendChild(opt(d.departmentId, d.departmentName));
+                    });
+                })
+                .catch(() => {});
+        }
+
+        // 팀 목록 로드
+        function loadTeams(departmentId) {
+            clearSelect(teamSel, '팀을 선택하세요');
+            clearSelect(userSel, '이름을 선택하세요');
+            if (!departmentId) return;
+
+            fetch(
+            	ctx + '/broadcast/teams?departmentId=' + encodeURIComponent(departmentId),
+                { headers: { 'Accept': 'application/json' } }
+            )
+                .then(r => r.json())
+                .then(list => {
+                    if (!Array.isArray(list) || list.length == 0) {
+                        teamSel.appendChild(opt('', '(팀 없음)'));
+                        return;
+                    }
+                    list.forEach(t => {
+                        teamSel.appendChild(opt(t.teamId, t.teamName));
+                    });
+                })
+                .catch(() => {});
+        }
+
+        // 등록 가능 사용자 목록 로드
+        function loadAssignableUsers(teamId) {
+            clearSelect(userSel, '이름을 선택하세요');
+            if (!teamId) return;
+
+        	// scheduleId(현재 프로그램)와 teamId(선택 팀)를 함께 전달
+            const url = ctx + '/broadcast/assignable-users?scheduleId='
+                + encodeURIComponent(scheduleId) + '&teamId=' + encodeURIComponent(teamId);
+
+            fetch(url, { headers: { 'Accept': 'application/json' } })
+                .then(r => r.json())
+                .then(list => {
+                	// 선택 가능 인원이 없는 경우
+                    if (!Array.isArray(list) || list.length == 0) {
+                        userSel.appendChild(opt('', '(선택 가능한 인원이 없음)'));
+                        return;
+                    }
+                    list.forEach(u => {
+                    	const id   = u.userId != null ? u.userId : u.user_id;
+                        const name = u.fullName != null ? u.fullName : u.full_name;
+                        const rank = u.userRank != null ? u.userRank : u.user_rank;
+                        const o = opt(id, (name || '') + ' (' + (rank || '-') + ')');  // 이름 (직급)
+                        userSel.appendChild(o); 
+                    });
+                })
+                .catch(() => {});
+        }
+
+        
+        // 모달이 열릴 때 부서부터 로드
+        teamAddModalEl && teamAddModalEl.addEventListener('show.bs.modal', function () {
+            loadDepartments();
+        });
+
+     	// 부서 선택 -> 팀 목록 갱신
+        deptSel && deptSel.addEventListener('change', function () {
+            loadTeams(this.value);
+        });
+     	
+     	// 팀 선택 -> 등록 가능 사용자 목록 갱신
+        teamSel && teamSel.addEventListener('change', function () {
+            loadAssignableUsers(this.value);
+        });
+
+        
+     	// 저장 버튼 -> 선택한 사용자를 현재 프로그램 팀에 등록
+        btnTeamSave && btnTeamSave.addEventListener('click', function () {
+            const uid = Number(userSel.value || 0);
+            if (!uid) {
+                alert('이름을 선택하세요.');
+                return;
+            }
+            
+            fetch(ctx + '/broadcast/team/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ scheduleId: Number(scheduleId), userId: uid })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status == 200 && res.result == 1) {
+                    bootstrap.Modal.getInstance(teamAddModalEl).hide();  // 모달 닫기
+                    
+                    if (typeof loadTeamPage == 'function') {
+                        loadTeamPage(1);  // 목록 갱신
+                    }
+                    alert('등록되었습니다.');
+                } else {
+                    alert(res.message || '등록에 실패했습니다.');
+                }
+            })
+            .catch(() => alert('통신 오류가 발생했습니다.'));
+        });        
     })();
 </script>
 

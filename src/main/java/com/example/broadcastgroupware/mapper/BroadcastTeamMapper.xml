@@ -66,11 +66,84 @@
 	
 	
 	<!-- 프로그램 팀원 등록 -->
-	<insert id="insertBroadcastTeam" parameterType="com.example.broadcastgroupware.domain.BroadcastTeam">
+	<insert id="insertBroadcastTeam" 
+			parameterType="com.example.broadcastgroupware.domain.BroadcastTeam">
 	    INSERT INTO broadcast_team (broadcast_schedule_id, user_id, create_date)
 	    VALUES (#{broadcastScheduleId}, #{userId}, NOW())
 	</insert>
 	
+	<!-- 대표자(기안자) 권한 확인 -->
+	<select id="existsOwnerByScheduleAndUser" parameterType="map" resultType="int">
+	    SELECT EXISTS (
+	        SELECT 1
+	        FROM broadcast_schedule bs
+	        JOIN approval_line al
+	            ON al.approval_line_id = bs.approval_line_id
+	        JOIN approval_document ad
+	            ON ad.approval_document_id = al.approval_document_id
+	        WHERE bs.broadcast_schedule_id = #{scheduleId}
+	          AND ad.user_id = #{loginUserId}
+	    ) AS ok
+	</select>
+	
+	<!-- 부서 목록 -->
+	<select id="listDepartments" resultType="com.example.broadcastgroupware.domain.Department">
+	    SELECT
+	        d.department_id   AS departmentId,
+	        d.department_name AS departmentName
+	    FROM department d
+	    <!-- '대표' 우선, 그 외 이름순 -->
+	    ORDER BY CASE WHEN d.department_name = '대표' THEN 0 ELSE 1 END,
+	             d.department_name ASC
+	</select>
+	
+	<!-- 부서별 팀 목록 -->
+	<select id="listTeamsByDepartment" parameterType="int" 
+			resultType="com.example.broadcastgroupware.domain.Team">
+	    SELECT
+	        t.team_id       AS teamId,
+	        t.department_id AS departmentId,
+	        t.team_name     AS teamName
+	    FROM team t
+	    WHERE t.department_id = #{departmentId}
+	    ORDER BY t.team_name ASC
+	</select>
+	
+	<!-- 등록 가능 사용자 -->
+	<select id="listAssignableUsersByTeam"
+	        parameterType="map"
+	        resultType="com.example.broadcastgroupware.dto.UserRowDto">
+	    SELECT
+	        u.user_id   AS userId,
+	        u.full_name AS fullName,
+	        u.user_rank AS userRank
+	    FROM `user` u
+	    INNER JOIN (
+	        SELECT dh.user_id, dh.team_id
+	        FROM deployment_history dh
+	        INNER JOIN (
+	            SELECT user_id, MAX(create_date) AS max_cd
+	            FROM deployment_history
+	            GROUP BY user_id
+	        ) latest
+	        	ON latest.user_id = dh.user_id
+	         	AND latest.max_cd  = dh.create_date  <!-- 각 사용자 최신 배치 이력만 -->
+	    ) cur 
+	    	ON cur.user_id = u.user_id
+	    WHERE u.user_resign_date IS NULL  		 	 <!-- 퇴사자 제외 -->
+	    	AND cur.team_id = #{teamId}   			 <!-- 선택한 팀 소속만 -->
+	      	AND NOT EXISTS (
+	          	SELECT 1
+	          	FROM broadcast_team bt
+	          	WHERE bt.broadcast_schedule_id = #{scheduleId}
+	           		AND bt.user_id = u.user_id  	 <!-- 이미 해당 프로그램에 등록된 인원 제외 -->
+	      )
+	    ORDER BY
+	        FIELD(u.user_rank, '국장', '부서장', '팀장', '과장', '대리', '사원')  ASC,
+  			u.full_name ASC;
+	</select>
+		
+		
 	<!-- 프로그램 팀원 삭제 -->
 	<delete id="deleteBroadcastTeamByIds">
 	    DELETE FROM broadcast_team
