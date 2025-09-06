@@ -177,20 +177,21 @@
 			            <table class="table table-hover align-middle mb-0">
 			                <colgroup>
 			                    <col style="width:56px;">
-			                    <col style="width:80px;">
-			                    <col style="width:20%;">
+			                    <col style="width:100px;">
 			                    <col style="width:16%;">
-			                    <col style="width:22%;">
-			                    <col style="width:22%;">
+			                    <col style="width:16%;">
+			                    <col style="width:16%;">
+			                    <col style="width:18%;">
 			                </colgroup>
 			                <thead class="table-light">
 			                    <tr class="text-center">
 			                        <th>선택</th>
-			                        <th>번호</th>
+			                        <th>사원번호</th>
 			                        <th>이름</th>
 			                        <th>직급</th>
 			                        <th>소속 부서</th>
 			                        <th>소속 팀</th>
+			                        <th>이메일</th>
 			                    </tr>
 			                </thead>
 			                <tbody id="teamBody">
@@ -396,18 +397,18 @@
             }
 
             // rows를 <tr>로 변환
-            var html = rows.map(function (r, idx) {
-                var no = beginRow + idx;
+            var html = rows.map(function (r) {
                 var rowId = safe(r.broadcastTeamId);
 
                 return '' +
 	                '<tr data-id="' + rowId + '">' +
 	                    '<td class="text-center"><input type="checkbox" class="row-check" /></td>' +
-	                    '<td class="text-center">' + no + '</td>' +
+	                    '<td class="text-center">' + esc(r.username || '-') + '</td>' +
 	                    '<td class="text-center">' + esc(r.fullName) + '</td>' +
 	                    '<td class="text-center">' + esc(r.userRank || '-') + '</td>' +
 	                    '<td class="text-center">' + esc(r.departmentName || '-') + '</td>' +
 	                    '<td class="text-center">' + esc(r.teamName || '-') + '</td>' +
+	                    '<td class="text-center">' + esc(r.email || '-') + '</td>' +
 	                '</tr>';
             }).join('');
 

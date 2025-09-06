@@ -16,10 +16,12 @@
         SELECT
             bt.broadcast_team_id    AS broadcastTeamId,
             u.user_id               AS userId,
+            u.username              AS username,
             u.full_name             AS fullName,
             d.department_name       AS departmentName,
             t.team_name             AS teamName,
-            u.user_rank             AS userRank
+            u.user_rank             AS userRank,
+            u.user_email            AS email
         FROM broadcast_team bt
         JOIN `user` u
             ON u.user_id = bt.user_id
