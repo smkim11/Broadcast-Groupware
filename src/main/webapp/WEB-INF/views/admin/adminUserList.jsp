@@ -58,34 +58,23 @@
 
 
               <!-- 목록 테이블 -->
-              <div class="table-responsive mb-4">
+              <div class="table-responsive mb-0">
                 <table class="table table-centered table-nowrap mb-0">
                   <thead>
                     <tr>
-                      <th scope="col" style="width: 50px;">
-                        <div class="form-check font-size-16">
-                          <input type="checkbox" class="form-check-input" id="contacusercheck">
-                          <label class="form-check-label" for="contacusercheck"></label>
-                        </div>
-                      </th>
                       <th scope="col">사원번호</th>
                       <th scope="col">이름</th>
                       <th scope="col">직급</th>
                       <th scope="col">부서</th>
                       <th scope="col">팀</th>
                       <th scope="col">Email</th>
+                      <th scope="col">입사일</th>
                       <th scope="col" style="width: 200px;">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     <c:forEach var="r" items="${rows}">
                       <tr>
-                        <th scope="row">
-                          <div class="form-check font-size-16">
-                            <input type="checkbox" class="form-check-input" id="check_${r.userId}">
-                            <label class="form-check-label" for="check_${r.userId}"></label>
-                          </div>
-                        </th>
 						<td><c:out value="${r.username}"/></td>
                         <td>
                           <img
@@ -109,6 +98,7 @@
                         </td>
                         <td><c:out value="${r.teamName}"/></td>
                         <td><c:out value="${r.email}"/></td>
+                        <td><c:out value="${r.userJoinDate}"/></td>
 
                         <td>
                           <ul class="list-inline mb-0">
@@ -121,15 +111,6 @@
                               <a href="javascript:void(0);" class="px-2 text-danger" data-user-id="${r.userId}">
                                 <i class="uil uil-trash-alt font-size-18"></i>
                               </a>
-                            </li>
-                            <li class="list-inline-item dropdown">
-                              <a class="text-muted dropdown-toggle font-size-18 px-2" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true">
-                                <i class="uil uil-ellipsis-v"></i>
-                              </a>
-                              <div class="dropdown-menu dropdown-menu-end">
-                                <a class="dropdown-item" href="${ctx}/user/detail/${r.userId}">View</a>
-                                <a class="dropdown-item" href="${ctx}/user/edit/${r.userId}">Edit</a>
-                              </div>
                             </li>
                           </ul>
                         </td>
@@ -144,78 +125,108 @@
                   </tbody>
                 </table>
               </div>
+              
+                   <!-- 검색 (가운데) -->
+				<div class="row mb-0">
+				  <div class="col-12">
+				    <form class="searchbar-wrap" method="get" action="${ctx}/admin/adminUserList">
+				      <input type="hidden" name="size" value="${page.rowPerPage}" />
+				      <select name="field" class="form-select">
+				        <option value="all"  ${empty param.field || param.field == 'all'  ? 'selected' : ''}>전체</option>
+					      <option value="name" ${param.field == 'name' ? 'selected' : ''}>이름</option>
+					      <option value="dept" ${param.field == 'dept' ? 'selected' : ''}>부서</option>
+					      <option value="team" ${param.field == 'team' ? 'selected' : ''}>팀</option>
+					      <option value="rank" ${param.field == 'rank' ? 'selected' : ''}>직급</option>
+					    </select>
+					    
+					     <c:set var="ph">
+					      <c:choose>
+					        <c:when test="${param.field == 'name'}">이름 검색</c:when>
+					        <c:when test="${param.field == 'dept'}">부서 검색</c:when>
+					        <c:when test="${param.field == 'team'}">팀 검색</c:when>
+					        <c:when test="${param.field == 'rank'}">직급 검색</c:when>
+					        <c:otherwise>이름/부서/팀/직급 검색</c:otherwise>
+					      </c:choose>
+					    </c:set>
+					    
+				        <div class="search-box ms-2">
+					      <div class="position-relative">
+					        <input type="text"
+					               name="q"
+					               value="${fn:escapeXml(q)}"
+					               class="form-control rounded bg-light border-0"
+					               placeholder="${ph}" />
+					        <i class="mdi mdi-magnify search-icon"></i>
+					      </div>
+					    </div>
+				      <button type="submit" class="btn btn-primary">검색</button>
+				    </form>
+				  </div>
+				</div>
+              
 
-              <!-- 하단 페이징/카운트 -->
-              <div class="row mt-4">
-                <div class="col-sm-6">
-                  <div>
-                    <c:set var="startIndex" value="${(page.currentPage - 1) * page.rowPerPage + 1}" />
-                    <c:set var="endIndex"   value="${page.currentPage * page.rowPerPage}" />
-                    <c:if test="${totalRows == 0}">
-                      <c:set var="startIndex" value="0"/>
-                      <c:set var="endIndex"   value="0"/>
-                    </c:if>
-                    <c:if test="${endIndex > totalRows}">
-                      <c:set var="endIndex" value="${totalRows}" />
-                    </c:if>
-                  </div>
-                </div>
+				<div class="row mt-0">
+				  <div class="col-12 d-flex justify-content-center">
+				
+				    <!-- 현재/마지막 페이지 보정 -->
+				    <c:set var="cp" value="${page.currentPage lt 1 ? 1 : page.currentPage}" />
+				    <c:set var="lp" value="${lastPage lt 1 ? 1 : lastPage}" />
+				
+				    <!-- ===== 5개 고정 블록: 1~5 / 6~10 / 11~15 ... ===== -->
+				    <c:set var="bs"  value="5" />
+				    <c:set var="cp0" value="${cp - 1}" />
+				    <!-- blockStart = (cp-1) - ((cp-1) % bs) + 1  (정수 블록 시작) -->
+				    <c:set var="rem" value="${cp0 mod bs}" />
+				    <c:set var="blockStart" value="${cp0 - rem + 1}" />
+				    <c:set var="blockEnd"   value="${blockStart + bs - 1}" />
+				    <c:if test="${blockEnd > lp}">
+				      <c:set var="blockEnd" value="${lp}" />
+				    </c:if>
+				
+				    <!-- 이전/다음 페이지 -->
+				    <c:set var="prevPage" value="${cp - 1 < 1 ? 1 : cp - 1}" />
+				    <c:set var="nextPage" value="${cp + 1 > lp ? lp : cp + 1}" />
+				
+				    <ul class="pagination mb-0">
+				      <!-- 처음(<<) -->
+				      <li class="page-item ${cp == 1 ? 'disabled' : ''}">
+				        <a class="page-link"
+				           href="${ctx}/admin/adminUserList?page=1&size=${page.rowPerPage}&q=${fn:escapeXml(q)}&field=${param.field}">&laquo;</a>
+				      </li>
+				
+				      <!-- 이전(<) -->
+				      <li class="page-item ${cp == 1 ? 'disabled' : ''}">
+				        <a class="page-link"
+				           href="${ctx}/admin/adminUserList?page=${prevPage}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}&field=${param.field}">&lsaquo;</a>
+				      </li>
+				
+				      <!-- 현재 블록의 ‘실제’ 페이지만 렌더링 (빈칸 없음) -->
+				      <c:forEach var="p" begin="${blockStart}" end="${blockEnd}">
+				        <li class="page-item ${p == cp ? 'active' : ''}">
+				          <a class="page-link"
+				             href="${ctx}/admin/adminUserList?page=${p}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}&field=${param.field}">${p}</a>
+				        </li>
+				      </c:forEach>
+				
+				      <!-- 다음(>) -->
+				      <li class="page-item ${cp == lp ? 'disabled' : ''}">
+				        <a class="page-link"
+				           href="${ctx}/admin/adminUserList?page=${nextPage}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}&field=${param.field}">&rsaquo;</a>
+				      </li>
+				
+				      <!-- 끝(>>) -->
+				      <li class="page-item ${cp == lp ? 'disabled' : ''}">
+				        <a class="page-link"
+				           href="${ctx}/admin/adminUserList?page=${lp}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}&field=${param.field}">&raquo;</a>
+				      </li>
+				    </ul>
+				  </div>
+				</div>
 
-                <div class="col-sm-6">
-                  <div class="float-sm-end">
-                    <c:set var="startPage" value="${page.currentPage - 2}" />
-                    <c:if test="${startPage < 1}">
-                      <c:set var="startPage" value="1" />
-                    </c:if>
-                    <c:set var="endPage" value="${page.currentPage + 2}" />
-                    <c:if test="${endPage > lastPage}">
-                      <c:set var="endPage" value="${lastPage}" />
-                    </c:if>
 
-                    <ul class="pagination mb-sm-0">
-                      <li class="page-item ${page.currentPage == 1 ? 'disabled' : ''}">
-                        <a class="page-link"
-                           href="${ctx}/admin/adminUserList?page=${page.currentPage - 1}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">
-                          <i class="mdi mdi-chevron-left"></i>
-                        </a>
-                      </li>
 
-                      <c:forEach var="p" begin="${startPage}" end="${endPage}">
-                        <li class="page-item ${p == page.currentPage ? 'active' : ''}">
-                          <a class="page-link"
-                             href="${ctx}/admin/adminUserList?page=${p}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">${p}</a>
-                        </li>
-                      </c:forEach>
-
-                      <li class="page-item ${page.currentPage == lastPage ? 'disabled' : ''}">
-                        <a class="page-link"
-                           href="${ctx}/admin/adminUserList?page=${page.currentPage + 1}&size=${page.rowPerPage}&q=${fn:escapeXml(q)}">
-                          <i class="mdi mdi-chevron-right"></i>
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <!-- 검색 -->
-              <div class="row mb-2">
-                <div class="col-md-6">
-                  <form class="form-inline float-md-end mb-3" method="get" action="${ctx}/admin/adminUserList">
-                    <input type="hidden" name="size" value="${page.rowPerPage}" />
-                    <div class="search-box ms-2">
-                      <div class="position-relative">
-                        <input type="text"
-                               name="q"
-                               value="${fn:escapeXml(q)}"
-                               class="form-control rounded bg-light border-0"
-                               placeholder="이름 / 이메일 검색" />
-                        <i class="mdi mdi-magnify search-icon"></i>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              </div>
               <!-- end row -->
+              
             </div><!-- card-body -->
           </div><!-- card -->
         </div>
@@ -310,24 +321,24 @@
 
 
        <!-- 입사일(왼쪽) + 안내문구(오른쪽) : 칸 너비는 그대로 col-md-6 / col-md-6 -->
-<div class="col-md-6">
-  <label class="form-label">입사일</label>
-  <input id="userJoinDate" class="form-control" type="date" readonly>
-  <!-- (유효성 메시지 위치 유지) -->
-  <div id="err-join" class="invalid-feedback"></div>
-</div>
-
-<!-- 오른쪽 빈칸에 안내 문구만 배치 -->
-<div class="col-md-6">
-  <!-- 라벨 라인 높이를 맞추기 위해 보이지 않는 레이블 한 줄 -->
-  <label class="form-label d-none d-md-block">&nbsp;</label>
-  <!-- 실제 안내 문구 -->
-  <div class="small text-danger pt-2">
-    ※ 초기비밀번호는 생년월일입니다.
-  </div>
-</div>
-
- </div>
+		<div class="col-md-6">
+		  <label class="form-label">입사일</label>
+		  <input id="userJoinDate" class="form-control" type="date" readonly>
+		  <!-- (유효성 메시지 위치 유지) -->
+		  <div id="err-join" class="invalid-feedback"></div>
+		</div>
+		
+		<!-- 오른쪽 빈칸에 안내 문구만 배치 -->
+		<div class="col-md-6">
+		  <!-- 라벨 라인 높이를 맞추기 위해 보이지 않는 레이블 한 줄 -->
+		  <label class="form-label d-none d-md-block">&nbsp;</label>
+		  <!-- 실제 안내 문구 -->
+		  <div class="small text-danger pt-2">
+		    ※ 초기비밀번호는 생년월일입니다.
+		  </div>
+		</div>
+		
+		 </div>
 
         <!-- 서버/기타 메시지 -->
         <div id="createResult" class="mt-3 small" style="display:none;"></div>
@@ -341,8 +352,35 @@
   </div>
 </div>
 <!-- ===== /직원 생성 모달 ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.querySelector('.searchbar-wrap');
+  if (!form) return;
 
+  const field = form.querySelector('select[name="field"]');
+  const q     = form.querySelector('input[name="q"]');
 
+  // 선택값에 맞춰 placeholder도 같이 바꿔주기(옵션)
+  const placeholders = {
+    all : '이름/부서/팀/직급 검색',
+    name: '이름 검색',
+    dept: '부서 검색',
+    team: '팀 검색',
+    rank: '직급 검색'
+  };
+
+  if (field && q) {
+    // 최초 로드 시 placeholder 안전 세팅
+    q.placeholder = placeholders[field.value] || q.placeholder;
+
+    field.addEventListener('change', function () {
+      q.value = '';                               // 검색어 초기화
+      q.placeholder = placeholders[this.value] || '검색어';
+      q.focus();
+    });
+  }
+});
+</script>
   <div>
     <jsp:include page ="../nav/footer.jsp"></jsp:include>
   </div>

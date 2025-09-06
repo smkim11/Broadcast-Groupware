@@ -10,6 +10,7 @@
  <script src="${pageContext.request.contextPath}/resources/libs/node-waves/waves.min.js"></script>
  <script src="${pageContext.request.contextPath}/resources/libs/waypoints/lib/jquery.waypoints.min.js"></script>
  <script src="${pageContext.request.contextPath}/resources/libs/jquery.counterup/jquery.counterup.min.js"></script>
+
   <!-- Session timeout js -->
 <!-- 플러그인 본체: 로컬 파일 사용 -->
 <script src="${pageContext.request.contextPath}/resources/libs/@curiosityx/bootstrap-session-timeout/index.js"></script>

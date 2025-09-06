@@ -88,105 +88,6 @@
 
 
 
-                        <div class="dropdown d-none d-lg-inline-block ms-1">
-                            <button type="button" class="btn header-item noti-icon waves-effect" data-bs-toggle="fullscreen">
-                                <i class="uil-minus-path"></i>
-                            </button>
-                        </div>
-                        <div class="dropdown d-inline-block">
-                            <button type="button" class="btn header-item noti-icon waves-effect" id="page-header-notifications-dropdown"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="uil-bell"></i>
-                                <span class="badge bg-danger rounded-pill">3</span>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
-                                aria-labelledby="page-header-notifications-dropdown">
-                                <div class="p-3">
-                                    <div class="row align-items-center">
-                                        <div class="col">
-                                            <h5 class="m-0 font-size-16"> Notifications </h5>
-                                        </div>
-                                        <div class="col-auto">
-                                            <a href="#!" class="small"> Mark all as read</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div data-simplebar style="max-height: 230px;">
-                                    <a href="javascript:void(0);" class="text-dark notification-item">
-                                        <div class="d-flex align-items-start">
-                                            <div class="flex-shrink-0 me-3">
-                                                <div class="avatar-xs">
-                                                    <span class="avatar-title bg-primary rounded-circle font-size-16">
-                                                        <i class="uil-shopping-basket"></i>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">Your order is placed</h6>
-                                                <div class="font-size-12 text-muted">
-                                                    <p class="mb-1">If several languages coalesce the grammar</p>
-                                                    <p class="mb-0"><i class="mdi mdi-clock-outline"></i> 3 min ago</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <a href="javascript:void(0);" class="text-dark notification-item">
-                                        <div class="d-flex align-items-start">
-                                            <div class="flex-shrink-0 me-3">
-                                                <img src="${pageContext.request.contextPath}/resources/images/users/avatar-default.png" class="rounded-circle avatar-xs" alt="user-pic">
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">James Lemire</h6>
-                                                <div class="font-size-12 text-muted">
-                                                    <p class="mb-1">It will seem like simplified English.</p>
-                                                    <p class="mb-0"><i class="mdi mdi-clock-outline"></i> 1 hour ago</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <a href="javascript:void(0);" class="text-dark notification-item">
-                                        <div class="d-flex align-items-start">
-                                            <div class="flex-shrink-0 me-3">
-                                                <div class="avatar-xs">
-                                                    <span class="avatar-title bg-success rounded-circle font-size-16">
-                                                        <i class="uil-truck"></i>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">Your item is shipped</h6>
-                                                <div class="font-size-12 text-muted">
-                                                    <p class="mb-1">If several languages coalesce the grammar</p>
-                                                    <p class="mb-0"><i class="mdi mdi-clock-outline"></i> 3 min ago</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-
-                                    <a href="javascript:void(0);" class="text-dark notification-item">
-                                        <div class="d-flex align-items-start">
-                                            <div class="flex-shrink-0 me-3">
-                                                <img src="${pageContext.request.contextPath}/resources/images/users/avatar-default.png" class="rounded-circle avatar-xs" alt="user-pic">
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">Salena Layfield</h6>
-                                                <div class="font-size-12 text-muted">
-                                                    <p class="mb-1">As a skeptical Cambridge friend of mine occidental.</p>
-                                                    <p class="mb-0"><i class="mdi mdi-clock-outline"></i> 1 hours ago</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="p-2 border-top">
-                                    <div class="d-grid">
-                                        <a class="btn btn-sm btn-link font-size-14 text-center" href="javascript:void(0)">
-                                            <i class="uil-arrow-circle-right me-1"></i> View More..
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         
 					<!-- 로그인한 유저 이름 직급 -->
                         <div class="dropdown d-inline-block">
@@ -288,68 +189,9 @@
                                     <span>채팅</span>
                                 </a>
                             </li>
-                            
                             <li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="uil-store"></i>
-                                    <span>예약</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-								    <li>
-								        <a href="javascript: void(0);" class="has-arrow">시설</a>
-								        <ul class="sub-menu" aria-expanded="false">
-								            <li>
-								                <a href="/user/meetingroom">회의실</a>
-								            </li>
-								            <li>
-								                <a href="/user/cuttingroom">편집실</a>
-								            </li>
-								         </ul>
-								         </li>
-								            <li>
-								                <a href="/user/car">차량</a>
-								            </li>
-								</ul>
-                             </li>   
-                               
-                             <li>
-                                <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="uil-comments-alt"></i>
-                                    <span>조직도</span>
-                                </a>
-	                                <ul class="sub-menu" aria-expanded="false">
-									    <c:choose>
-										    <c:when test="${loginUser.role == 'user'}">
-			                     				<li>
-											        <a href="/user/userList">직원 리스트</a>
-											    </li>
-									   		</c:when>
-										    <c:when test="${loginUser.role == 'admin'}">
-										    	<li>
-					            					<a href="/admin/adminUserList">직원 관리</a>
-					            				</li>
-					            			</c:when>
-				            			</c:choose>
-									</ul>
-                            </li>
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="uil-store"></i>
-                                    <span>게시판</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false" id="board-menu-list">
-								        <c:choose>
-									        <c:when test="${loginUser.role == 'admin'}">
-									            <li>
-									                <a href="/admin/adminBoard">게시판 관리</a>
-									            </li>
-									        </c:when>
-								        </c:choose>
-								</ul>
-                             </li>         
-                       		<li>
-                                <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="uil-store"></i>
+                                    <i class="uil-stopwatch me-1"></i>
                                     <span>근태</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
@@ -374,11 +216,70 @@
 				            			</c:when>
 			            			</c:choose>
 								</ul>
-                             </li>       
+                             </li>
+                            
+                               
+                             <li>
+                                <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                    <i class="uil-sitemap"></i>
+                                    <span>조직도</span>
+                                </a>
+	                                <ul class="sub-menu" aria-expanded="false">
+									    <c:choose>
+										    <c:when test="${loginUser.role == 'user'}">
+			                     				<li>
+											        <a href="/user/userList">직원 리스트</a>
+											    </li>
+									   		</c:when>
+										    <c:when test="${loginUser.role == 'admin'}">
+										    	<li>
+					            					<a href="/admin/adminUserList">직원 관리</a>
+					            				</li>
+					            			</c:when>
+				            			</c:choose>
+									</ul>
+                            </li>
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                    <i class="uil-clipboard-alt"></i>
+                                    <span>게시판</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false" id="board-menu-list">
+								        <c:choose>
+									        <c:when test="${loginUser.role == 'admin'}">
+									            <li>
+									                <a href="/admin/adminBoard">게시판 관리</a>
+									            </li>
+									        </c:when>
+								        </c:choose>
+								</ul>
+                             </li>         
+                       		 <li>
+                                <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                    <i class="uil-clock-three me-1"></i>
+                                    <span>예약</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+								    <li>
+								        <a href="javascript: void(0);" class="has-arrow">시설</a>
+								        <ul class="sub-menu" aria-expanded="false">
+								            <li>
+								                <a href="/user/meetingroom">회의실</a>
+								            </li>
+								            <li>
+								                <a href="/user/cuttingroom">편집실</a>
+								            </li>
+								         </ul>
+								         </li>
+								            <li>
+								                <a href="/user/car">차량</a>
+								            </li>
+								</ul>
+                             </li>         
 							<li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="uil-store"></i>
-                                    <span>결재</span>
+                                    <i class="uil-desktop-alt"></i>
+                                    <span>전자결재</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
 								    <li>
@@ -419,7 +320,7 @@
                              </li>     
                             <li>
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="uil-store"></i>
+                                    <i class="uil uil-tv-retro me-1"></i>
                                     <span>방송편성</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">

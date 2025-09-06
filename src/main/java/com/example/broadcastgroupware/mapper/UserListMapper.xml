@@ -51,6 +51,7 @@
     u.full_name  AS fullName,
     u.user_rank  AS userRank,
     u.user_email AS email,
+    u.user_join_date AS userJoinDate,
     t.team_id    AS teamId,
     t.team_name  AS teamName,
     COALESCE(ui.profile_image, '/resources/images/users/avatar-default.png') AS profileImage,
@@ -85,13 +86,36 @@
   ) ui ON ui.user_id = u.user_id
 
   <where>
-    <!-- 필요 시 퇴사자 제외 -->
-    <!-- u.user_resign_date IS NULL -->
+    <!-- 퇴사자 제외 -->
+    u.user_resign_date IS NULL
     <if test="q != null and q != ''">
-      <if test="_parameter != null"> AND </if>
-      (u.full_name LIKE CONCAT('%', #{q}, '%')
-       OR u.user_email LIKE CONCAT('%', #{q}, '%'))
-    </if>
+     AND
+    <choose>
+      <!-- 이름만 -->
+      <when test="field == 'name'">
+        u.full_name LIKE CONCAT('%', #{q}, '%')
+      </when>
+      <!-- 부서만 -->
+      <when test="field == 'dept'">
+        d.department_name LIKE CONCAT('%', #{q}, '%')
+      </when>
+      <!-- 팀만 -->
+      <when test="field == 'team'">
+        t.team_name LIKE CONCAT('%', #{q}, '%')
+      </when>
+      <!-- 직급만 -->
+      <when test="field == 'rank'">
+        u.user_rank LIKE CONCAT('%', #{q}, '%')
+      </when>
+      <!-- 전체(기본): 이름/부서/팀/직급 -->
+      <otherwise>
+        (u.full_name       LIKE CONCAT('%', #{q}, '%')
+         OR d.department_name LIKE CONCAT('%', #{q}, '%')
+         OR t.team_name     LIKE CONCAT('%', #{q}, '%')
+         OR u.user_rank     LIKE CONCAT('%', #{q}, '%'))
+      </otherwise>
+    </choose>
+  </if>
   </where>
 
   ORDER BY
@@ -103,7 +127,7 @@
   LIMIT #{limit} OFFSET #{offset}
 </select>
 
-  <!-- (신규) 관리자 목록 카운트: 목록과 동일한 FROM/WHERE 사용 -->
+  <!-- 관리자 목록 카운트: 목록과 동일한 FROM/WHERE 사용 -->
 <select id="countUserList" resultType="int">
   SELECT COUNT(*)
   FROM (
@@ -130,12 +154,35 @@
       WHERE z.rn = 1
     ) ui ON ui.user_id = u.user_id
     <where>
-      <!-- u.user_resign_date IS NULL -->
-      <if test="q != null and q != ''">
-        <if test="_parameter != null"> AND </if>
-        (u.full_name LIKE CONCAT('%', #{q}, '%')
-         OR u.user_email LIKE CONCAT('%', #{q}, '%'))
-      </if>
+       u.user_resign_date IS NULL 
+    <if test="q != null and q != ''">
+     AND
+    <choose>
+      <!-- 이름만 -->
+      <when test="field == 'name'">
+        u.full_name LIKE CONCAT('%', #{q}, '%')
+      </when>
+      <!-- 부서만 -->
+      <when test="field == 'dept'">
+        d.department_name LIKE CONCAT('%', #{q}, '%')
+      </when>
+      <!-- 팀만 -->
+      <when test="field == 'team'">
+        t.team_name LIKE CONCAT('%', #{q}, '%')
+      </when>
+      <!-- 직급만 -->
+      <when test="field == 'rank'">
+        u.user_rank LIKE CONCAT('%', #{q}, '%')
+      </when>
+      <!-- 전체(기본): 이름/부서/팀/직급 -->
+      <otherwise>
+        (u.full_name       LIKE CONCAT('%', #{q}, '%')
+         OR d.department_name LIKE CONCAT('%', #{q}, '%')
+         OR t.team_name     LIKE CONCAT('%', #{q}, '%')
+         OR u.user_rank     LIKE CONCAT('%', #{q}, '%'))
+      </otherwise>
+    </choose>
+  </if>
     </where>
     GROUP BY u.user_id
   ) X

@@ -154,7 +154,6 @@
       const lastDay = new Date(baseYear, mm, 0).getDate(); // 해당 월의 말일
       return dd >= 1 && dd <= lastDay;
     }
-
     // 주민 뒤 첫 자리 유효(1~8)
     function isValidSn2FirstDigit(s) {
       return /^[1-8]$/.test(s);
@@ -292,34 +291,60 @@
         throw new Error(msg);
       })
       .then(res=>{
-        // 성공: 모달 닫기
-        if (window.bootstrap) {
+        // ===== 성공: 모달 닫고, '완전히 닫힌 후' 확인 Alert 띄우기 =====
+        const afterHidden = () => {
+          // 리스너 해제
+          $modal.removeEventListener("hidden.bs.modal", afterHidden);
+          // 혹시 남은 백드롭/바디 상태 정리
+          document.querySelectorAll(".modal-backdrop").forEach(el=>el.remove());
+          document.body.classList.remove("modal-open");
+          document.body.style.removeProperty("padding-right");
+
+          // SweetAlert 확인 → 확인 시 새로고침
+          if (window.Swal) {
+            Swal.fire({
+              title: "직원 등록 완료",
+              icon: "success",
+              confirmButtonText: "확인",
+              confirmButtonColor: "#34c38f"
+            }).then(result => {
+              if (result.isConfirmed) location.reload();
+            });
+          } else {
+            if (confirm("직원 등록 완료. 새로고침할까요?")) location.reload();
+          }
+        };
+
+        $modal.addEventListener("hidden.bs.modal", afterHidden, { once:true });
+
+        // Bootstrap 모달 닫기
+        if (window.bootstrap?.Modal) {
           const inst = bootstrap.Modal.getInstance($modal) || new bootstrap.Modal($modal);
           inst.hide();
         } else {
-          // bootstrap 인스턴스가 없으면 수동으로 닫기 시도
+          // 수동 폴백: 바로 숨기고 afterHidden 실행
           $modal.classList.remove("show");
           $modal.style.display = "none";
-          document.body.classList.remove("modal-open");
           document.querySelector(".modal-backdrop")?.remove();
+          document.body.classList.remove("modal-open");
+          afterHidden();
         }
-
-        // 성공 메시지 (SweetAlert2)
+      })
+      .catch(err => {
+        console.error(err);
+        // 실패 알림 (확인 버튼)
         if (window.Swal) {
           Swal.fire({
-            icon: "success",
-            title: "직원 등록 완료",
-            timer: 1600,
-            showConfirmButton: false
+            title: "등록을 실패했습니다.",
+            text: err.message || "서버 오류가 발생했습니다.",
+            icon: "error",
+            confirmButtonText: "확인",
+            confirmButtonColor: "#34c38f"
           });
         } else {
-          alert("직원 등록 완료");
+          alert(err.message || "등록 실패");
         }
-
-        // 필요 시 목록 새로고침 (원하면 주석 해제)
-        // setTimeout(()=>location.reload(), 1700);
-      })
-      .catch(e=>console.error(e));
+      });
     });
   });
 })();

@@ -17,10 +17,11 @@ public interface UserListMapper {
 	
 	// 유저리스트 
 	// 조직도리스트 조회
-	int countUserList(@Param("q") String q);
+	int countUserList(@Param("q") String q, @Param("field") String field);
 	
 	// 유저리스트
 	List<UserListDto> selectUserList(@Param("q") String q,
+									 @Param("field") String field,
 									 @Param("limit") int limit,
 									 @Param("offset") int offset);
 	
