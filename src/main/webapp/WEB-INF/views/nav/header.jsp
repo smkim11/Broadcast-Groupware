@@ -286,6 +286,20 @@
 								        <a href="/approval/document/main">문서 작성</a>
 								    </li>
 								    <li>
+								    	<a href="javascript: void(0);" class="has-arrow">내 문서함</a>
+								    	<ul class="sub-menu" aria-expanded="false">
+								    		<li>
+								                <a href="/approval/documents/draft">임시저장 문서</a>
+								            </li>
+								            <li>
+								                <a href="/approval/documents/in-progress">진행 중 문서</a>
+								            </li>
+								            <li>
+								                <a href="/approval/documents/completed">종료 문서</a>
+								            </li>
+								    	</ul>
+								    </li>
+								    <li>
 								        <a href="javascript: void(0);" class="has-arrow">받은 문서함</a>
 								        <ul class="sub-menu" aria-expanded="false">
 								    		<li>
@@ -302,38 +316,13 @@
 								            </li>
 								    	</ul>
 								    </li>
-								    <li>
-								    	<a href="javascript: void(0);" class="has-arrow">내 문서함</a>
-								    	<ul class="sub-menu" aria-expanded="false">
-								    		<li>
-								                <a href="/approval/documents/draft">임시저장 문서</a>
-								            </li>
-								            <li>
-								                <a href="/approval/documents/in-progress">진행 중 문서</a>
-								            </li>
-								            <li>
-								                <a href="/approval/documents/completed">종료 문서</a>
-								            </li>
-								    	</ul>
-								    </li>
 								</ul>
-                             </li>     
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow waves-effect">
+                             </li>
+                             <li>
+                                <a href="/broadcast/list" class="waves-effect">
                                     <i class="uil uil-tv-retro me-1"></i>
                                     <span>방송편성</span>
                                 </a>
-                                <ul class="sub-menu" aria-expanded="false">
-								    <li>
-								        <a href="/broadcast/list">편성목록</a>
-								    </li>
-								    <li>
-								        <a href="#">시청률</a>
-								    </li>
-								    <li>
-								        <a href="#">편성표</a>
-								    </li>
-								</ul>
                              </li>       
                             </ul>
                     </div>

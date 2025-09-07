@@ -26,6 +26,7 @@
                             <ol class="breadcrumb m-0">
                                 <li class="breadcrumb-item"><a href="javascript:void(0);">전자결재</a></li>
                                 <li class="breadcrumb-item active">받은 문서함</li>
+                                <li class="breadcrumb-item active">결재 종료 문서</li>
                             </ol>
                         </div>
                     </div>

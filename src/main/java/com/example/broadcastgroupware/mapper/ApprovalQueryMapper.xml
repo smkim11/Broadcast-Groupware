@@ -63,6 +63,17 @@
 	    <include refid="approvalDocumentFromJoins"/>
 	    WHERE ad.user_id = #{userId}
 	    	AND ad.approval_document_status IN ('승인', '반려')
+    	<choose>
+	        <when test="status != null and status == 'APPROVED'">
+	            AND ad.approval_document_status = '승인'
+	        </when>
+	        <when test="status != null and status == 'REJECTED'">
+	            AND ad.approval_document_status = '반려'
+	        </when>
+	        <otherwise>
+	            <!-- ALL -->
+	        </otherwise>
+      </choose>
 	    ORDER BY ad.update_date DESC
     </select>
 

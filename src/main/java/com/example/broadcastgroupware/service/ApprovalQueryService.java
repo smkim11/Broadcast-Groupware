@@ -33,8 +33,8 @@ public class ApprovalQueryService {
     }
 
     // 종료 문서 목록 조회
-    public List<ApprovalDocumentDto> findCompletedDocuments(int userId) {
-        return approvalQueryMapper.selectCompletedDocuments(userId);
+    public List<ApprovalDocumentDto> findCompletedDocuments(int userId, String status) {
+        return approvalQueryMapper.selectCompletedDocuments(userId, status);
     }
 
     // 임시저장 문서 목록 조회

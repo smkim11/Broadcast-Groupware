@@ -40,8 +40,10 @@ public class ApprovalQueryController {
 
     // 종료 문서 목록 조회
     @GetMapping("/documents/completed")
-    public String listCompleted(@ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
-        model.addAttribute("docs", approvalQueryService.findCompletedDocuments(loginUser.getUserId()));
+    public String listCompleted(@ModelAttribute("loginUser") UserSessionDto loginUser, 
+    							@RequestParam(defaultValue = "ALL") String status, Model model) {
+        model.addAttribute("docs", approvalQueryService.findCompletedDocuments(loginUser.getUserId(), status));
+        model.addAttribute("status", status);
         return "approval/list_completed";
     }
 

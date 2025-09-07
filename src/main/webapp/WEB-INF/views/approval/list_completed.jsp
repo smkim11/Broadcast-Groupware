@@ -26,11 +26,19 @@
                             <ol class="breadcrumb m-0">
                                 <li class="breadcrumb-item"><a href="javascript:void(0);">전자결재</a></li>
                                 <li class="breadcrumb-item active">내 문서함</li>
+                                <li class="breadcrumb-item active">종료 문서</li>
                             </ol>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- 필터 -->
+            <div class="d-flex gap-2 mb-3">
+			    <a href="?status=ALL" class="btn btn-sm <c:out value='${param.status == null || param.status == "ALL" ? "btn-primary" : "btn-outline-primary"}'/>">전체</a>
+			    <a href="?status=APPROVED" class="btn btn-sm <c:out value='${param.status == "APPROVED" ? "btn-success" : "btn-outline-success"}'/>">승인</a>
+			    <a href="?status=REJECTED" class="btn btn-sm <c:out value='${param.status == "REJECTED" ? "btn-danger" : "btn-outline-danger"}'/>">반려</a>
+			</div>
 
             <!-- 종료 문서 테이블 -->
             <div class="card">

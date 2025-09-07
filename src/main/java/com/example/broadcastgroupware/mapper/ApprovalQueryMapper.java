@@ -17,7 +17,8 @@ public interface ApprovalQueryMapper {
     List<ApprovalDocumentDto> selectInProgressDocuments(@Param("userId") int userId);
 
     // 종료 목록 문서 (승인 + 반려)
-    List<ApprovalDocumentDto> selectCompletedDocuments(@Param("userId") int userId);
+    List<ApprovalDocumentDto> selectCompletedDocuments(@Param("userId") int userId,
+    												   @Param("status") String status);
 
     // 임시저장 목록 문서
     List<ApprovalDocumentDto> selectDraftDocuments(@Param("userId") int userId);

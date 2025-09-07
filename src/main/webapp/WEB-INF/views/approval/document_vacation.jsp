@@ -195,15 +195,6 @@
 				    </div>
 				</div>
 		
-		        <!-- 파일 첨부 영역 -->
-		        <div class="card mt-3">
-		            <div class="card-body">
-		                <label class="form-label d-block mb-2">파일 첨부</label>
-		                <div class="alert alert-info mb-0">
-		                    파일 첨부 기능 아직 미구현
-		                </div>
-		            </div>
-		        </div>
 		    </form>
 		
 		</div>
