@@ -40,7 +40,7 @@
                         <div class="navbar-brand-box">
                             <a href="/home" class="logo logo-dark">
                                 <span class="logo-sm">
-                                    <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
+                                    <img src="${pageContext.request.contextPath}/resources/images/logo-sm2.png" alt="" height="22">
                                 </span>
                                 <span class="logo-lg">
                                     <img src="${pageContext.request.contextPath}/resources/images/logo-dark.png" alt="" height="20">
@@ -49,7 +49,7 @@
 
                             <a href="/home" class="logo logo-light">
                                 <span class="logo-sm">
-                                    <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
+                                    <img src="${pageContext.request.contextPath}/resources/images/logo-sm2.png" alt="" height="22">
                                 </span>
                                 <span class="logo-lg">
                                     <img src="${pageContext.request.contextPath}/resources/images/logo-dark2.png" alt="" height="20">
@@ -140,7 +140,7 @@
                 <div class="navbar-brand-box">
                     <a href="/home" class="logo logo-dark">
                         <span class="logo-sm">
-                            <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
+                            <img src="${pageContext.request.contextPath}/resources/images/logo-sm2.png" alt="" height="22">
                         </span>
                         <span class="logo-lg">
                             <img src="${pageContext.request.contextPath}/resources/images/logo-dark2.png" alt="" height="60">
