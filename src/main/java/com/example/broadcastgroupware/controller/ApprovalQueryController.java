@@ -117,4 +117,31 @@ public class ApprovalQueryController {
         return "approval/list_referenced";
     }
 
+
+    // 문서 수정 페이지 조회
+    @GetMapping("/document/edit/{id}")
+    public String documentEdit(@PathVariable("id") int approvalDocumentId,
+                               @ModelAttribute("loginUser") UserSessionDto loginUser, Model model) {
+        Map<String, Object> bundle = approvalQueryService.getDetailPageModel(approvalDocumentId, loginUser.getUserId());
+        if (bundle == null) {
+            model.addAttribute("message", "문서를 찾을 수 없습니다.");
+            return "error/404";
+        }
+
+        model.addAttribute("document", bundle.get("document"));
+        model.addAttribute("broadcastForm", bundle.get("broadcastForm"));
+        model.addAttribute("vacationForm", bundle.get("vacationForm"));
+
+        // 결재선/참조선 (개인 원본 + 팀/개인 분리본)
+        model.addAttribute("approvalLines", bundle.get("approvalLines"));
+        model.addAttribute("referenceLines", bundle.get("referenceLines"));
+        model.addAttribute("referenceTeams", bundle.get("referenceTeams"));
+        model.addAttribute("referenceIndividuals", bundle.get("referenceIndividuals"));
+
+        model.addAttribute("isEditable", bundle.get("isEditable"));  // 편집 가능 여부
+        model.addAttribute("docType", bundle.get("docType"));
+
+        return "approval/document_edit";
+    }
+
 }

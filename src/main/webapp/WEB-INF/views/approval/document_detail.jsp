@@ -24,12 +24,21 @@
 			    <div class="col-12">
 			        <div class="page-title-box d-flex align-items-center justify-content-between">
 			            <h4 class="mb-0">문서 상세</h4>
-			            <div class="page-title-right">
-			                <ol class="breadcrumb m-0">
-			                    <li class="breadcrumb-item"><a href="javascript:void(0);">전자결재</a></li>
-			                    <li class="breadcrumb-item active">내 문서함</li>
-			                </ol>
-			            </div>
+		            <div class="col-auto d-flex gap-2">
+		                <a href="${pageContext.request.contextPath}/approval/document/main"
+		                   class="btn btn-outline-secondary">목록</a>
+		
+			                <c:if test="${isEditable}">
+			                    <a href="${pageContext.request.contextPath}/approval/document/edit/${document.approvalDocumentId}"
+			                       class="btn btn-outline-success">수정</a>
+			
+			                    <form method="post" action="${ctx}/approval/document/delete" class="m-0 d-inline">
+					                <input type="hidden" name="approvalDocumentId" value="${document.approvalDocumentId}"/>
+					                <button type="submit" class="btn btn-outline-danger"
+					                        onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+					            </form>
+			                </c:if>
+		            	</div>
 			        </div>
 			    </div>
 			</div>
@@ -255,10 +264,6 @@
 			                        <div class="card h-100">
 			                            <div class="card-header bg-light py-2 d-flex justify-content-between">
 			                                <strong>결재선</strong>
-			                                <c:if test="${isEditable}">
-			                                    <a href="${pageContext.request.contextPath}/approval/line/input?docId=${document.approvalDocumentId}"
-			                                       class="btn btn-sm btn-outline-success">수정</a>
-			                                </c:if>
 			                            </div>
 			                            <div class="card-body p-2">
 			                                <table class="table table-sm table-bordered mb-0 text-center">
@@ -311,10 +316,6 @@
 			                        <div class="card h-100">
 			                            <div class="card-header bg-light py-2 d-flex justify-content-between">
 			                                <strong>참조선</strong>
-			                                <c:if test="${isEditable}">
-			                                    <a href="${pageContext.request.contextPath}/approval/reference/input?docId=${document.approvalDocumentId}"
-			                                       class="btn btn-sm btn-outline-success">수정</a>
-			                                </c:if>
 			                            </div>
 			                            
 										<div class="card-body p-2" style="max-height:260px; overflow:auto;">
@@ -395,24 +396,6 @@
 			            </div>
 			        </div>
 			    </div>
-			</div>
-			
-			<!-- 수정/삭제 -->
-			<div class="mt-3 d-flex align-items-center">
-			    <a href="${pageContext.request.contextPath}/approval/document/main" class="btn btn-outline-secondary">목록</a>
-			
-			    <c:if test="${isEditable}">
-			        <div class="ms-auto d-flex gap-2">
-			            <form method="post"
-			                  action="${pageContext.request.contextPath}/approval/document/delete/${document.approvalDocumentId}"
-			                  class="m-0">
-			                <button type="submit" class="btn btn-outline-danger"
-			                        onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
-			            </form>
-			            <a href="${pageContext.request.contextPath}/approval/document/edit/${document.approvalDocumentId}"
-			               class="btn btn-outline-success">수정</a>
-			        </div>
-			    </c:if>
 			</div>
 			
 			<!-- 결재 모달 -->

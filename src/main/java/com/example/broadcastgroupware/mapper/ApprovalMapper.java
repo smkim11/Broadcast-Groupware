@@ -18,7 +18,7 @@ public interface ApprovalMapper {
 	
 	// ===== 문서 작성 =====
 	
-	// 일반 문서
+	// 공통/일반 문서
 	int insertApprovalDocument(ApprovalDocument doc);
 	// 휴가 폼
     int insertVacationForm(VacationForm form);
@@ -54,8 +54,47 @@ public interface ApprovalMapper {
     
     // 문서 상태 변경
     int updateDocumentStatus(@Param("approvalDocumentId") int approvalDocumentId,
-            				@Param("status") String status);
+            				 @Param("status") String status);
     
+    
+    // ===== 문서 수정 =====
+
+	// 공통/일반 문서
+	int updateApprovalDocument(@Param("approvalDocumentId") int approvalDocumentId,
+                               @Param("title") String title,
+                               @Param("content") String content);
+	// 휴가 폼
+	int updateVacationForm(@Param("approvalDocumentId") int approvalDocumentId,
+						   @Param("vacationForm") VacationForm vacationForm);
+	// 방송 폼
+	int updateBroadcastForm(@Param("approvalDocumentId") int approvalDocumentId,
+							@Param("broadcastForm") BroadcastForm broadcastForm);
+	// 방송 요일
+	int updateBroadcastWeekday(@Param("broadcastFormId") int broadcastFormId,
+							   @Param("weekday") BroadcastWeekday weekday);
+	
+	// 문서 ID로 방송 폼 PK 조회 (요일 갱신/삭제 전 formId 추출)
+	Integer selectBroadcastFormIdByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+	
+	
+	// ===== 문서 삭제 (FK 제약 때문에 자식 테이블부터 삭제) =====
+	
+	// 휴가 폼
+	int deleteVacationFormByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+	// 방송 폼
+	int deleteBroadcastFormByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+	// 방송 요일
+	int deleteBroadcastWeekdayByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+	// 공통/일반 문서
+	int deleteDocumentById(@Param("approvalDocumentId") int approvalDocumentId);
+	
+	// 결재선/참조선 전체 삭제
+	int deleteApprovalLinesByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+	int deleteReferenceLinesByDocumentId(@Param("approvalDocumentId") int approvalDocumentId);
+		 
+    
+	// ===== 그 외 =====
+	
     // home화면 문서 현황 조회
     Map<String, Object> selectHomeDocCounts(@Param("userId") int userId);
     

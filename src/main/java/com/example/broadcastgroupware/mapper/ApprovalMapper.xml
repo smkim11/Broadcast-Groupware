@@ -3,7 +3,7 @@
 <mapper
 	namespace="com.example.broadcastgroupware.mapper.ApprovalMapper">
 	
-    <!-- 공통(일반) 문서 INSERT -->
+    <!-- 공통/일반 문서 INSERT -->
     <!-- 
 		useGeneratedKeys="true": DB에서 AUTO_INCREMENT로 생성된 PK 값을 가져오도록 설정
 		keyProperty="approvalDocumentId": 생성된 PK를 ApprovalDocument 객체의 approvalDocumentId 필드에 자동 세팅
@@ -149,6 +149,109 @@
 	    WHERE approval_document_id = #{approvalDocumentId}
 	</update>
 	
+	
+	<!-- ======== 수정 ======== -->
+
+	<!-- 공통/일반 문서 UPDATE -->
+	<update id="updateApprovalDocument" parameterType="map">
+	    UPDATE approval_document
+	    SET approval_document_title = #{title},
+	        approval_document_content = #{content},
+	        update_date = NOW()
+	    WHERE approval_document_id = #{approvalDocumentId}
+	</update>
+	
+	<!-- 휴가 폼 UPDATE -->
+    <update id="updateVacationForm" parameterType="map">
+        UPDATE vacation_form
+        SET
+            vacation_form_type = #{vacationForm.vacationFormType},
+            vacation_form_half_type = #{vacationForm.vacationFormHalfType},
+            vacation_form_start_date = #{vacationForm.vacationFormStartDate},
+            vacation_form_end_date = #{vacationForm.vacationFormEndDate}
+        WHERE approval_document_id = #{approvalDocumentId}
+    </update>
+	
+    <!-- 방송 폼 UPDATE -->
+    <update id="updateBroadcastForm" parameterType="map">
+        UPDATE broadcast_form
+        SET
+            broadcast_form_name = #{broadcastForm.broadcastFormName},
+            broadcast_form_capacity = #{broadcastForm.broadcastFormCapacity},
+            broadcast_form_start_date = #{broadcastForm.broadcastFormStartDate},
+            broadcast_form_end_date = #{broadcastForm.broadcastFormEndDate},
+            broadcast_form_start_time = #{broadcastForm.broadcastFormStartTime},
+            broadcast_form_end_time = #{broadcastForm.broadcastFormEndTime}
+        WHERE approval_document_id = #{approvalDocumentId}
+    </update>
+    
+    <!-- 방송 요일 UPDATE -->
+    <update id="updateBroadcastWeekday" parameterType="map">
+        UPDATE broadcast_weekday
+        SET
+            broadcast_sunday = #{weekday.broadcastSunday},
+            broadcast_monday = #{weekday.broadcastMonday},
+            broadcast_tuesday = #{weekday.broadcastTuesday},
+            broadcast_wednesday = #{weekday.broadcastWednesday},
+            broadcast_thursday = #{weekday.broadcastThursday},
+            broadcast_friday = #{weekday.broadcastFriday},
+            broadcast_saturday = #{weekday.broadcastSaturday}
+        WHERE broadcast_form_id = #{broadcastFormId}
+    </update>
+    
+    <!-- 방송 폼 id 조회 (요일 테이블 갱신용) -->
+    <select id="selectBroadcastFormIdByDocumentId" resultType="int">
+        SELECT broadcast_form_id
+        FROM broadcast_form
+        WHERE approval_document_id = #{approvalDocumentId}
+        LIMIT 1
+    </select>
+    
+    
+    <!-- ======== 삭제 ======== -->
+	
+	<!-- 휴가 폼 DELETE -->
+	<delete id="deleteVacationFormByDocumentId" parameterType="int">
+		DELETE FROM vacation_form
+		WHERE approval_document_id = #{approvalDocumentId}
+	</delete>
+	
+	<!-- 방송 폼 DELETE -->
+	<delete id="deleteBroadcastFormByDocumentId" parameterType="int">
+		DELETE FROM broadcast_form
+		WHERE approval_document_id = #{approvalDocumentId}
+	</delete>
+	
+	<!-- 방송 요일 DELETE -->
+	<delete id="deleteBroadcastWeekdayByDocumentId" parameterType="int">
+		DELETE bw
+		FROM broadcast_weekday bw
+		JOIN broadcast_form bf 
+			ON bf.broadcast_form_id = bw.broadcast_form_id
+		WHERE bf.approval_document_id = #{approvalDocumentId}
+	</delete>
+	
+	<!-- 공통/일반 문서 DELETE -->
+	<delete id="deleteDocumentById" parameterType="int">
+		DELETE FROM approval_document
+		WHERE approval_document_id = #{approvalDocumentId}
+	</delete>
+	
+	<!-- 결재선 전체 삭제 -->
+	<delete id="deleteApprovalLinesByDocumentId" parameterType="int">
+	    DELETE FROM approval_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	</delete>
+	
+	<!-- 참조선 전체 삭제 -->
+	<delete id="deleteReferenceLinesByDocumentId" parameterType="int">
+	    DELETE FROM reference_line
+	    WHERE approval_document_id = #{approvalDocumentId}
+	</delete>   
+
+
+ 	<!-- ======== 그 외 ======== -->
+
 	<!-- 문서 홈 요약: 미결/진행/완료(누적) -->
 	<select id="selectHomeDocCounts" parameterType="int" resultType="map">
 	  SELECT
@@ -166,7 +269,7 @@
 	      SELECT COUNT(*)
 	      FROM approval_document ad
 	      WHERE ad.user_id = #{userId}
-	        AND ad.approval_document_status = '진행중'
+	        AND ad.approval_document_status = '진행 중'
 	    ) AS progress,
 	
 	    <!-- 완료함: 내가 상신해서 끝난 문서(완료/반려/종료 등) -->
@@ -177,5 +280,5 @@
 	        AND ad.approval_document_status = '승인'
 	    ) AS done
 	</select>
-
+	
 </mapper>

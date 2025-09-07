@@ -64,7 +64,7 @@
 								    <th class="bg-light text-center">작성자</th>
 								    <td>
 								        <input type="text" class="form-control" value="${sessionScope.loginUser.fullName}" readonly>
-								        <input type="hidden" name="authorId" value="${sessionScope.loginUser.userId}">
+								        <input type="hidden" name="userId" value="${sessionScope.loginUser.userId}">
 								    </td>
 								    <th class="bg-light text-center">직급</th>
 								    <td>
@@ -399,7 +399,7 @@
             // 입력값 수집
             const titleEl = form.querySelector('[name="title"]');  	   // 공통 제목
             const contentEl = form.querySelector('[name="content"]');  // 공통 내용
-            const userIdEl = form.querySelector('[name="userId"],[name="authorId"]');
+            const userIdEl = form.querySelector('[name="userId"]');
 
             const title = (titleEl ? titleEl.value : '').trim();
             const content = (contentEl ? contentEl.value : '').trim();
@@ -489,7 +489,6 @@
 	            
             	// 저장 후 문서 유형 선택 화면으로 이동
                 window.location.href = base + '/approval/document/main';
-                alert('저장 중 오류가 발생했습니다.\n' + (e && e.message ? e.message : e));
             })
             .catch(function (e) {
                 console.error('방송 문서 저장 오류:', e);

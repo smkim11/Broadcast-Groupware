@@ -54,7 +54,7 @@
 							                  groupingUsed="false" />
 									</td>
                                     <td class="text-start">
-                                        <a href="${pageContext.request.contextPath}/approval/document/edit/${doc.approvalDocumentId}">
+                                        <a href="${pageContext.request.contextPath}/approval/document/detail/${doc.approvalDocumentId}">
                                             <c:out value="${doc.approvalDocumentTitle}"/>
                                         </a>
                                     </td>

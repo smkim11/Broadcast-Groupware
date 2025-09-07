@@ -245,6 +245,188 @@ public class ApprovalService {
         return docId;
     }
     
+
+	// 공통(일반) 문서 수정
+	@Transactional
+	public int updateCommonDocument(int approvalDocumentId, ApprovalDocumentDto request) {
+	    approvalMapper.updateApprovalDocument(
+	            approvalDocumentId,
+	            request.getApprovalDocumentTitle(),
+	            request.getApprovalDocumentContent()
+	    );
+	
+	    // 결재선/참조선 교체 저장
+	    replaceLines(approvalDocumentId, request);
+	
+	    return approvalDocumentId;
+	}
+
+	// 휴가 문서 수정
+	@Transactional
+	public int updateVacationDocument(int approvalDocumentId, ApprovalDocumentDto request) {
+	    // 공통 본문 + 라인 교체
+	    updateCommonDocument(approvalDocumentId, request);
+	    
+	    // 휴가 폼 업데이트
+	    if (request.getVacationForm() != null) {
+	        var vf = toEntity(request.getVacationForm());
+	        vf.setApprovalDocumentId(approvalDocumentId);
+	        
+	        int rows = approvalMapper.updateVacationForm(approvalDocumentId, vf);
+	        if (rows == 0) {
+	            approvalMapper.insertVacationForm(vf);
+	        }
+	    }
+	    return approvalDocumentId;
+	}
+
+	// 방송 문서 수정
+	@Transactional
+	public int updateBroadcastDocument(int approvalDocumentId, ApprovalDocumentDto request) {
+		// 공통 본문 + 라인 교체
+		updateCommonDocument(approvalDocumentId, request);
+	
+		if (request.getBroadcastForm() != null) {
+			BroadcastForm form = toEntity(request.getBroadcastForm());
+			form.setApprovalDocumentId(approvalDocumentId);
+	
+		 // 1) 방송 폼 업데이트
+		 int rows = approvalMapper.updateBroadcastForm(approvalDocumentId, form);
+		 if (rows == 0) {
+		     approvalMapper.insertBroadcastForm(form);
+		 }
+	
+	     // 2) 요일 업데이트
+	     Integer formId = approvalMapper.selectBroadcastFormIdByDocumentId(approvalDocumentId);
+	     if (formId != null) {
+	            BroadcastWeekday wd = toWeekdayEntity(request.getBroadcastForm().getBroadcastDays(), formId);
+	            int wrows = approvalMapper.updateBroadcastWeekday(formId, wd);
+	            if (wrows == 0) {
+	                wd.setBroadcastFormId(formId);
+	                approvalMapper.insertBroadcastWeekday(wd);
+	            }
+	        }
+		}
+		return approvalDocumentId;
+	}
+
+	
+	// 결재선/참조선 교체 저장 공통 함수
+	private void replaceLines(int approvalDocumentId, ApprovalDocumentDto request) {
+		boolean hasApvInReq = request.getApprovalLines() != null;
+	    boolean hasRefInReq = (request.getReferenceLines() != null && !request.getReferenceLines().isEmpty())
+	                       || (request.getReferenceTeamIds() != null && !request.getReferenceTeamIds().isEmpty());
+
+	    if (!hasApvInReq && !hasRefInReq) return;  // 아무것도 안 바꾼 경우 보존
+
+	    // 1) 기존 라인 제거
+	    approvalMapper.deleteApprovalLinesByDocumentId(approvalDocumentId);
+	    approvalMapper.deleteReferenceLinesByDocumentId(approvalDocumentId);
+
+	    // 2) 결재선 재삽입 (3명 초과 시 에러 + 시퀀스 재부여)
+	    if (hasApvInReq) {
+	        List<ApprovalLineDto> cleaned = request.getApprovalLines().stream()
+	            .filter(l -> l != null && l.getUserId() != null)
+	            .sorted((a, b) -> Integer.compare(
+	                a.getApprovalLineSequence() != null ? a.getApprovalLineSequence() : Integer.MAX_VALUE,
+	                b.getApprovalLineSequence() != null ? b.getApprovalLineSequence() : Integer.MAX_VALUE
+	            ))
+	            .toList();
+
+	        if (cleaned.size() > 3) {
+	            throw new IllegalArgumentException("결재선은 최대 3명까지만 저장할 수 있습니다.");
+	        }
+
+	        List<ApprovalLine> lines = new ArrayList<>();
+	        for (int i = 0; i < cleaned.size(); i++) {
+	            ApprovalLineDto src = cleaned.get(i);
+	            ApprovalLine line = new ApprovalLine();
+	            line.setApprovalDocumentId(approvalDocumentId);
+	            line.setUserId(src.getUserId());
+	            line.setApprovalLineSequence(i + 1);  // 시퀀스 재부여
+	            line.setApprovalLineStatus(i == 0 ? "대기" : null);
+	            lines.add(line);
+	        }
+	        if (!lines.isEmpty()) {
+	            approvalMapper.insertApprovalLines(lines);
+	        }
+	    }
+	
+	    // 3) 참조선 재삽입 (create 때와 동일한 팀 -> 개인 전개 규칙)
+	    List<ReferenceLineDto> refs = request.getReferenceLines();
+	    List<Integer> extraTeamIds = request.getReferenceTeamIds();
+	
+	    boolean hasRefs = (refs != null && !refs.isEmpty()) || (extraTeamIds != null && !extraTeamIds.isEmpty());
+	    if (!hasRefs) return;  // 참조선 없으면 종료
+	
+	    long teamCount = 0, userCount = 0;  // 입력 검증용 카운트
+	    if (refs != null) {
+	        teamCount += refs.stream().map(ReferenceLineDto::getTeamId).filter(Objects::nonNull).distinct().count();
+	        userCount += refs.stream().map(ReferenceLineDto::getUserId).filter(Objects::nonNull).distinct().count();
+	    }
+	    if (extraTeamIds != null) {
+	        teamCount += extraTeamIds.stream().filter(Objects::nonNull).distinct().count();
+	    }
+	    
+	    final int MAX_TOTAL = 50;  // 참조선 최대 총합(팀+개인)
+	    if (teamCount + userCount > MAX_TOTAL) throw new IllegalArgumentException("참조 대상은 총 " + MAX_TOTAL + "개입니다.");
+	
+	    // 팀 -> 개인 확장을 위한 팀 목록
+	    List<Integer> teamIds = new ArrayList<>();  
+	    if (refs != null) {
+	        teamIds.addAll(refs.stream().map(ReferenceLineDto::getTeamId).filter(Objects::nonNull).collect(Collectors.toSet()));
+	    }
+	    if (extraTeamIds != null) {
+	        teamIds.addAll(extraTeamIds.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
+	    }
+	    
+	    // 팀 중복 제거
+	    teamIds = teamIds.stream().distinct().toList();
+	
+	    Set<Integer> userIds = new java.util.LinkedHashSet<>();
+	    if (refs != null) {
+	        userIds.addAll(refs.stream().map(ReferenceLineDto::getUserId).filter(Objects::nonNull).collect(Collectors.toSet()));
+	    }
+	    if (!teamIds.isEmpty()) {
+	        List<Integer> fromTeams = approvalMapper.selectUserIdsByTeamIds(teamIds);
+	        // 팀 구성원 합치기
+	        if (fromTeams != null) userIds.addAll(fromTeams);
+	    }
+	
+	    if (userIds.size() > MAX_TOTAL) {
+	        throw new IllegalArgumentException("참조 대상은 총 " + MAX_TOTAL + "명까지 저장할 수 있습니다.");
+	    }
+	
+	    // 엔티티 변환
+	    List<ReferenceLine> entities = userIds.stream().map(uid -> {
+	        ReferenceLine rl = new ReferenceLine();
+	        rl.setApprovalDocumentId(approvalDocumentId);
+	        rl.setUserId(uid);
+	        return rl;
+	    }).toList();
+	
+	    if (!entities.isEmpty()) {
+	        approvalMapper.insertReferenceLines(entities);  // 참조선 일괄 저장
+	    }
+	}
+ 
+	
+	// 문서 삭제 (자식 -> 부모 순서로 하드 삭제)
+	@Transactional
+	public void deleteDocument(int approvalDocumentId) {
+	    // 결재선/참조선
+	    approvalMapper.deleteApprovalLinesByDocumentId(approvalDocumentId);
+	    approvalMapper.deleteReferenceLinesByDocumentId(approvalDocumentId);
+	
+	    // 방송/휴가 폼
+	    approvalMapper.deleteVacationFormByDocumentId(approvalDocumentId);
+	    approvalMapper.deleteBroadcastWeekdayByDocumentId(approvalDocumentId);
+	    approvalMapper.deleteBroadcastFormByDocumentId(approvalDocumentId);
+	
+	    // 마지막에 본문 삭제
+	    approvalMapper.deleteDocumentById(approvalDocumentId);
+	}
+	 
     
     // DTO -> 엔터티 매핑
     private ApprovalDocument toEntity(ApprovalDocumentDto request) {

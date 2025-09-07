@@ -5,11 +5,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.broadcastgroupware.domain.User;
 import com.example.broadcastgroupware.dto.UserSessionDto;
 import com.example.broadcastgroupware.mapper.UserMapper;
+import com.example.broadcastgroupware.service.ApprovalService;
 import com.example.broadcastgroupware.service.UserListService;
 
 import jakarta.servlet.http.HttpSession;
@@ -19,10 +23,13 @@ import jakarta.servlet.http.HttpSession;
 public class ApprovalController {
 	private final UserMapper userMapper;
 	private final UserListService userListService;
-
-    public ApprovalController(UserMapper userMapper, UserListService userListService) {
+	private final ApprovalService approvalService;
+	
+    public ApprovalController(UserMapper userMapper, UserListService userListService,
+    						  ApprovalService approvalService) {
         this.userMapper = userMapper;
         this.userListService = userListService; 
+        this.approvalService = approvalService; 
     }
     
     // ===== 결재 화면 부서명 / 팀명 조회 =====
@@ -100,6 +107,15 @@ public class ApprovalController {
     	// 팀원(UserListService) 조직도 메서드 재사용
     	model.addAttribute("orgTree", userListService.getUserTreeForInvite());
         return "approval/reference_input";
+    }
+    
+    // 문서 삭제
+    @PostMapping("/document/delete")
+    public String deleteDocument(@RequestParam("approvalDocumentId") int id,
+                                 RedirectAttributes ra) {
+        approvalService.deleteDocument(id);
+        ra.addFlashAttribute("toast", "문서를 삭제했습니다.");
+        return "redirect:/approval/document/main";
     }
 
 }
