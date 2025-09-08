@@ -26,7 +26,16 @@ html[data-bs-theme="dark"] .pager-circle .page-item.active .page-link{
   box-shadow: 0 4px 10px rgba(85,110,230,.45);
 }
 
-
+#room-avatar.chat-room-avatar{
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
 
 /* DM 안읽음 배지 */
 .badge.dm-badge-unread{

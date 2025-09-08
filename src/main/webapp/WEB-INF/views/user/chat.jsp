@@ -63,14 +63,23 @@
         <div class="chat-leftsidebar card">
           <div class="p-3 px-4">
             <div class="d-flex align-items-start">
-             <c:set var="loginAvatar" value="${empty loginUserAvatarUrl 
-			  ? pageContext.request.contextPath.concat('/resources/images/users/avatar-default.png') 
-			  : loginUserAvatarUrl}" />
+			<c:choose>
+			  <c:when test="${not empty loginUserAvatarUrl}">
+			    <c:set var="loginAvatar"
+			           value="${loginUserAvatarUrl}${empty loginUserAvatarVersion ? '' : '?v='.concat(loginUserAvatarVersion)}"/>
+			  </c:when>
+			  <c:otherwise>
+			    <c:set var="loginAvatar" value="${pageContext.request.contextPath}/resources/images/users/avatar-default.png"/>
+			  </c:otherwise>
+			</c:choose>
 			
 			<div class="flex-shrink-0 me-3 align-self-center">
 			  <img id="sidebar-login-avatar"
 			       src="${loginAvatar}"
-			       class="avatar-xs rounded-circle" alt="">
+			       class="avatar-xs rounded-circle"
+			       data-user-id="${loginUserId}"
+			       alt="avatar"
+			       onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/resources/images/users/avatar-default.png'">
 			</div>
 			
 			<div class="flex-grow-1">
@@ -90,8 +99,8 @@
             </div>
           </div>
 
-          <!-- Search -->
-          <div class="p-3">
+          <!-- Search 
+         	<div class="p-3">
             <div class="search-box chat-search-box">
               <div class="position-relative">
                 <input type="text" class="form-control bg-light border-light rounded" placeholder="Search...">
@@ -99,6 +108,7 @@
               </div>
             </div>
           </div>
+          -->
 
           <!-- Groups / Contacts -->
           <div class="pb-3">
@@ -143,9 +153,11 @@
 			    <div class="d-flex align-items-center">
 			      <!--  크기 고정 클래스 적용 -->
 			      <img id="room-avatar"
-			           src="<c:url value='/resources/images/users/avatar-default.png'/>"
-			           class="rounded-circle header-profile-user"
-			           alt="avatar">
+				     src="<c:url value='/resources/images/users/avatar-default.png'/>"
+				     class="rounded-circle me-2 chat-room-avatar"
+				     data-user-id="" 
+				     alt="avatar"
+				     onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/resources/images/users/avatar-default.png'">
 			
 			      <div class="ms-2 min-w-0">
 			        <h5 id="room-title" class="font-size-16 mb-0 text-truncate"></h5>
@@ -164,8 +176,6 @@
                            <i class="uil uil-ellipsis-h"></i>
                        </button>
                        <div class="dropdown-menu dropdown-menu-end">
-                           <a class="dropdown-item" href="#" id="btn-pin=room">상단고정</a>
-                           <a class="dropdown-item" href="#" id="action-rename-room">채팅방 이름 변경</a>
                            <a class="dropdown-item text-danger" href="#" id="action-leave-room">대화방 나가기</a>
                        </div>
                    </div>
@@ -311,9 +321,6 @@
       </div>
        <div class="modal-footer">
         <button class="btn btn-light" data-bs-dismiss="modal">닫기</button>
-        <button class="btn btn-primary" id="members-invite-btn">
-          <i class="mdi mdi-plus me-1"></i> 초대하기
-        </button>
       </div>
     </div>
   </div>

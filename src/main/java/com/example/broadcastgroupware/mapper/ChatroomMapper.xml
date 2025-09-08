@@ -35,22 +35,30 @@
 	      COALESCE(unread.cnt, 0) AS unread_count,
 	
 	      /* 이름: DM은 상대 이름, GROUP은 방 이름 */
+	      CASE WHEN c.room_type = 'DM'
+	           THEN u_peer.full_name
+	           ELSE c.chatroom_name
+	      END AS chatroom_name,
+	
+	      /* 직급: DM만 의미 있음 */
+	      CASE WHEN c.room_type = 'DM' THEN u_peer.user_rank ELSE NULL END AS peer_user_rank,
+	
 	      CASE 
-        WHEN c.room_type = 'DM' THEN
-          COALESCE(
-            CONCAT(
-              '/uploads/',
-              ui.user_images_name,
-              CASE WHEN ui.user_images_ext IS NULL OR ui.user_images_ext = ''
-                   THEN '' ELSE CONCAT('.', TRIM(LEADING '.' FROM ui.user_images_ext)) END,
-              CASE WHEN ui.update_date IS NULL
-                   THEN '' ELSE CONCAT('?v=', UNIX_TIMESTAMP(ui.update_date)) END
-            ),
-            '/resources/images/users/avatar-default.png'
-          )
-        ELSE
-          '/resources/images/users/group-default.png'
-      END AS avatar_url
+	      WHEN c.room_type = 'DM' THEN
+	        COALESCE(
+	          CONCAT(
+	            '/uploads/',
+	            ui.user_images_name,
+	            CASE WHEN ui.user_images_ext IS NULL OR ui.user_images_ext = ''
+	                 THEN '' ELSE CONCAT('.', TRIM(LEADING '.' FROM ui.user_images_ext)) END,
+	            CASE WHEN ui.update_date IS NULL
+	                 THEN '' ELSE CONCAT('?v=', UNIX_TIMESTAMP(ui.update_date)) END
+	          ),
+	          '/resources/images/users/avatar-default.png'
+	        )
+	      ELSE
+	        '/resources/images/users/group-default.png'
+	    END AS avatar_url
 	  FROM chatroom c
 	
 	  /* 내가 속한 방 */
@@ -75,7 +83,7 @@
 	  /* DM일 때만 상대 프로필이 매칭됨 (GROUP이면 전부 NULL) */
 	  LEFT JOIN `user` u_peer
 	    ON u_peer.user_id = pid.peer_user_id
-	    
+	
 	  LEFT JOIN (
 	    SELECT user_id, user_images_name, user_images_ext, update_date,
 	           ROW_NUMBER() OVER (
