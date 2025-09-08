@@ -16,6 +16,7 @@ public class BroadcastGroupwareApplication implements WebMvcConfigurer{
 	}
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		registry.addResourceHandler("/final/**").addResourceLocations("file:///C:/final/");
+		registry.addResourceHandler("/upload/**")
+		.addResourceLocations("file:/home/ubuntu/upload/");
 	}
 }
