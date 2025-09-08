@@ -114,7 +114,7 @@
                      				<div class="card">
                      					<div class="card-body">
                      						<strong>이번주 근무시간</strong>
-                     						<div>${fn:substring(weekWorkHours,0,2)}시간 ${fn:substring(weekWorkHours,3,5)}분</div>
+                     						<div>${weekWorkHours}</div>
                    						</div>
                						</div>
                 					<div class="card">
