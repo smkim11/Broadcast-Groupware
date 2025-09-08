@@ -335,22 +335,25 @@ a.btn:last-of-type:hover {
 	            </div>
 	            <div class="article-body">
 					<c:forEach var="c" items="${detail}">
-					    <div class="content">
-					        <div class="attachment-dropdown" style="position: relative; display: inline-block; float: right; margin-top: 5px;">
-					            <button class="dropbtn">📎 첨부파일</button>
-					            <div class="dropdown-content" style="display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 1;">
-					                <c:forEach var="f" items="${fileList}">
-					                    <a href="/file/download?fileId=${f.fileId}" style="display: block; padding: 5px 10px; text-decoration: none; color: #333;">
-					                        ${f.fileName}
-					                    </a>
-					                </c:forEach>
-					            </div>
-					        </div>
-					        
-					        <div class="content-main">${c.postContent}</div>
-					
-					        <div style="clear: both;"></div>
-					    </div>
+						<div class="content">
+						    <!-- 첨부파일 있을 때만 버튼 표시 -->
+						    <c:if test="${not empty fileList}">
+						        <div class="attachment-dropdown" style="position: relative; display: inline-block; float: right; margin-top: 5px;">
+						            <button class="dropbtn">📎 첨부파일</button>
+						            <div class="dropdown-content" style="display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 1;">
+						                <c:forEach var="f" items="${fileList}">
+						                    <a href="/file/download?fileId=${f.fileId}" style="display: block; padding: 5px 10px; text-decoration: none; color: #333;">
+						                        ${f.fileName}
+						                    </a>
+						                </c:forEach>
+						            </div>
+						        </div>
+						    </c:if>
+						
+						    <div class="content-main">${c.postContent}</div>
+						    <div style="clear: both;"></div>
+						</div>
+
 					</c:forEach>
 										
 					<div class="comment">
