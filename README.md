@@ -110,4 +110,18 @@ ERD 예시: ![DB](DB.png)
 관리자/직원 역할별 기능 흐름 및 CRUD 구조
 FlowChart: ![흐름도](흐름도.png)
 
+## 🧑‍💻 기여자 정보
+
+- 김성민 / 캘린더, 근태, 마이페이지 구성 / https://github.com/smkim11
+- 김예진 / 결재, 방송편성 구성 / https://github.com/Yejin-source
+- 장정수 / 예약, 게시판 구성 / https://github.com/coffee-jeong
+- 장지영 / 로그인, 채팅, 메인화면 구성 / https://github.com/JANGJI0
+
+---
+
+## 📌 라이선스
+
+본 프로젝트는 수업용 / 포트폴리오 목적의 샘플 프로젝트입니다.  
+상업적 사용은 제한됩니다.
+
 
