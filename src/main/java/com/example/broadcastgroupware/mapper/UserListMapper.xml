@@ -54,12 +54,15 @@
     u.user_join_date AS userJoinDate,
     t.team_id    AS teamId,
     t.team_name  AS teamName,
+
+    /* ✅ 여기서 실제로 브라우저가 접근할 수 있는 URL을 만든다 */
     COALESCE(ui.profile_image, '/resources/images/users/avatar-default.png') AS profileImage,
+
     d.department_id   AS departmentId,
     d.department_name AS departmentName
   FROM `user` u
 
-  <!-- 1) 배치이력: 사용자별 최신 1행만 뽑는다 -->
+  /* 1) 사용자별 최신 배치 이력 1행 */
   LEFT JOIN (
     SELECT user_id, team_id
     FROM (
@@ -70,52 +73,62 @@
     WHERE x.rn = 1
   ) dh ON dh.user_id = u.user_id
 
-  <!-- 2) 팀/부서 (각 team_id는 유일하다고 가정) -->
   LEFT JOIN team t        ON t.team_id = dh.team_id
   LEFT JOIN department d  ON d.department_id = t.department_id
 
-  <!-- 3) 이미지: 사용자별 최신 1장만 -->
+  /* 2) ✅ 사용자별 최신 '프로필' 이미지 1장 + URL 생성 */
   LEFT JOIN (
-    SELECT user_id, user_images_type AS profile_image
+    SELECT user_id,
+           CONCAT(
+             '/uploads/',
+             user_images_name,
+             CASE
+               WHEN user_images_ext IS NULL OR user_images_ext=''
+                 THEN ''
+               ELSE CONCAT('.', TRIM(LEADING '.' FROM user_images_ext))
+             END,
+             CASE
+               WHEN update_date IS NULL THEN ''
+               ELSE CONCAT('?v=', UNIX_TIMESTAMP(update_date)) -- 캐시 무력화
+             END
+           ) AS profile_image
     FROM (
       SELECT ui.*,
-             ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY create_date DESC, user_images_id DESC) AS rn
+             ROW_NUMBER() OVER (
+               PARTITION BY user_id
+               ORDER BY update_date DESC, create_date DESC, user_images_id DESC
+             ) AS rn
       FROM user_images ui
+      WHERE ui.user_images_type = '프로필'
     ) z
     WHERE z.rn = 1
   ) ui ON ui.user_id = u.user_id
 
   <where>
-    <!-- 퇴사자 제외 -->
     u.user_resign_date IS NULL
     <if test="q != null and q != ''">
-     AND
-    <choose>
-      <!-- 이름만 -->
-      <when test="field == 'name'">
-        u.full_name LIKE CONCAT('%', #{q}, '%')
-      </when>
-      <!-- 부서만 -->
-      <when test="field == 'dept'">
-        d.department_name LIKE CONCAT('%', #{q}, '%')
-      </when>
-      <!-- 팀만 -->
-      <when test="field == 'team'">
-        t.team_name LIKE CONCAT('%', #{q}, '%')
-      </when>
-      <!-- 직급만 -->
-      <when test="field == 'rank'">
-        u.user_rank LIKE CONCAT('%', #{q}, '%')
-      </when>
-      <!-- 전체(기본): 이름/부서/팀/직급 -->
-      <otherwise>
-        (u.full_name       LIKE CONCAT('%', #{q}, '%')
-         OR d.department_name LIKE CONCAT('%', #{q}, '%')
-         OR t.team_name     LIKE CONCAT('%', #{q}, '%')
-         OR u.user_rank     LIKE CONCAT('%', #{q}, '%'))
-      </otherwise>
-    </choose>
-  </if>
+      AND
+      <choose>
+        <when test="field == 'name'">
+          u.full_name LIKE CONCAT('%', #{q}, '%')
+        </when>
+        <when test="field == 'dept'">
+          d.department_name LIKE CONCAT('%', #{q}, '%')
+        </when>
+        <when test="field == 'team'">
+          t.team_name LIKE CONCAT('%', #{q}, '%')
+        </when>
+        <when test="field == 'rank'">
+          u.user_rank LIKE CONCAT('%', #{q}, '%')
+        </when>
+        <otherwise>
+          (u.full_name LIKE CONCAT('%', #{q}, '%')
+           OR d.department_name LIKE CONCAT('%', #{q}, '%')
+           OR t.team_name LIKE CONCAT('%', #{q}, '%')
+           OR u.user_rank LIKE CONCAT('%', #{q}, '%'))
+        </otherwise>
+      </choose>
+    </if>
   </where>
 
   ORDER BY

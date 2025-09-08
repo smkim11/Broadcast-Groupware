@@ -29,6 +29,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
             	.dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll() // JSP forward 허용
+            	.requestMatchers("/uploads/**").permitAll()      // 프로필 이미지 실제 파일 서빙 허용
                 .requestMatchers("/api/find/password", "/login", "/logout", "/resources/**", "/css/**", "/js/**", "/ws-stomp/**", "/session/**").permitAll()
                 .requestMatchers("/home").hasAnyRole("admin","user")
                 .requestMatchers("/lock", "/unlock").authenticated()

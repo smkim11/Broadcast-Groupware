@@ -40,7 +40,7 @@
                         <div class="navbar-brand-box">
                             <a href="/home" class="logo logo-dark">
                                 <span class="logo-sm">
-                                    <img src="${pageContext.request.contextPath}/resources/images/logo-sm2.png" alt="" height="22">
+                                    <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
                                 </span>
                                 <span class="logo-lg">
                                     <img src="${pageContext.request.contextPath}/resources/images/logo-dark.png" alt="" height="20">
@@ -92,23 +92,29 @@
 					<!-- 로그인한 유저 이름 직급 -->
                         <div class="dropdown d-inline-block">
 							   <c:set var="me" value="${sessionScope.loginUser}" />
+							   <c:url var="defaultAvatar" value="/resources/images/users/avatar-default.png" />
 							
 							<c:if test="${not empty me}">
 							  <button type="button" class="btn header-item waves-effect" id="page-header-user-dropdown"
 							          data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							
-							      <c:choose>
-							        <c:when test="${not empty me.userimagesName}">
-							          <img class="rounded-circle header-profile-user"
-							               src="<c:url value='${pageContext.request.contextPath}/resources/images/users/${me.userimagesName}'/>"
-							               alt="Header Avatar" />
-							        </c:when>
-							        <c:otherwise>
-							          <img class="rounded-circle header-profile-user"
-							               src="<c:url value='${pageContext.request.contextPath}/resources/images/users/avatar-default.png'/>"
-							               alt="Header Avatar" />
-							        </c:otherwise>
-							      </c:choose>
+									<c:choose>
+									  <c:when test="${not empty me and not empty me.profileUrl}">
+									    <c:url var="avatarSrc" value="${me.profileUrl}">
+									      <c:param name="v" value="${me.profileVer}" />
+									    </c:url>
+									    <img class="rounded-circle header-profile-user"
+									         src="${avatarSrc}"
+									         alt="Header Avatar"
+									         onerror="this.onerror=null;this.src='${defaultAvatar}'" />
+									  </c:when>
+									
+									  <c:otherwise>
+									    <img class="rounded-circle header-profile-user"
+									         src="${defaultAvatar}"
+									         alt="Header Avatar" />
+									  </c:otherwise>
+									</c:choose>
 							
 							      <span class="d-none d-xl-inline-block ms-1 fw-medium font-size-15">
 							        ${me.fullName} ${me.userRank}
@@ -140,7 +146,7 @@
                 <div class="navbar-brand-box">
                     <a href="/home" class="logo logo-dark">
                         <span class="logo-sm">
-                            <img src="${pageContext.request.contextPath}/resources/images/logo-sm2.png" alt="" height="22">
+                            <img src="${pageContext.request.contextPath}/resources/images/logo-sm.png" alt="" height="22">
                         </span>
                         <span class="logo-lg">
                             <img src="${pageContext.request.contextPath}/resources/images/logo-dark2.png" alt="" height="60">

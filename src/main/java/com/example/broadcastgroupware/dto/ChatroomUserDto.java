@@ -8,4 +8,6 @@ public class ChatroomUserDto {
 	private String fullName;
 	private String userRank;
 	private String avatarPath;	// null이면 기본 이미지
+	
+	private String avatarUrl;
 }

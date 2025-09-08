@@ -19,6 +19,7 @@
 		<result column="peer_avatar_path"	property="peerAvatarPath"/>
 		<result column="group_avatar_path"	property="groupAvatarPath"/>
 		<result column="peer_user_rank"    property="peerUserRank"/>
+		 <result column="avatar_url"        property="avatarUrl"/>
 	</resultMap>
 	
 	<!-- 내가 속한 DM 목록(상대 정보 포함) -->
@@ -34,21 +35,22 @@
 	      COALESCE(unread.cnt, 0) AS unread_count,
 	
 	      /* 이름: DM은 상대 이름, GROUP은 방 이름 */
-	      CASE WHEN c.room_type = 'DM'
-	           THEN u_peer.full_name
-	           ELSE c.chatroom_name
-	      END AS chatroom_name,
-	
-	      /* 직급: DM만 의미 있음 */
-	      CASE WHEN c.room_type = 'DM' THEN u_peer.user_rank ELSE NULL END AS peer_user_rank,
-	
-	      /* 서비스용 원재료 */
-	      pid.peer_user_id AS peer_user_id,
-	      /* 아바타 경로: 필요 시 컬럼/로직 맞춰서 채우고, 당장은 NULL이어도 무방 */
-	      NULL AS peer_avatar_path,
-	      NULL AS group_avatar_path,
-	
-	      li.last_incoming_at AS last_incoming_at
+	      CASE 
+        WHEN c.room_type = 'DM' THEN
+          COALESCE(
+            CONCAT(
+              '/uploads/',
+              ui.user_images_name,
+              CASE WHEN ui.user_images_ext IS NULL OR ui.user_images_ext = ''
+                   THEN '' ELSE CONCAT('.', TRIM(LEADING '.' FROM ui.user_images_ext)) END,
+              CASE WHEN ui.update_date IS NULL
+                   THEN '' ELSE CONCAT('?v=', UNIX_TIMESTAMP(ui.update_date)) END
+            ),
+            '/resources/images/users/avatar-default.png'
+          )
+        ELSE
+          '/resources/images/users/group-default.png'
+      END AS avatar_url
 	  FROM chatroom c
 	
 	  /* 내가 속한 방 */
@@ -73,6 +75,16 @@
 	  /* DM일 때만 상대 프로필이 매칭됨 (GROUP이면 전부 NULL) */
 	  LEFT JOIN `user` u_peer
 	    ON u_peer.user_id = pid.peer_user_id
+	    
+	  LEFT JOIN (
+	    SELECT user_id, user_images_name, user_images_ext, update_date,
+	           ROW_NUMBER() OVER (
+	             PARTITION BY user_id
+	             ORDER BY update_date DESC, create_date DESC, user_images_id DESC
+	           ) AS rn
+	    FROM user_images
+	    WHERE user_images_type = '프로필'
+	  ) ui ON ui.user_id = u_peer.user_id AND ui.rn = 1
 	
 	  /* 각 방의 최신 메시지 1건 */
 	  LEFT JOIN (

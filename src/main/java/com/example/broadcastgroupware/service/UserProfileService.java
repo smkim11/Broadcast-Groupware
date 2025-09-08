@@ -1,5 +1,5 @@
 package com.example.broadcastgroupware.service;
 
-public class UserService {
+public class UserProfileService {
 
 }

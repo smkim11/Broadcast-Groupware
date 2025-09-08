@@ -673,7 +673,7 @@ function renderDmList(list) {
     var name    = item.chatroomName || '(이름 없음)';
     var peerUserRank = isGroup ? '' : (item.peerUserRank || '');
 
-    var avatar = window.DEFAULT_AVATAR;
+    var avatar = item.avatarUrl || window.DEFAULT_AVATAR;
     if (!isGroup && item.peerAvatarPath) {
       avatar = ctx + '/resources/images/users/' + item.peerAvatarPath;
     } else if (isGroup && item.groupAvatarPath) {
@@ -698,7 +698,8 @@ function renderDmList(list) {
           'data-peer-avatar="'+ escapeHtml(avatar)  + '">' +
             '<div class="flex-shrink-0 me-3">' +
               '<div class="avatar-xs">' +
-                '<img src="' + escapeHtml(avatar) + '" class="rounded-circle avatar-img-fix" alt="avatar">' +
+			  '<img src="' + escapeHtml(avatar) + '" class="rounded-circle avatar-img-fix" alt="avatar" ' +
+			  'onerror="this.onerror=null;this.src=\'' + (window.DEFAULT_AVATAR || '/resources/images/users/avatar-default.png') + '\'" />'
               '</div>' +
             '</div>' +
             '<div class="flex-grow-1 w-100">' +
@@ -814,7 +815,8 @@ function applyRoomHeaderFromList(roomId){
     var avatar   = $item.data('peer-avatar') || window.DEFAULT_AVATAR;
     var roomType = String($item.data('room-type') || '').toUpperCase();
 
-    $avatar.attr('src', avatar);
+	var fallback = window.DEFAULT_AVATAR || '/resources/images/users/avatar-default.png';
+	$avatar.attr('src', avatar).off('error').on('error', function(){ this.onerror=null; this.src = fallback; });
     $title.text(rank ? (name + ' ' + rank) : name);
 
     if (btnRename)  btnRename.classList.toggle('d-none',  roomType !== 'GROUP');
@@ -925,12 +927,15 @@ async function refreshMemberCount(roomId){
 function renderMembers(list){
   var ctx = window.CONTEXT_PATH || '';
   var html = (list || []).map(function(u){
-    var avatar = u.avatarPath ? (ctx + '/resources/images/users/' + u.avatarPath)
-                              : (window.DEFAULT_AVATAR || '/resources/images/users/avatar-default.png');
-    return (
-      '<li class="list-group-item d-flex align-items-center">' +
-        '<img src="'+ escapeHtml(avatar) +'" class="rounded-circle me-2" ' +
-             'style="width:32px;height:32px;object-fit:cover;" alt="avatar">' +
+	var avatar = u.avatarUrl || (u.avatarPath
+	  ? (ctx + '/resources/images/users/' + u.avatarPath)
+	  : (window.DEFAULT_AVATAR || '/resources/images/users/avatar-default.png'));
+	  
+	  return (
+	    '<li class="list-group-item d-flex align-items-center">' +
+	      '<img src="'+ escapeHtml(avatar) +'" class="rounded-circle me-2" ' +
+	           'style="width:32px;height:32px;object-fit:cover;" alt="avatar" ' +
+	           'onerror="this.onerror=null;this.src=\'' + (window.DEFAULT_AVATAR || '/resources/images/users/avatar-default.png') + '\'">' +
         '<div class="flex-grow-1 text-truncate">' +
           '<div class="fw-semibold text-truncate">'+ escapeHtml(u.fullName || '') +'</div>' +
           (u.userRank ? '<small class="text-muted">'+ escapeHtml(u.userRank) +'</small>' : '') +

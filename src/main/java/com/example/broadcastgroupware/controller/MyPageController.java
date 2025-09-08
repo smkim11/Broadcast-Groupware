@@ -2,6 +2,7 @@ package com.example.broadcastgroupware.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.broadcastgroupware.domain.UserImages;
 import com.example.broadcastgroupware.dto.MyPageDto;
 import com.example.broadcastgroupware.dto.UserSessionDto;
+import com.example.broadcastgroupware.mapper.UserMapper;
 import com.example.broadcastgroupware.service.MyPageService;
 
 import jakarta.servlet.http.HttpSession;
@@ -21,9 +23,13 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class MyPageController {
 	private MyPageService myPageService;
-	public MyPageController(MyPageService myPageService) {
-		this.myPageService=myPageService;
-	}
+	private final UserMapper userMapper;
+	
+	  public MyPageController(MyPageService myPageService,
+              				  UserMapper userMapper) {     
+		this.myPageService = myPageService;
+		this.userMapper = userMapper;
+		}
 	
 	@GetMapping("/myPage")
 	public String myPage(Model model, HttpSession session) {
@@ -74,6 +80,15 @@ public class MyPageController {
 	        userImages.setUserImagesPath(savaPath);
 	    }
 	    myPageService.addProfile(userImages);
+	    
+        // 2) ★ 저장 직후, 표시용 URL/버전 조회 → 세션 갱신 (핵심!)
+        Map<String, Object> p = userMapper.selectProfileInfo(userId); // {url, ver}
+        String url = p != null ? (String) p.get("url") : null;
+        String ver = (p != null && p.get("ver") != null) ? String.valueOf(p.get("ver")) : null;
+
+        loginUser.setProfileUrl(url);
+        loginUser.setProfileVer(ver);
+        session.setAttribute("loginUser", loginUser);
 	    
 	    return "redirect:/myPage";
 	}

@@ -44,4 +44,21 @@
 	    WHERE u.user_id = #{userId}
 	</select>
 	
+	<select id="selectProfileInfo" parameterType="int" resultType="map">
+	  SELECT
+	    -- 브라우저가 접근할 URL (/uploads/ + 파일명.확장자)
+	    CONCAT('/uploads/',
+	           ui.user_images_name,
+	           CASE WHEN ui.user_images_ext IS NULL OR ui.user_images_ext=''
+	                THEN '' ELSE CONCAT('.', TRIM(LEADING '.' FROM ui.user_images_ext)) END
+	    ) AS url,
+	    -- 캐시무력화 버전 (update_date -> 초단위)
+	    UNIX_TIMESTAMP(ui.update_date) AS ver
+	  FROM user_images ui
+	  WHERE ui.user_id = #{userId}
+	    AND ui.user_images_type = '프로필'
+	  ORDER BY ui.update_date DESC, ui.create_date DESC, ui.user_images_id DESC
+	  LIMIT 1
+	</select>
+	
 </mapper>

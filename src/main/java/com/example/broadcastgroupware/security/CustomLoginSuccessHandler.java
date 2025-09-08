@@ -1,18 +1,23 @@
 package com.example.broadcastgroupware.security;
 
-import com.example.broadcastgroupware.domain.User;
-import com.example.broadcastgroupware.dto.UserSessionDto;
-import com.example.broadcastgroupware.mapper.UserMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.*;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.Set;
+import com.example.broadcastgroupware.domain.User;
+import com.example.broadcastgroupware.dto.UserSessionDto;
+import com.example.broadcastgroupware.mapper.UserMapper;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @Component
 public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
@@ -46,6 +51,13 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         sessionUser.setUserRank(user.getUserRank());
         sessionUser.setUserJoinDate(user.getUserJoinDate());
         sessionUser.setUserResignDate(user.getUserResignDate());
+        
+        //  DB에서 최신 프로필 이미지 URL/버전 조회해서 세션에 반영
+        Map<String, Object> p = userMapper.selectProfileInfo(user.getUserId()); // {url, ver}
+        if (p != null) {
+            sessionUser.setProfileUrl((String) p.get("url"));                     // 예: /uploads/abcd.png
+            sessionUser.setProfileVer(p.get("ver") == null ? null : String.valueOf(p.get("ver"))); // 예: 1720000000
+        }
         
         // 세션에 저장
         session.setAttribute("loginUser", sessionUser);

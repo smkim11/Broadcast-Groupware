@@ -63,13 +63,25 @@
                         </th>
 						<td><c:out value="${r.username}"/></td>
                         <td>
-                          <img
-                            src="<c:out value='${empty r.profileImage ? ctx += "/resources/images/users/default-avatar.png" : r.profileImage}'/>"
-                            alt=""
-                            class="avatar-xs rounded-circle me-2">
-                          <a href="${ctx}/user/detail/${r.userId}" class="text-body">
-                            <c:out value="${r.fullName}"/>
-                          </a>
+						 <c:choose>
+						    <c:when test="${not empty r.profileImage}">
+						      <img
+						        src="${r.profileImage}"
+						        alt=""
+						        class="avatar-xs rounded-circle me-2"
+						        onerror="this.onerror=null;this.src='${ctx}/resources/images/users/avatar-default.png'">
+						    </c:when>
+						    <c:otherwise>
+						      <img
+						        src="${ctx}/resources/images/users/avatar-default.png"
+						        alt=""
+						        class="avatar-xs rounded-circle me-2">
+						    </c:otherwise>
+						  </c:choose>
+						
+						  <a href="${ctx}/user/detail/${r.userId}" class="text-body">
+						    <c:out value="${r.fullName}"/>
+						  </a>
                          <small class="text-muted">(<c:out value="${r.gender}"/>)</small>
                         </td>
 

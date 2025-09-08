@@ -70,11 +70,11 @@
             
                             </div>
                         </div>
-	                            관리자 - 210304 / 1234<br>
-								국장   - 210501 / 1234<br>
+	                            관리자	- 210304 / 1234<br>
+								국장		- 210501 / 1234<br>
 								부서장	- 210201 / 1234<br>
-								팀장	 	- 220207 / 1234<br>
-								사원 		- 220202 / 1234
+								팀장		- 220207 / 1234<br>
+								대리		- 220202 / 1234
                         <div class="mt-2 text-center">
                             <p>© <script>document.write(new Date().getFullYear())</script> 김성민 김예진 장정수 장지영 <i class="mdi mdi-star text-danger"></i> by 맛있는 김장김장</p>
                         </div>
