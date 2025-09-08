@@ -5,6 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Reference Line</title>
+<link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <div>
@@ -408,16 +409,22 @@
                 
              	// 팀이 이미 선택된 경우 개인 선택 불가
                 if (type == 'USER' && teamId) {
-                    const existsTeamRow = tblBody.querySelector('tr[data-type="TEAM"][data-id="' + teamId + '"]');
-                    if (existsTeamRow) {
-                        chk.checked = false;
-                        if (!userBlockedByTeam) {
-                            alert('해당 팀이 참조로 추가되어 개인을 별도로 선택할 수 없습니다.');
-                            userBlockedByTeam = true;
-                        }
-                        continue;
-                    }
-                }
+		            const existsTeamRow = tblBody.querySelector('tr[data-type="TEAM"][data-id="' + teamId + '"]');
+		            if (existsTeamRow) {
+		                chk.checked = false;
+		                if (!userBlockedByTeam) {
+		                    Swal.fire({
+		                        title: "해당 팀이 이미 참조로 추가되었습니다.",
+		                        text: "팀이 선택된 상태에선 개인을 별도로 선택할 수 없습니다.",
+		                        icon: "error",
+		                        confirmButtonText: "확인",
+		                        confirmButtonColor: "#34c38f"
+		                    });
+		                    userBlockedByTeam = true;
+		                }
+		                continue;
+		            }
+		        }
              	
              	// 전개 기준 상한 계산
                 let wouldBeExpanded = baseExpanded;
@@ -469,7 +476,15 @@
                 chk.checked = false;
             }
 
-            if (totalAtLimit) alert('참조 대상은 팀 구성원을 포함해 총 ' + MAX_TOTAL + '명을 초과할 수 없습니다.');
+            if (totalAtLimit) {
+                Swal.fire({
+                    title: "선택 상한을 초과했습니다.",
+                    html: "참조 대상은 팀 구성원을 포함해<br>총 " + MAX_TOTAL + "명을 초과할 수 없습니다.",
+                    icon: "error",
+                    confirmButtonText: "확인",
+                    confirmButtonColor: "#34c38f"
+                });
+            }
 
             updateAddBtnState();
         }
@@ -528,14 +543,24 @@
             const rows = tblBody.querySelectorAll('tr');
             
             if (rows.length == 0) {
-                alert('참조 대상을 최소 1개 이상 선택해 주세요.');
+                Swal.fire({
+                    title: "참조 대상을 최소 1개 이상 선택해 주세요.",
+                    icon: "error",
+                    confirmButtonText: "확인",
+                    confirmButtonColor: "#34c38f"
+                });
                 return;
             }
             
             // 최종 검증
             const expanded = getExpandedTotalCount();
             if (expanded > MAX_TOTAL) {
-                alert('참조 대상은 팀 구성원을 포함해 총 ' + MAX_TOTAL + '명을 초과할 수 없습니다.');
+                Swal.fire({
+                    title: "참조 대상은 팀 구성원을 포함해 총 " + MAX_TOTAL + "명을 초과할 수 없습니다.",
+                    icon: "error",
+                    confirmButtonText: "확인",
+                    confirmButtonColor: "#34c38f"
+                });
                 return;
             }
                 
@@ -569,8 +594,17 @@
            	sessionStorage.setItem('referenceLines', JSON.stringify(list));
     		sessionStorage.setItem('flowKeep', '1');  // 작성 페이지로 돌아갈 경우 유지
             
-            // 뒤로가기
-            history.back();
+    		// 적용 완료 알림 후 뒤로가기
+    		Swal.fire({
+    	        title: "참조선이 적용되었습니다.",
+    	        icon: "success",
+    	        confirmButtonText: "확인",
+    	        confirmButtonColor: "#34c38f"
+    	    }).then(function (r) {
+    	        if (r.isConfirmed) {
+    	            history.back();
+    	        }
+    	    });
         }
 
         // 버튼 바인딩
@@ -602,4 +636,6 @@
 </script>
 
 </body>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </html>

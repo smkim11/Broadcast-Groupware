@@ -34,9 +34,12 @@
 			                       class="btn btn-outline-success">수정</a>
 			
 			                    <form method="post" action="${ctx}/approval/document/delete" class="m-0 d-inline js-form-delete">
-					                <input type="hidden" name="approvalDocumentId" value="${document.approvalDocumentId}"/>
-					                <button type="button" class="btn btn-outline-danger js-btn-delete">삭제</button>
-					            </form>
+								    <input type="hidden" name="approvalDocumentId" value="${document.approvalDocumentId}"/>
+								    <c:if test="${not empty _csrf}">
+								        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+								    </c:if>
+								    <button type="button" class="btn btn-outline-danger js-btn-delete">삭제</button>
+								</form>
 			                </c:if>
 		            	</div>
 			        </div>
@@ -213,8 +216,8 @@
 			                            </td>
 			                            <th class="bg-light text-center">방송 시간</th>
 			                            <td>
-			                                <c:out value="${broadcastForm.broadcastFormStartTime}"/> ~
-			                                <c:out value="${broadcastForm.broadcastFormEndTime}"/>
+			                                <c:out value="${fn:substring(broadcastForm.broadcastFormStartTime,0,5)}"/> ~
+			                                <c:out value="${fn:substring(broadcastForm.broadcastFormEndTime,0,5)}"/>
 			                            </td>
 			                        </tr>
 			                        <tr>
@@ -422,11 +425,16 @@
 			                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
 			                    </c:if>
 			                </div>
-			                <div class="modal-footer">
-							    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
-							    <button type="button" class="btn btn-outline-danger" id="btnReject">반려</button>
-							    <button type="button" class="btn btn-outline-success" id="btnApprove">승인</button>
+			                <div class="modal-footer d-flex justify-content-between align-items-center">
+							    <div>
+							        <button type="button" class="btn btn-outline-danger" id="btnReject">반려</button>
+							    </div>
+							    <div class="d-flex gap-2">
+							        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+							        <button type="button" class="btn btn-outline-success" id="btnApprove">승인</button>
+							    </div>
 							</div>
+
 			            </form>
 			        </div>
 			    </div>
@@ -475,36 +483,30 @@
     }
 	
     (function () {
-		// 문서 삭제
-        const delForm = document.querySelector('.js-form-delete');
-        const delBtn  = document.querySelector('.js-btn-delete');
-        if (delForm && delBtn) {
-            delBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                Swal.fire({
-                    title: "문서를 삭제하시겠습니까?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#f46a6a",
-                    cancelButtonColor: "#74788d",
-                    confirmButtonText: "삭제",
-                    cancelButtonText: "취소"
-                }).then(function (r) {
-                	if (r.value) {
-                        Swal.fire({
-                            title: "삭제되었습니다.",
-                            icon: "success",
-                            confirmButtonText: "확인",
-                            confirmButtonColor: "#34c38f"
-                        }).then(function (r2) {
-                            if (r2.isConfirmed) {
-                                window.location.href = "${ctx}/approval/document/main";
-                            }
-                        });
-                    }
-                });
-            });
+    	// 문서 삭제
+    	const delForm = document.querySelector('.js-form-delete');
+    	const delBtn  = document.querySelector('.js-btn-delete');
+
+    	if (delForm && delBtn) {
+    	    delBtn.addEventListener('click', function (e) {
+    	        e.preventDefault();
+    	        e.stopPropagation();
+
+    	        Swal.fire({
+    	            title: "문서를 삭제하시겠습니까?",
+    	            icon: "warning",
+    	            showCancelButton: true,
+    	            confirmButtonColor: "#f46a6a",
+    	            cancelButtonColor: "#74788d",
+    	            confirmButtonText: "삭제",
+    	            cancelButtonText: "취소"
+    	        }).then(function (r) {
+    	            if (!r.isConfirmed) return;
+
+    	            // 바로 폼 제출 -> 서버에서 삭제 처리 후 redirect
+    	            delForm.submit();
+    	        });
+    	    });
         }
 
         // 결재: 승인/반려 확인 -> 완료 알림 -> 제출

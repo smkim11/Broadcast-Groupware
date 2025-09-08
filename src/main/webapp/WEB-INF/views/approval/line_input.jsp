@@ -5,6 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Approval Line</title>
+<link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <div>
@@ -306,7 +307,12 @@
             const remaining = MAX_APPROVERS - existing;
 
             if (remaining <= 0) {
-                alert('결재선은 최대 3명까지만 추가할 수 있습니다.');
+                Swal.fire({
+                    title: "결재선은 최대 3명까지만 추가할 수 있습니다.",
+                    icon: "error",
+                    confirmButtonText: "확인",
+                    confirmButtonColor: "#34c38f"
+                });
                 checked.forEach(chk => (chk.checked = false));
                 return;
             }
@@ -341,7 +347,12 @@
             }
             
             if (blockedByLimit) {
-                alert('결재선은 최대 3명까지만 추가할 수 있습니다.');
+                Swal.fire({
+                    title: "결재선은 최대 3명까지만 추가할 수 있습니다.",
+                    icon: "error",
+                    confirmButtonText: "확인",
+                    confirmButtonColor: "#34c38f"
+                });
             }
             
             refreshOrder();
@@ -407,14 +418,24 @@
             const rows = tblBody.querySelectorAll('tr');
             
             if (rows.length == 0) {
-           		alert('결재선을 최소 1명 이상 선택해 주세요.');
+                Swal.fire({
+                    title: "결재선을 최소 1명 이상 선택해 주세요.",
+                    icon: "error",
+                    confirmButtonText: "확인",
+                    confirmButtonColor: "#34c38f"
+                });
                 return;
-          	}
-            
-       	  	if (rows.length > MAX_APPROVERS) {
-       	       	alert('결재선은 최대 3명까지 선택 가능합니다.');
-       	      	return;
-       	   	}
+            }
+
+            if (rows.length > MAX_APPROVERS) {
+                Swal.fire({
+                    title: "결재선은 최대 3명까지만 선택 가능합니다.",
+                    icon: "error",
+                    confirmButtonText: "확인",
+                    confirmButtonColor: "#34c38f"
+                });
+                return;
+            }
             	
        		// 선택된 행들을 전송/저장용 데이터로 변환
             const list = Array.from(rows).map((tr, idx) => ({
@@ -430,8 +451,17 @@
            	sessionStorage.setItem('approvalLines', JSON.stringify(list));
     		sessionStorage.setItem('flowKeep', '1');  // 작성 페이지로 돌아갈 경우 유지
             
-         	// 뒤로가기
-            history.back();
+         	// 적용 완료 알림 후 뒤로가기
+    		Swal.fire({
+    	        title: "결재선이 적용되었습니다.",
+    	        icon: "success",
+    	        confirmButtonText: "확인",
+    	        confirmButtonColor: "#34c38f"
+    	    }).then(function (r) {
+    	        if (r.isConfirmed) {
+    	            history.back();
+    	        }
+    	    });
         }
 
         // 버튼 바인딩
@@ -463,4 +493,6 @@
 </script>
 
 </body>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </html>

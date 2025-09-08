@@ -7,6 +7,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Program Detail</title>
+<link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <style>
     .episodes-table th,
     .episodes-table td {
@@ -357,7 +358,7 @@
             // 로딩 상태 표시
             tbody.innerHTML =
                 '<tr>' +
-                    '<td colspan="6" class="text-center text-muted py-4">불러오는 중…</td>' +
+                    '<td colspan="7" class="text-center text-muted py-4">불러오는 중…</td>' +
                 '</tr>';
 
             // 서버 호출 URL
@@ -379,7 +380,7 @@
                     // 실패 시 에러 메시지 표시
                     tbody.innerHTML =
                         '<tr>' +
-                            '<td colspan="6" class="text-center text-muted py-4">목록을 불러오지 못했습니다</td>' +
+                            '<td colspan="7" class="text-center text-muted py-4">목록을 불러오지 못했습니다</td>' +
                         '</tr>';
                     console.error(e);
                 });
@@ -391,7 +392,7 @@
                 // 팀원이 없을 때 메시지 표시
                 tbody.innerHTML =
                     '<tr>' +
-                        '<td colspan="6" class="text-center text-muted py-4">등록된 팀원이 없습니다</td>' +
+                        '<td colspan="7" class="text-center text-muted py-4">등록된 팀원이 없습니다</td>' +
                     '</tr>';
                 return;
             }
@@ -449,27 +450,46 @@
             var ids = selectedIds();
             if (ids.length == 0) return;
 
-            if (!confirm('선택한 ' + ids.length + '명을 삭제하시겠습니까?')) return;
+            Swal.fire({
+                title: "선택한 " + ids.length + "명을 삭제하시겠습니까?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#f46a6a",
+                cancelButtonColor: "#74788d",
+                confirmButtonText: "삭제",
+                cancelButtonText: "취소"
+            }).then(function (r) {
+                if (!r.isConfirmed) return;
 
-            // 삭제 요청 전송
-            fetch(ctx + '/broadcast/team/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: ids })
-            })
-            .then(function (res) {
-                if (!res.ok) throw new Error('삭제 실패');
-                var lastPage = Math.max(1, Math.ceil((totalCount - ids.length) / pageSize));
-                return loadTeamPage(Math.min(currentPage, lastPage));  // 현재 페이지 또는 마지막 페이지 로드
-            })
-            .then(function () {
-                alert('삭제되었습니다.');
-            })
-            .catch(function (e) {
-                console.error(e);
-                alert('삭제 중 오류가 발생했습니다.');
-            });
-        });
+	            // 삭제 요청 전송
+	            fetch(ctx + '/broadcast/team/delete', {
+	                method: 'POST',
+	                headers: { 'Content-Type': 'application/json' },
+	                body: JSON.stringify({ ids: ids })
+	            })
+	            .then(function (res) {
+	                if (!res.ok) throw new Error('삭제 실패');
+	                var lastPage = Math.max(1, Math.ceil((totalCount - ids.length) / pageSize));
+	                return loadTeamPage(Math.min(currentPage, lastPage));  // 현재 페이지 또는 마지막 페이지 로드
+	            })
+	            .then(function () {
+	                Swal.fire({
+	                    title: "삭제되었습니다.",
+	                    icon: "success",
+	                    confirmButtonText: "확인",
+	                    confirmButtonColor: "#34c38f"
+	                });
+	            })
+	            .catch(function () {
+	                Swal.fire({
+	                    title: "삭제 중 오류가 발생했습니다.",
+	                    icon: "error",
+	                    confirmButtonText: "확인",
+	                    confirmButtonColor: "#34c38f"
+	                });
+	            });
+	        });
+	    });
         
         
         // ===== 회차 목록(행 내부) =====
@@ -767,7 +787,12 @@
         btnTeamSave && btnTeamSave.addEventListener('click', function () {
             const uid = Number(userSel.value || 0);
             if (!uid) {
-                alert('이름을 선택하세요.');
+                Swal.fire({
+                    title: '등록할 인원을 선택해주세요.',
+                    icon: 'warning',
+                    confirmButtonText: '확인',
+                    confirmButtonColor: '#34c38f'
+                });
                 return;
             }
             
@@ -784,15 +809,34 @@
                     if (typeof loadTeamPage == 'function') {
                         loadTeamPage(1);  // 목록 갱신
                     }
-                    alert('등록되었습니다.');
+                    Swal.fire({
+                        title: '등록되었습니다.',
+                        icon: 'success',
+                        confirmButtonText: '확인',
+                        confirmButtonColor: '#34c38f'
+                    });
                 } else {
-                    alert(res.message || '등록에 실패했습니다.');
+                	Swal.fire({
+                        title: res.message || '등록에 실패했습니다.',
+                        icon: 'error',
+                        confirmButtonText: '확인',
+                        confirmButtonColor: '#34c38f'
+                    });
                 }
             })
-            .catch(() => alert('통신 오류가 발생했습니다.'));
+            .catch(() => {
+                Swal.fire({
+                    title: '통신 오류가 발생했습니다.',
+                    icon: 'error',
+                    confirmButtonText: '확인',
+                    confirmButtonColor: '#34c38f'
+                });
+            });
         });        
     })();
 </script>
 
 </body>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </html>
