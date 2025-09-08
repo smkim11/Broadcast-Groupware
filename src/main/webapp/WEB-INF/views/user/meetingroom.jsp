@@ -50,8 +50,8 @@
 	background: white;
 	padding: 25px;
 	border-radius: 12px;
-	width: 90%;
-	max-width: 600px;   /* 모달 가로 최대값 */
+	width: 95%;
+	max-width: 700px;   /* 모달 가로 최대값 */
 	text-align: center;
 	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 	position: relative;
