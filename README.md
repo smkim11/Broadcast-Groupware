@@ -65,19 +65,17 @@
 
 
 
-
 # 📂 프로젝트 구조
-
+```
 broadcast-groupware/
 ├── src/
-│   ├── main/java/com/broadcast/...
-│   └── resources/
-│       ├── application.properties
-│       └── templates/ (Mustache/JSP)
+│ ├── main/java/com/broadcast/...
+│ └── resources/
+│ ├── application.properties
+│ └── templates/ (Mustache/JSP)
 ├── pom.xml
 └── mvnw / .gitignore / ...
-
-
+```
 
 
 # 🗃️ 데이터베이스 설계
