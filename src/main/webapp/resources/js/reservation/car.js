@@ -720,6 +720,9 @@
 						cancelBtn.textContent = "취소";
 						cancelBtn.disabled = !isChangeable;
 						
+						cancelBtn.style.backgroundColor = "red";
+						cancelBtn.style.color = "white";
+						
 						// 예약 취소 이벤트
 						cancelBtn.addEventListener("click", async function(){
 						    // 예약 취소 여부 확인

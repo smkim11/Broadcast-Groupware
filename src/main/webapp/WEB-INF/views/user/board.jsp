@@ -95,6 +95,32 @@
     width: 20%; /* 작성일 */
 }
 
+#postModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999; /* 페이징, 테이블, 헤더 전부 위로 */
+}
+
+#postModal .modal-content {
+    background: #fff;
+    padding: 20px;
+    width: 500px;
+    border-radius: 8px;
+    position: relative;
+
+    z-index: 10000; /* 배경보다 위 */
+}
+
 
 </style>
 </head>
@@ -189,8 +215,8 @@
                 <input type="text" name="postPassword" style="width:100%;" required>
             </div>
             <div style="text-align:right;">
-                <button type="button" id="closePostModal">닫기</button>
-                <button type="submit">등록</button>
+                <button class="btn btn-outline-secondary btn-sm" type="button" id="closePostModal">닫기</button>
+                <button class="btn btn-outline-success btn-sm" type="submit">등록</button>
             </div>
         </form>
     </div>
