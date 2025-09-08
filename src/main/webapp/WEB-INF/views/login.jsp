@@ -27,8 +27,8 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="text-center">
-                            <a href="/login" class="mb-5 d-block auth-logo">
-                                <img src="${pageContext.request.contextPath}/resources/images/logo-dark.png" alt="" height="22" class="logo logo-dark">
+                            <a href="/login" class="mb-3 d-block auth-logo">
+                                <img src="${pageContext.request.contextPath}/resources/images/logo-back.png" alt="" height="50" class="logo logo-dark">
                                 <img src="${pageContext.request.contextPath}/resources/images/logo-light.png" alt="" height="22" class="logo logo-light">
                             </a>
                         </div>
