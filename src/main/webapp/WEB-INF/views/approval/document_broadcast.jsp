@@ -5,6 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Document Broadcast</title>
+<link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <div>
@@ -386,6 +387,33 @@
 	 	// ===== 문서 저장 (상신/임시저장) =====
         function submitDocument(isDraft) {
             if (!form) return;
+            
+         	// 상신일 때만 최소 필수값 검증
+            if (!isDraft) {
+                const title = (form.querySelector('[name="title"]')?.value || '').trim();
+                const programName = (form.querySelector('[name="programName"]')?.value || '').trim();
+                const sDate = (form.querySelector('[name="broadcastStartDate"]')?.value || '').trim();
+                const eDate = (form.querySelector('[name="broadcastEndDate"]')?.value || '').trim();
+                const sTime = (form.querySelector('[name="startTime"]')?.value || '').trim();
+                const eTime = (form.querySelector('[name="endTime"]')?.value || '').trim();
+                const dayNodes = form.querySelectorAll('input[name="broadcastDays"]:checked');
+
+                const apvLines = getApprovalLines();
+                const hasAll =
+                    title && programName && sDate && eDate && sTime && eTime &&
+                    dayNodes.length > 0 && apvLines.length > 0;
+
+                if (!hasAll) {
+                    Swal.fire({
+                        title: "저장에 실패했습니다.",
+                        text: "작성하지 않은 부분이 있습니다. 다시 확인해 주세요.",
+                        icon: "error",
+                        confirmButtonText: "확인",
+                        confirmButtonColor: "#34c38f"
+                    });
+                    return;
+                }
+            }
 
             // 입력값 수집
             const titleEl = form.querySelector('[name="title"]');  	   // 공통 제목
@@ -478,12 +506,32 @@
 	            sessionStorage.removeItem('approvalLines');
 	            sessionStorage.removeItem('referenceLines');
 	            
-            	// 저장 후 문서 유형 선택 화면으로 이동
-                window.location.href = base + '/approval/document/main';
+	         	// 성공 모달 -> 확인 시 이동
+                Swal.fire({
+                    title: (isDraft ? "임시저장되었습니다." : "상신되었습니다."),
+                    icon: "success",
+                    confirmButtonText: "확인",
+                    confirmButtonColor: "#34c38f"
+                }).then(function(r){
+                    if (r.isConfirmed) {
+                        window.location.href = base + '/approval/document/main';
+                    }
+                });
             })
             .catch(function (e) {
-                console.error('방송 문서 저장 오류:', e);
-            })
+			    console.error('방송 문서 저장 오류:', e);
+			    Swal.fire({
+			        title: "저장에 실패했습니다.",
+			        text: "작성하지 않은 부분이 있습니다. 다시 확인해 주세요.",
+			        icon: "error",
+			        confirmButtonText: "확인",
+			        confirmButtonColor: "#34c38f"
+			    });
+			})
+			.catch(function (e) {
+			    console.error('방송 문서 저장 오류:', e);
+			    alert('작성하지 않은 부분이 있습니다. 다시 확인해 주세요.');
+			})
             .finally(function () {
             	// 버튼 잠금 해제
                 if (btnSubmit) btnSubmit.disabled = false;
@@ -493,17 +541,77 @@
         }
 
         // 이벤트 바인딩
-        if (btnSubmit) btnSubmit.addEventListener('click', function () { submitDocument(false); });
-        if (btnDraft) btnDraft .addEventListener('click', function () { submitDocument(true); });
+        if (btnSubmit) btnSubmit.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            Swal.fire({
+                title: "상신하시겠습니까?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#34c38f",
+                cancelButtonColor: "#f46a6a",
+                confirmButtonText: "예",
+                cancelButtonText: "아니요"
+            }).then(function(result) {
+                if (result.value) {
+                    submitDocument(false);  // 실제 상신 실행
+                }
+            });
+        });
 
-	    if (btnCancel) btnCancel.addEventListener('click', function () {
-	        // 취소 시 선택값 초기화
-	        sessionStorage.removeItem('approvalLines');
-	        sessionStorage.removeItem('referenceLines');
-	        history.back();  // 뒤로가기
+        if (btnDraft) btnDraft.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            Swal.fire({
+                title: "임시저장하시겠습니까?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#34c38f",
+                cancelButtonColor: "#f46a6a",
+                confirmButtonText: "예",
+                cancelButtonText: "아니요"
+            }).then(function(result) {
+                if (result.value) {
+                    submitDocument(true);  // 실제 임시저장 실행
+                }
+            });
+        });
+
+        if (btnCancel) btnCancel.addEventListener('click', function (e) {
+	        e.preventDefault();   // 폼 전송 방지
+	        e.stopPropagation();  // 상위로 이벤트 전파 방지
+
+	        Swal.fire({
+	            title: "작성 중인 내용을 취소하시겠습니까?",
+	            icon: "warning",
+	            showCancelButton: true,
+	            confirmButtonColor: "#34c38f",
+	            cancelButtonColor: "#f46a6a",
+	            confirmButtonText: "예",
+	            cancelButtonText: "아니요"
+	        }).then(function(result) {
+	            if (result.value) {
+	                // 확인 시: 값 초기화 후 '취소되었습니다' 알림 -> 뒤로가기
+	                sessionStorage.removeItem('approvalLines');
+	                sessionStorage.removeItem('referenceLines');
+
+	                Swal.fire({
+	                    title: "취소되었습니다.",
+	                    icon: "success",
+	                    confirmButtonText: "확인",
+	                    confirmButtonColor: "#34c38f"
+	                }).then(function(r2){
+	                    if (r2.isConfirmed) {
+	                        history.back();  // 뒤로가기
+	                    }
+	                });
+	            }
+	        });
 	    });
     })();
 </script>
 
 </body>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </html>

@@ -9,6 +9,7 @@
 <title>Document Detail</title>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <link href="${ctx}/resources/css/custom-approval.css?v=20250903" rel="stylesheet" type="text/css" />
+<link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <div>
@@ -32,10 +33,9 @@
 			                    <a href="${pageContext.request.contextPath}/approval/document/edit/${document.approvalDocumentId}"
 			                       class="btn btn-outline-success">수정</a>
 			
-			                    <form method="post" action="${ctx}/approval/document/delete" class="m-0 d-inline">
+			                    <form method="post" action="${ctx}/approval/document/delete" class="m-0 d-inline js-form-delete">
 					                <input type="hidden" name="approvalDocumentId" value="${document.approvalDocumentId}"/>
-					                <button type="submit" class="btn btn-outline-danger"
-					                        onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+					                <button type="button" class="btn btn-outline-danger js-btn-delete">삭제</button>
 					            </form>
 			                </c:if>
 		            	</div>
@@ -423,10 +423,10 @@
 			                    </c:if>
 			                </div>
 			                <div class="modal-footer">
-			                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
-			                    <button type="submit" class="btn btn-outline-danger" onclick="setDecision('REJECT')">반려</button>
-			                    <button type="submit" class="btn btn-outline-success" onclick="setDecision('APPROVE')">승인</button>
-			                </div>
+							    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+							    <button type="button" class="btn btn-outline-danger" id="btnReject">반려</button>
+							    <button type="button" class="btn btn-outline-success" id="btnApprove">승인</button>
+							</div>
 			            </form>
 			        </div>
 			    </div>
@@ -473,6 +473,106 @@
     function setDecision(dec) {
         document.getElementById('approveModalDecision').value = dec;
     }
+	
+    (function () {
+		// 문서 삭제
+        const delForm = document.querySelector('.js-form-delete');
+        const delBtn  = document.querySelector('.js-btn-delete');
+        if (delForm && delBtn) {
+            delBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                Swal.fire({
+                    title: "문서를 삭제하시겠습니까?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#f46a6a",
+                    cancelButtonColor: "#74788d",
+                    confirmButtonText: "삭제",
+                    cancelButtonText: "취소"
+                }).then(function (r) {
+                	if (r.value) {
+                        Swal.fire({
+                            title: "삭제되었습니다.",
+                            icon: "success",
+                            confirmButtonText: "확인",
+                            confirmButtonColor: "#34c38f"
+                        }).then(function (r2) {
+                            if (r2.isConfirmed) {
+                                window.location.href = "${ctx}/approval/document/main";
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        // 결재: 승인/반려 확인 -> 완료 알림 -> 제출
+        const approveBtn = document.getElementById('btnApprove');
+        const rejectBtn = document.getElementById('btnReject');
+        const approveForm = document.querySelector('#approveModal form');
+
+        if (approveBtn && approveForm) {
+            approveBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                Swal.fire({
+                    title: "승인하시겠습니까?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#34c38f",
+                    cancelButtonColor: "#74788d",
+                    confirmButtonText: "확인",
+                    cancelButtonText: "취소"
+                }).then(function (r) {
+                    if (!r.value) return;
+                    Swal.fire({
+                        title: "승인되었습니다.",
+                        icon: "success",
+                        confirmButtonText: "확인",
+                        confirmButtonColor: "#34c38f"
+                    }).then(function (r2) {
+                        if (r2.isConfirmed) {
+                            setDecision('APPROVE');
+                            approveForm.submit();
+                        }
+                    });
+                });
+            });
+        }
+
+        if (rejectBtn && approveForm) {
+            rejectBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                Swal.fire({
+                    title: "반려하시겠습니까?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#34c38f",
+                    cancelButtonColor: "#74788d",
+                    confirmButtonText: "확인",
+                    cancelButtonText: "취소"
+                }).then(function (r) {
+                    if (!r.value) return;
+                    Swal.fire({
+                        title: "반려되었습니다.",
+                        icon: "error",
+                        confirmButtonText: "확인",
+                        confirmButtonColor: "#34c38f"
+                    }).then(function (r2) {
+                        if (r2.isConfirmed) {
+                            setDecision('REJECT');
+                            approveForm.submit();
+                        }
+                    });
+                });
+            });
+        }
+    })();
 </script>
+
 </body>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </html>

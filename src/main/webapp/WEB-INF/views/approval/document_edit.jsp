@@ -9,6 +9,7 @@
 <title>Document Edit</title>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <link href="${ctx}/resources/css/custom-approval.css?v=20250903" rel="stylesheet" type="text/css" />
+<link href="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <div>
@@ -34,7 +35,7 @@
                     <a href="${ctx}/approval/line/input?mode=edit&docId=${document.approvalDocumentId}" class="btn btn-outline-primary">결재선</a>
                     <a href="${ctx}/approval/reference/input?mode=edit&docId=${document.approvalDocumentId}" class="btn btn-outline-primary">참조선</a>
                     <button id="btnUpdate" type="button" class="btn btn-outline-success">수정</button>
-                    <a href="${ctx}/approval/document/detail/${document.approvalDocumentId}" class="btn btn-outline-secondary">취소</a>
+                    <a href="${ctx}/approval/document/detail/${document.approvalDocumentId}" class="btn btn-outline-secondary js-btn-cancel">취소</a>
                 </div>
             </div>
 
@@ -286,15 +287,6 @@
                     </div>
                 </div>
 
-                <!-- 파일 첨부 영역 -->
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <label class="form-label d-block mb-2">파일 첨부</label>
-                        <div class="alert alert-info mb-0">
-                            파일 첨부 기능 아직 미구현
-                        </div>
-                    </div>
-                </div>
             </form>
 
         </div>
@@ -599,11 +591,20 @@
                 return resp.json().catch(() => ({}));
             })
             .then(function () {
-                sessionStorage.removeItem('approvalLines');
-                sessionStorage.removeItem('referenceLines');
-                sessionStorage.setItem('flowKeep', '0');
-                window.location.href = base + '/approval/document/detail/' + docId;
-            })
+			    sessionStorage.removeItem('approvalLines');
+			    sessionStorage.removeItem('referenceLines');
+			    sessionStorage.setItem('flowKeep', '0');
+			    Swal.fire({
+			        title: "문서가 수정되었습니다.",
+			        icon: "success",
+			        confirmButtonText: "확인",
+			        confirmButtonColor: "#34c38f"
+			    }).then(function (r) {
+			        if (r.isConfirmed) {
+			            window.location.href = base + '/approval/document/detail/' + docId;
+			        }
+			    });
+			})
             .catch(function (e) {
                 console.error('문서 수정 오류:', e);
                 alert('수정 중 오류가 발생했습니다.\n' + (e && e.message ? e.message : e));
@@ -612,9 +613,53 @@
         }
 
         // 버튼 바인딩
-        if (btnUpdate) btnUpdate.addEventListener('click', submitUpdate);
+        (function () {
+            const btnUpdate = document.getElementById('btnUpdate');
+            const cancelLink = document.querySelector('.js-btn-cancel');
+            const base = '${ctx}';
+            const docId = ${document.approvalDocumentId};
+
+            if (btnUpdate) {
+                btnUpdate.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    submitUpdate();   // 바로 실행
+                });
+            }
+
+
+            if (cancelLink) {
+                cancelLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const href = cancelLink.getAttribute('href');
+                    Swal.fire({
+                        title: "수정을 취소하시겠습니까?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#34c38f",
+                        cancelButtonColor: "#f46a6a",
+                        confirmButtonText: "예",
+                        cancelButtonText: "아니요"
+                    }).then(function (r) {
+                    	Swal.fire({
+                            title: "취소되었습니다.",
+                            icon: "success",
+                            confirmButtonText: "확인",
+                            confirmButtonColor: "#34c38f"
+                        }).then(function (r2) {
+                            if (r2.isConfirmed) {
+                                window.location.href = href;
+                            }
+                        });
+                    });
+                });
+            }
+        })();
     })();
 </script>
 
 </body>
+<!-- Sweet Alerts js -->
+<script src="${pageContext.request.contextPath}/resources/libs/sweetalert2/sweetalert2.min.js"></script>
 </html>
