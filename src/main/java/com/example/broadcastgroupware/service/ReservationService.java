@@ -80,7 +80,7 @@ public class ReservationService {
 
 	    // 2) 겹치는 예약이 있는지 확인
 	    int count = reservationMapper.checkReservations(vehicleReservation);
-	    log.info("중복 시간 예약: {}", count);
+	    // log.info("중복 시간 예약: {}", count);
 
 	    if(count > 0) {
 	        return false; // 겹치는 예약 있음

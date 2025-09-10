@@ -90,7 +90,8 @@ public class BoardService {
 
 		// 2. 파일 처리
 		if (files != null && !files.isEmpty()) {
-			String uploadDir = "C:\\final\\"; // 로컬 C드라이브 경로
+			// String uploadDir = "C:\\final\\"; 로컬경로
+			String uploadDir = "/home/ubuntu/upload/"; // 로컬 C드라이브 경로
 
 			for (MultipartFile file : files) {
 				if (file.isEmpty()) continue;

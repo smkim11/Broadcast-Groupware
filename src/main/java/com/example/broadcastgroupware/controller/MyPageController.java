@@ -62,7 +62,8 @@ public class MyPageController {
 	        String fileName = UUID.randomUUID().toString().replace("-", "");
 
 	        // 저장 경로
-	        String savaPath = "c:\\final\\";
+	        // String savaPath = "c:\\final\\"; 로컬경로
+	        String savaPath = "/home/ubuntu/upload/";
 	        String fullPath = savaPath + fileName + "." + ext;
 	        File saveFile = new File(fullPath);
 

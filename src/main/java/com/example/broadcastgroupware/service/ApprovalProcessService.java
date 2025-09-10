@@ -267,7 +267,8 @@ public class ApprovalProcessService {
             }
 
             // 사본 저장 경로
-            Path dstDir = Paths.get("C:/final/signatures/approvals/" + documentId);
+            // Path dstDir = Paths.get("C:/final/signatures/approvals/" + documentId); 로컬경로
+            Path dstDir = Paths.get("/home/ubuntu/upload/" + documentId);
             Files.createDirectories(dstDir);
             Path dst = dstDir.resolve(userId + "." + ext);
 

@@ -51,7 +51,8 @@ public class MyPageService {
 	    String filename = UUID.randomUUID().toString().replace("-", "");
 
 	    // 2) 저장 경로 지정
-	    String savePath = "c:\\final\\"; 
+	    // String savePath = "c:\\final\\"; 로컬경로
+	    String savePath = "/home/ubuntu/upload/"; 
 	    File file = new File(savePath + filename+ "." + ext);
 
 	    // 3) 디코딩해서 파일 저장
@@ -103,7 +104,8 @@ public class MyPageService {
 	    String filename = UUID.randomUUID().toString().replace("-", "");
 
 	    // 2) 저장 경로 지정
-	    String savePath = "c:\\final\\"; 
+	    // String savePath = "c:\\final\\"; 로컬경로
+	    String savePath = "/home/ubuntu/upload/"; 
 	    File file = new File(savePath + filename+ "." + ext);
 
 	    // 3) 디코딩해서 파일 저장

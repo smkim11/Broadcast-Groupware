@@ -109,7 +109,8 @@ public class ApprovalQueryService {
     
     
     // 파일 시스템 기준 루트/사본 폴더 (표시용 URL 산출에만 사용)
-    private static final String FINAL_STORAGE_PATH = "C:/final";
+    // private static final String FINAL_STORAGE_PATH = "C:/final"; 기존경로
+    private static final String FINAL_STORAGE_PATH = "/home/ubuntu/upload/";
     private static final String SIGNATURE_STORAGE_PATH = FINAL_STORAGE_PATH + "/signatures/approvals";
     
     // 결재선의 서명 경로를 화면 표시용으로 가공
@@ -162,10 +163,12 @@ public class ApprovalQueryService {
 
         // C:/final/ 하위만 /final/... 로 노출
         String lower = norm.toLowerCase();
-        String root = "c:/final/";
+        // String root = "c:/final/"; 로컬경로
+        String root = "/home/ubuntu/upload/";
         if (lower.startsWith(root)) {
             String tail = norm.substring(root.length()).replaceAll("^/+", "");
-            return "/final/" + tail;
+            // return "/final/" + tail; 로컬경로
+            return "/home/ubuntu/upload/" + tail;
         }
         return null;
     }
@@ -177,7 +180,8 @@ public class ApprovalQueryService {
         for (String ext : exts) {
             Path cand = Paths.get(base, userId + "." + ext);
             if (Files.exists(cand)) {
-                return "/final/signatures/approvals/" + documentId + "/" + userId + "." + ext;
+            	// return "/final/signatures/approvals/" + documentId + "/" + userId + "." + ext; 로컬경로
+                return "/home/ubuntu/upload/" + documentId + "/" + userId + "." + ext;
             }
         }
         return null;
