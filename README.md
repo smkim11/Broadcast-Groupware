@@ -59,9 +59,17 @@
 | ORM | JPA / MyBatis |
 | Build Tool | Maven |
 | Server | Embedded Tomcat |
+| API | 공휴일, 날씨, 캘린더, 전자서명|
 | 기타 | Lombok 등 |
 
+# 🌐 배포 환경 (현재는 종료됨)
 
+- AWS EC2 (Ubuntu 22.04)
+- Spring Boot 프로젝트 WAR 파일을 Docker 컨테이너로 실행
+- 별도의 AWS EC2 인스턴스에 설치된 MySQL 서버 연동
+- 외부 접속을 위한 8080 포트 개방 (보안 그룹 설정)
+
+※ 현재는 서버 인스턴스를 종료하여 접속은 불가합니다
 
 # 📂 프로젝트 구조
 ```
